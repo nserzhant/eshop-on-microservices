@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using R2S.Users.Api.Models;
@@ -11,6 +12,7 @@ namespace R2S.Users.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmployeeAccountController : ControllerBase
     {
         private readonly JWTSettings _jwtSettings;
@@ -22,6 +24,7 @@ namespace R2S.Users.Api.Controllers
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Regiser(UserDTO userDTO)
         {
@@ -30,6 +33,7 @@ namespace R2S.Users.Api.Controllers
             return Ok();
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserDTO user)
         {
