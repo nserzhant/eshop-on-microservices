@@ -1,0 +1,42 @@
+{
+    "home-header" : "This is an Employee Portal. You can view, edit and register employees here.",
+    "register-header" : "Register to the portal",
+    "login-header" : "Log in to the portal",
+    "change-email-header" : "Change the account email",
+    "change-password-header" : "Change the account password",
+    "employees-list-header" : "List of the employees",
+    "edit-employee-hedader" : "Edit employee {{email}}",
+    "email" : "Email",
+    "password" : "Password",
+    "confirm-password" : "Confitm Password",
+    "current-password" : "Current Password",
+    "register" : "Register",
+    "log-in" : "Log In",
+    "new-email" : "New Email",    
+    "new-password" : "New Password",  
+    "change-email" : "Change Email",
+    "change-password" : "Change Password",
+    "filter-by-email" : "Filter by the email",
+    "apply-filter" : "Apply Filter",
+    "roles" : "Roles",
+    "edit" : "Edit",
+    "paginator-aria-label" : "Select page of periodic elements",
+    "change-roles" : "Change roles",
+    "sales-manager-role" : "Sales Manager",
+    "administrator-role" : "Administrator",
+    "set-password" : "Set password",
+    "back" : "Back",
+    "errors" : {
+        "invalid-email" : "Invalid email.",
+        "email-required" : "Email required.",
+        "missing-password" : "Missing password.",
+        "missing-current-password" : "Missing the current password.",
+        "password-does-not-match" : "Passwords does not match.",
+        "missing-confirm-password" : "Missing the confirm password.",
+        "api" : {
+            "invalidUserOrPasswordException" : "Email or password is not valid.",
+            "userNotFoundException" : "User not found.",
+            "invalidPasswordException" : "Password is not valid."
+        }        
+    }
+}

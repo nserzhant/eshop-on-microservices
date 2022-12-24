@@ -17,5 +17,6 @@ namespace R2S.Users.Core.Read.Queries
         public OrderByDirections OrderByDirection { get; set; }
         public int PageSize { get; set; }
         public int PageIndex { get; set; }
+        public string? EmailFilter { get; set; }
     }
 }

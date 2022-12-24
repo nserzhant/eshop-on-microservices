@@ -1,0 +1,66 @@
+/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.card-row {
+    width: 100%;
+}
+
+mat-card {
+    width: 400px;
+}
+
+
+mat-card.child-card  {
+    width: 370px;
+}
+
+div.child-card-spacer {
+    margin-top: 15px;
+} 
+
+.mat-card:not([class*=mat-elevation-z]) {
+    @include mat.elevation(4);
+}
+
+.right {
+    float: right;
+}
+
+.center {
+    text-align: center;
+}
+
+
+.action-spinner {
+    margin: 6px;
+    float: right;
+}
+
+.grid-spinner {
+    margin: 6px;
+    float: left; 
+}
+
+.errors-container {
+    margin-bottom: 10px;
+    border: 1px solid red;
+}
+
+.single-error-message {
+    padding: 5px;
+}
+
+mat-card-actions {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+}
+
+.error-snack-bar {    
+  padding: 16px;
+  background-color: red;
+  color: white;
+}

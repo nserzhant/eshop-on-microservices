@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NSwag.Generation.Processors.Security;
+using R2S.Users.Api.Filters;
 using R2S.Users.Api.Settings;
 using R2S.Users.Core;
 using System.Text;
@@ -18,39 +20,7 @@ jwtSettingsSection.Bind(jwtSettings);
 // Add services to the container.
 
 builder.Services.Configure<JWTSettings>(jwtSettingsSection);
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    var securityScheme = new OpenApiSecurityScheme()
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT" // Optional
-    };
-
-    var securityRequirement = new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "bearerAuth"
-                }
-            },
-            new string[] {}
-        }
-    };
-
-    options.AddSecurityDefinition("bearerAuth", securityScheme);
-    options.AddSecurityRequirement(securityRequirement);
-});
+builder.Services.AddControllers(options => options.Filters.Add<UsersDomainExceptionFilter>());
 
 builder.Services.AddUsersServices(builder.Configuration);
 
@@ -72,13 +42,30 @@ builder.Services.AddAuthentication(auth =>
     };
 });
 
+builder.Services.AddOpenApiDocument(document =>
+{
+    document.AddSecurity("Bearer", new NSwag.OpenApiSecurityScheme
+    {
+        Type = NSwag.OpenApiSecuritySchemeType.Http,
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        BearerFormat = "JWT",
+        Description = "Type into the textbox: {your JWT token}."
+    });
+    document.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("Bearer"));
+});
+builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
+{
+    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+}));
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+//// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseOpenApi();
+    app.UseSwaggerUi3();
+    app.UseCors("corsapp");
 }
 
 app.UseHttpsRedirection();

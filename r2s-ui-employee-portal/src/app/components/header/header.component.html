@@ -1,0 +1,40 @@
+<mat-toolbar color="primary">
+  <a  mat-icon-button [routerLink]="''">
+    <mat-icon>home</mat-icon>
+  </a>
+  <a mat-button [routerLink]="'/employees'" *ngIf="isAdmin">
+    <mat-icon>people</mat-icon> 
+    Employees 
+  </a>
+  <span class="spacer"></span>
+  <button mat-button [matMenuTriggerFor]="userActionsMenu" *ngIf="isAuthenticated">
+    <mat-icon>account_box</mat-icon>
+    {{ userEmail }}
+  </button>
+  <mat-menu #userActionsMenu="matMenu">
+    <a mat-menu-item [routerLink]="'/change-password'">
+      <mat-icon>lock</mat-icon> 
+       Change Password
+    </a>
+    <a mat-menu-item [routerLink]="'/change-email'">
+      <mat-icon> email</mat-icon> 
+      Change Email
+    </a>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Log Out
+    </button>
+  </mat-menu>
+  <a mat-button [routerLink]="'/login'" *ngIf="!isAuthenticated"> 
+    Log In 
+    <mat-icon>login</mat-icon>
+  </a>
+  <a mat-button [routerLink]="'/register'" *ngIf="!isAuthenticated">
+    <mat-icon>person_add</mat-icon>
+     Register 
+  </a>    
+  <button mat-button (click)="logout()" *ngIf="isAuthenticated">
+    <mat-icon>logout</mat-icon>
+    Log Out
+  </button>
+</mat-toolbar>

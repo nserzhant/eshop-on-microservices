@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace R2S.Users.Core.Exceptions
 {
-    public class UserNotFoundException : Exception
+    public class UserNotFoundException : BaseUsersDomainException
     {
     }
 }

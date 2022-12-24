@@ -12,6 +12,6 @@ namespace R2S.Users.Core.Services
         Task<IdentityResult> SaveUserRoles(Guid userId, params Roles[] roles);
         Task<IdentityResult> SetPassword(Guid userId, string newPassword);
         Task<IdentityResult> ChangePassword(Guid userId, string oldPassword, string newPassword);
-        Task<IdentityResult> ChangeEmail(Guid userId, string newEmail);
+        Task<IdentityResult> ChangeEmail(Guid userId, string newEmail, string password);
     }
 }

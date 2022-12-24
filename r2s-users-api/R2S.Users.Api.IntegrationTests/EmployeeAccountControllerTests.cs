@@ -94,7 +94,8 @@ namespace R2S.Users.Api.IntegrationTests
         {
             _testAuthenticationContextBuilder.SetAuthorizedAs(defaultUserId);
             var usersClient = _webApplicationFactory.CreateClient();
-            var content = new StringContent(JsonSerializer.Serialize("newEmail@email.com"));
+            var userDTO = new UserDTO { Email = "newEmail@email.com", Password = defaultUserPassword };
+            var content = new StringContent(JsonSerializer.Serialize(userDTO));
             content.Headers.Remove(HeaderNames.ContentType);
             content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
 

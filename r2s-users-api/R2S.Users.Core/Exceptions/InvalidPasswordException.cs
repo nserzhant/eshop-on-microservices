@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace R2S.Users.Core.Exceptions
 {
-    public class InvalidPasswordException : Exception
+    public class InvalidPasswordException : BaseUsersDomainException
     {
     }
 }

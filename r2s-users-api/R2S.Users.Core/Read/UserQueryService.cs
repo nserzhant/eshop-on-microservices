@@ -35,13 +35,19 @@ namespace R2S.Users.Core.Read
 
         public async Task<ListUserQueryResult> GetUsers(ListUserQuery listUserQuery)
         {
-            var count = _usersReadDbContext.Users.Count();
+            var count = _usersReadDbContext.Users
+                .Where(u => 
+                    listUserQuery.EmailFilter == null 
+                    || u.Email.Contains(listUserQuery.EmailFilter)).Count();
             var orderByExpression = $"{listUserQuery.OrderBy} {listUserQuery.OrderByDirection}";
 
             var users = await _usersReadDbContext.Users.Include(u => u.Roles)
+                .Where(u => 
+                    listUserQuery.EmailFilter == null 
+                    || u.Email.Contains(listUserQuery.EmailFilter))
                 .OrderBy(orderByExpression)
-                .Take(listUserQuery.PageSize)
-                .Skip(listUserQuery.PageIndex * listUserQuery.PageSize).ToListAsync();
+                .Skip(listUserQuery.PageIndex * listUserQuery.PageSize)
+                .Take(listUserQuery.PageSize).ToListAsync();
 
             var result = new ListUserQueryResult()
             {

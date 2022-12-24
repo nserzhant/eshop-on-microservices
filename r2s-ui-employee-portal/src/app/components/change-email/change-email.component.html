@@ -1,0 +1,27 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>{{ 'change-email-header' | translate}}</mat-card-title>
+  </mat-card-header>
+  <form [formGroup]="changeEmailForm" (ngSubmit)="onSubmit()">
+    <mat-form-field class="card-row">
+      <mat-label>{{ 'new-email' | translate}}</mat-label>
+      <input type="email" matInput formControlName="email">
+      <mat-error *ngIf="changeEmailForm.controls['email']?.hasError('email')">
+        {{ 'errors.invalid-email' | translate}}
+      </mat-error>
+      <mat-error *ngIf="changeEmailForm.controls['email']?.hasError('required')">
+        {{ 'errors.email-required' | translate}}
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field class="card-row">
+      <mat-label>{{ 'password' | translate }}</mat-label>
+      <input type="password" matInput formControlName="password">
+      <mat-error>{{ 'errors.missing-password' | translate }}</mat-error>
+    </mat-form-field>
+    <api-errors-summary [apiError] = "apiError"></api-errors-summary>
+    <button type="submit" mat-raised-button color="primary" [disabled]="changeEmailForm.invalid || isLoading">
+      {{ 'change-email' | translate}}
+    </button>
+    <mat-spinner *ngIf="isLoading" class="action-spinner"></mat-spinner>
+  </form>
+</mat-card>

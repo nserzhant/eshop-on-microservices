@@ -26,7 +26,7 @@ namespace R2S.Users.Api.IntegrationTests.Infrastructure
 
         internal void SetAuthorizedAs(Guid defaultUserId)
         {
-            Claims.Add(new Claim("sub", defaultUserId.ToString()));
+            Claims.Add(new Claim(ClaimTypes.NameIdentifier, defaultUserId.ToString()));
         }
     }
 }

@@ -178,6 +178,27 @@ namespace R2S.Users.Core.IntegrationTests
         [Test]
         [Category("User Service")]
         [Category("SaveUserRoles")]
+        public async Task When_Adding_Additional_Role_For_The_User_Then_User_Will_Contains_Both_Roles()
+        {
+            var userEmail = "newemail@test.com";
+            var userPassword = "abcdef123Av#";
+            await userService.Register(userEmail, userPassword);
+            var userReadModel = await userQueryService.GetByEmail(userEmail);
+            await userService.SaveUserRoles(userReadModel.Id, Roles.SalesManager);
+
+            var result = await userService.SaveUserRoles(userReadModel.Id, Roles.Administrator, Roles.SalesManager);
+            var user = await userQueryService.GetByEmail(userEmail);
+
+            Assert.That(user, Is.Not.Null);
+            Assert.That(user.Roles, Is.Not.Null);
+            Assert.That(user.Roles.Count, Is.EqualTo(2));
+            Assert.That(user.Roles.Select(r => r.Name), Does.Contain(Roles.Administrator.ToString()));
+            Assert.That(user.Roles.Select(r => r.Name), Does.Contain(Roles.SalesManager.ToString()));
+        }
+
+        [Test]
+        [Category("User Service")]
+        [Category("SaveUserRoles")]
         public async Task When_Saving_A_Single_Role_For_The_User_With_Two_Roles_Then_User_Will_Contains_Only_This_Role()
         {
             var userEmail = "newemail@test.com";
@@ -242,6 +263,35 @@ namespace R2S.Users.Core.IntegrationTests
             Assert.That(resultDesc.Users[0].Email, Is.EqualTo("newemail5@test.com"));
             Assert.That(resultDesc.Users[0].Roles, Is.Not.Null);
             Assert.That(resultDesc.Users[0].Roles.Count, Is.EqualTo(1));
+        }
+
+
+        [Test]
+        [Category("User Query Service")]
+        [Category("GetUsers")]
+        public async Task When_Users_Exists_Then_They_Could_Be_Filtered_By_List_Query()
+        {
+            await registerUser("newemail0@test.com", Roles.Administrator);
+            await registerUser("anotherEmail@test.com", Roles.SalesManager);
+            await registerUser("newemail0@test.com", Roles.Administrator);
+            await registerUser("filteredEmail1@test.com", Roles.SalesManager);
+            await registerUser("newemail1@test.com", Roles.Administrator);
+            await registerUser("newemail2@test.com", Roles.SalesManager);
+            await registerUser("additionalFilteredEmail@test.com", Roles.Administrator);
+            var query = new ListUserQuery();
+            query.OrderBy = ListUserOrderBy.Email;
+            query.OrderByDirection = OrderByDirections.ASC;
+            query.PageSize = 5;
+            query.PageIndex = 0;
+            query.EmailFilter = "filter";
+
+            var resultAsc = await userQueryService.GetUsers(query);
+
+            Assert.That(resultAsc, Is.Not.Null);
+            Assert.That(resultAsc.TotalCount, Is.EqualTo(2));
+            Assert.That(resultAsc.Users.Count, Is.EqualTo(2));
+            Assert.That(resultAsc.Users[0].Email, Is.EqualTo("additionalFilteredEmail@test.com"));
+            Assert.That(resultAsc.Users[1].Email, Is.EqualTo("filteredEmail1@test.com"));
         }
 
         [Test]
@@ -332,7 +382,7 @@ namespace R2S.Users.Core.IntegrationTests
             var userReadModel = await userQueryService.GetByEmail(userEmail);
             var newEmail = "newemail_changed@test.com";
 
-            await userService.ChangeEmail(userReadModel.Id, newEmail);
+            await userService.ChangeEmail(userReadModel.Id, newEmail, userPassword);
 
             async Task assert() => await userService.Login(newEmail, userPassword);
             Assert.That(assert, Throws.Nothing);
@@ -345,12 +395,28 @@ namespace R2S.Users.Core.IntegrationTests
         {
             var nonExistingId = Guid.NewGuid();
             var newEmail = "newemail_changed@test.com";
+            var userPassword = "abcdef123Av#";
 
-            Task act() => userService.ChangeEmail(nonExistingId, newEmail);
+            Task act() => userService.ChangeEmail(nonExistingId, newEmail, userPassword);
 
             Assert.That(act, Throws.TypeOf<UserNotFoundException>());
         }
 
+        [Test]
+        [Category("User Service")]
+        [Category("ChangeEmail")]
+        public async Task When_Trying_To_Change_Email_With_Wrong_Old_Password_Then_Exception_Should_Be_Thrown()
+        {
+            var userEmail = "newemail@test.com";
+            var userPassword = "abcdef123Av#";
+            await userService.Register(userEmail, userPassword);
+            var userReadModel = await userQueryService.GetByEmail(userEmail);
+            var newEmail = "newemail_changed@test.com";
+
+            Task act() => userService.ChangeEmail(userReadModel.Id, newEmail, $"{userPassword}_wrong");
+
+            Assert.That(act, Throws.TypeOf<InvalidPasswordException>());
+        }
 
         private async Task registerUser(string userEmail, params Roles[] roles)
         {

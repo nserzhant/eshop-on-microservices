@@ -49,7 +49,7 @@ namespace R2S.Users.Core.Services
             var existingRoles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>();
 
-            claims.Add(new Claim("sub", user.Id.ToString()));
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
             claims.Add(new Claim(ClaimTypes.Name, user.UserName));
 
             foreach (var role in existingRoles)
@@ -69,6 +69,7 @@ namespace R2S.Users.Core.Services
             var roleNames = roles.Select(r => r.ToString());
             var existingRoles = await _userManager.GetRolesAsync(user);
             var rolesToRemove = existingRoles.Except(roleNames);
+            var rolesToAdd = roleNames.Except(existingRoles);
 
             var result = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
 
@@ -79,7 +80,7 @@ namespace R2S.Users.Core.Services
                 return result;
             }
 
-            result = await _userManager.AddToRolesAsync(user, roleNames);
+            result = await _userManager.AddToRolesAsync(user, rolesToAdd);
 
 
             if (!result.Succeeded)
@@ -140,16 +141,20 @@ namespace R2S.Users.Core.Services
             return result;
         }
 
-        public async Task<IdentityResult> ChangeEmail(Guid userId, string newEmail)
+        public async Task<IdentityResult> ChangeEmail(Guid userId, string newEmail, string password)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
 
             if (user == null)
                 throw new UserNotFoundException();
 
-            var token = await _userManager.GenerateChangeEmailTokenAsync(user, newEmail);
+            if (!await _userManager.CheckPasswordAsync(user, password))
+                throw new InvalidPasswordException();
 
-            var result = await _userManager.ChangeEmailAsync(user, newEmail, token);
+            user.UserName = newEmail;
+            user.Email = newEmail;
+
+            var result = await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
             {
