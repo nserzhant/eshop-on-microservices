@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, NgForm, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ApiErrorDTO, IdentityErrorsDTO, UsersDomainErrorDTO } from 'src/app/services/api/users.api.client';
+import { ApiErrorDTO } from 'src/app/services/api/users.api.client';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 
+/* Implicit login Flow. Currently is not using. */
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -17,7 +18,8 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private authenticationService: AuthenticationService) { }
+    private authenticationService: AuthenticationService) {
+     }
 
   ngOnInit(): void {
     this.loginForm = new FormGroup({
@@ -27,23 +29,23 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit() {
-    if (!this.loginForm.valid) {
-      return;
-    }
+    // if (!this.loginForm.valid) {
+    //   return;
+    // }
 
-    const email = this.loginForm.value.email;
-    const password = this.loginForm.value.password;    
-    this.isLoading = true; 
+    // const email = this.loginForm.value.email;
+    // const password = this.loginForm.value.password;    
+    // this.isLoading = true; 
     
-    this.authenticationService.login(email, password).subscribe({
-        error: (e) => {
-          this.isLoading = false;
-          this.apiError = e; 
-        },
-        complete: () => {
-          this.isLoading = false;
-          this.router.navigate(['/']);
-        }
-    });
+    // this.authenticationService.login(email, password).subscribe({
+    //     error: (e) => {
+    //       this.isLoading = false;
+    //       this.apiError = e; 
+    //     },
+    //     complete: () => {
+    //       this.isLoading = false;
+    //       this.router.navigate(['/']);
+    //     }
+    // });
   }
 }

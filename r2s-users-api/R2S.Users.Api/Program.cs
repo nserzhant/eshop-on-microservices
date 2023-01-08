@@ -32,11 +32,13 @@ builder.Services.AddAuthentication(auth =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
+        ClockSkew = TimeSpan.FromSeconds(0),
         ValidateIssuer = true,
-        ValidateAudience = true,
+        ValidateAudience = false,
         ValidAudience = jwtSettings.Audience,
         ValidIssuer = jwtSettings.Issuer,
         RequireExpirationTime = true,
+        ValidateLifetime = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.JWTSecretKey)),
         ValidateIssuerSigningKey = true
     };

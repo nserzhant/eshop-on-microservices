@@ -13,14 +13,29 @@ export class AuthGuard implements CanActivate {
               private router: Router) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree | Observable<boolean | UrlTree> | Promise<boolean | UrlTree> {
-    return this.authenticationService.user.pipe(map( user => {
+    return this.authenticationService.authUser.pipe(map( user => {
       const authenticated = !!user;
       const requiredRoleNames = route.data['roles'] as Array<string>;      
       const requiredRoles = requiredRoleNames?.map(r=> Roles[r as keyof typeof Roles]) || new Array<Roles>();
-      const rolesAbsent = requiredRoles.filter(role  => !!user && !!user.roles && user!.roles!.indexOf(role) < 0);
+
+      const userRoles  = authenticated && user.profile && user!.profile['role'];
+      let roleNames = new Array<string>();
+
+      if(userRoles) {
+        if ( typeof userRoles ===  'string') {
+          roleNames.push(userRoles);
+        } else if (Array.isArray(userRoles)) {
+          roleNames = userRoles;
+        }
+      }
+      
+      const roles = roleNames?.map(r=> Roles[r as keyof typeof Roles]) || new Array<Roles>();
+
+
+      const rolesAbsent = requiredRoles.filter(role  => roles.indexOf(role) < 0);
 
       if(!authenticated || rolesAbsent.length > 0) {
-        return this.router.createUrlTree(['/login']);
+        return this.router.createUrlTree(['']);
       }
       
       return true;

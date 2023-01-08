@@ -22,7 +22,6 @@ namespace R2S.Users.Api.IntegrationTests
             base.TearDown();
         }
 
-
         [Test]
         [Category("Register User")]
         public async Task When_User_Is_Unauthenitcated_Then_User_Can_Register()
@@ -36,22 +35,6 @@ namespace R2S.Users.Api.IntegrationTests
 
 
             var response = await usersClient.PostAsync(Post.Register, content);
-
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        }
-
-        [Test]
-        [Category("Login User")]
-        public async Task When_Unathorized_User_Is_Registered_Then_User_Can_Login()
-        {
-            _testAuthenticationContextBuilder.SetUnauthenticated();
-            var usersClient = _webApplicationFactory.CreateClient();
-            var userDTO = new UserDTO { Email = defaultUserEmail, Password = defaultUserPassword };
-            var content = new StringContent(JsonSerializer.Serialize(userDTO));
-            content.Headers.Remove(HeaderNames.ContentType);
-            content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
-
-            var response = await usersClient.PostAsync(Post.Login, content);
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
@@ -122,7 +105,6 @@ namespace R2S.Users.Api.IntegrationTests
         public static class Post
         {
             public static string Register => $"{API_BASE_URL}/register";
-            public static string Login => $"{API_BASE_URL}/login";
         }
 
         public static class Patch

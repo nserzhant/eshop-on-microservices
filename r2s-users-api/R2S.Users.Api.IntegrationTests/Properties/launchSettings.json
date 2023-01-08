@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "R2S.Users.Api.IntegrationTests": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:51303;http://localhost:51304"
+    }
+  }
+}

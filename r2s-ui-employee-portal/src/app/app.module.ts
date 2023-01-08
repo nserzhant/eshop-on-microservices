@@ -68,6 +68,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { ApiErrorsSummaryComponent } from './components/common/api-errors-summary/api-errors-summary.component';
 import { HttpErrorInterceptor } from './services/http-error-interceptor.service';
+import { LoginCallbackComponent } from './components/login-callback/login-callback.component';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -85,7 +86,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     EmployeeEditComponent,
     HomeComponent,
     HeaderComponent,
-    ApiErrorsSummaryComponent
+    ApiErrorsSummaryComponent,
+    LoginCallbackComponent
   ],
   imports: [
     BrowserModule,

@@ -1,39 +1,56 @@
 import { Injectable } from '@angular/core';
+import { User, UserManager, UserManagerSettings } from 'oidc-client-ts';
 import { BehaviorSubject, Observable, tap} from 'rxjs';
-import { ChangePasswordDTO, EmployeeAccountClient, Roles, UserDTO } from './api/users.api.client';
+import { environment } from 'src/environments/environment';
+import { ChangePasswordDTO, EmployeeAccountClient, UserDTO } from './api/users.api.client';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-  user = new BehaviorSubject<AuthenticatedUser | null>(null);
+  authUser = new BehaviorSubject<User | null>(null);
+  userManager: UserManager;
 
-  constructor(private employeeAccountClient: EmployeeAccountClient) { }
+  constructor(private employeeAccountClient: EmployeeAccountClient) {
+    const userManagerSettings : UserManagerSettings = {
+      authority : environment.stsAuthority,
+      client_id : environment.clientId,
+      redirect_uri : `${environment.clientRoot}login-callback`,
+      post_logout_redirect_uri: `${environment.clientRoot}`, 
+      response_type : 'code',
+      scope : 'openid api roles offline_access'
+    };
+    
+    this.userManager = new UserManager(userManagerSettings);
+    this.userManager.events.addUserSignedIn(()=>this.handleUserLoggedIn());
+    this.userManager.events.addUserSignedOut(()=>this.handleUserLoggedOut());
+    
+    this.userManager.getUser().then(user => {
+      this.authUser.next(user);
+    });  
+  }
 
-  login(email: string, password: string) : Observable<string> {
-    const userDto = new UserDTO();
-    userDto.password = password;
-    userDto.email = email;
-    return this.employeeAccountClient.login(userDto).pipe(
-      tap(token => {
-        this.handleAuthentication(token);
-      })
-    );
+  public login(): Promise<void> {
+    return this.userManager.signinRedirect();
+  }
+
+  public logout(): Promise<void> {
+    return this.userManager.signoutRedirect();
   }
 
   register(email: string, password: string): Observable<void> {
     const userDto = new UserDTO();
     userDto.password = password;
     userDto.email = email;
-    return this.employeeAccountClient.regiser(userDto).pipe(
-      tap(() => this.logout())
-    );
+
+    return this.employeeAccountClient.regiser(userDto);
   }
 
   changeEmail(email: string, password: string): Observable<void> {
     const userDto = new UserDTO();
     userDto.password = password;
     userDto.email = email;
+
     return this.employeeAccountClient.changeEmail(userDto).pipe(
       tap(() => this.logout())
     );
@@ -43,55 +60,19 @@ export class AuthenticationService {
     const changePasswordDTO = new ChangePasswordDTO();
     changePasswordDTO.oldPassword = currentPassword;
     changePasswordDTO.newPassword = newPassword;
+
     return this.employeeAccountClient.changePassword(changePasswordDTO).pipe(
       tap(() => this.logout())
     );
   }
 
-  logout() {
-    this.user.next(null);
+  async handleUserLoggedOut() {
+    await this.userManager!.removeUser();
+    this.authUser.next(null);
   }
 
-  handleAuthentication(idToken: string) {
-    const authenticatedUser = new AuthenticatedUser(idToken);
-    this.user.next(authenticatedUser);
-  }
-}
-
-export class AuthenticatedUser {
-  email?: string;
-  id?: string;
-  roles?: Roles[];
-  _tokenExpirationDate?: Date;
-
-  constructor(
-    private _token: string
-  ) {
-      var base64Url = _token.split('.')[1];
-      var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-  
-      const tokenJSON = JSON.parse(jsonPayload);
-      console.log(tokenJSON);
-      this.id = tokenJSON['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
-      this.email = tokenJSON["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
-      const date = new Date(0);
-      date.setUTCSeconds(tokenJSON.exp);
-      this._tokenExpirationDate = date;
-      const roles : string = tokenJSON["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
-      this.roles = new Array<Roles>();
-      if(Object.values(Roles).indexOf(roles) >= 0) {
-        const role  = Roles[roles as keyof typeof Roles];
-        this.roles.push(role);
-      }
-  }
-
-  get token() {
-    if (!this._tokenExpirationDate || new Date() > this._tokenExpirationDate) {
-      return '';
-    }
-    return this._token;
+  async handleUserLoggedIn() {
+    const user = await this.userManager.getUser();
+    this.authUser.next(user);
   }
 }

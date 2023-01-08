@@ -1,14 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using R2S.Users.Api.Models;
 using R2S.Users.Api.Settings;
 using R2S.Users.Core.Services;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace R2S.Users.Api.Controllers
 {
@@ -40,24 +36,6 @@ namespace R2S.Users.Api.Controllers
             }
 
             return Ok();
-        }
-
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorDTO), StatusCodes.Status400BadRequest)]
-        [AllowAnonymous]
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(UserDTO user)
-        {
-            var claims = await _userService.Login(user.Email, user.Password);
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.JWTSecretKey));
-            var token = new JwtSecurityToken(issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(5),
-                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
-            var tokenStr = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return Ok(tokenStr);
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]

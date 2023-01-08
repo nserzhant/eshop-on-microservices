@@ -5,7 +5,7 @@ import { ChangePasswordComponent } from './components/change-password/change-pas
 import { EmloyeesListComponent } from './components/emloyees-list/emloyees-list.component';
 import { EmployeeEditComponent } from './components/employee-edit/employee-edit.component';
 import { HomeComponent } from './components/home/home.component';
-import { LoginComponent } from './components/login/login.component';
+import { LoginCallbackComponent } from './components/login-callback/login-callback.component';
 import { RegisterComponent } from './components/register/register.component';
 import { AuthGuard } from './services/auth-guard.service';
 
@@ -15,12 +15,12 @@ const routes: Routes = [
     component: HomeComponent
   },
   {
-    path: 'login',
-    component: LoginComponent
-  },
-  {
     path: 'register',
     component: RegisterComponent
+  },
+  {
+    path: 'login-callback',
+    component: LoginCallbackComponent
   },
   {
     path: 'change-email',

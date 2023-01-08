@@ -44,7 +44,6 @@ export class ChangeEmailComponent implements OnInit {
         },
         complete: () => {
           this.isLoading = false;
-          this.router.navigate(['/login']);
         } 
     });
   }

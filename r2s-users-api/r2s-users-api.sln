@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "R2S.Users.Core.IntegrationT
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "R2S.Users.Api.IntegrationTests", "R2S.Users.Api.IntegrationTests\R2S.Users.Api.IntegrationTests.csproj", "{6DD098D6-F7A6-4A9E-894D-89572F73512B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "R2S.Users.DB.Manager", "R2S.Users.DB.Manager\R2S.Users.DB.Manager.csproj", "{4D4A1974-80A6-4C4C-B5D1-98AE5CF07ED4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "R2S.Users.DB.Manager", "R2S.Users.DB.Manager\R2S.Users.DB.Manager.csproj", "{4D4A1974-80A6-4C4C-B5D1-98AE5CF07ED4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "R2S.Users.AuthorizationServer", "R2S.Users.AuthorizationServer\R2S.Users.AuthorizationServer.csproj", "{FD58058A-6283-4929-9123-F959C23AEF3A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{4D4A1974-80A6-4C4C-B5D1-98AE5CF07ED4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4D4A1974-80A6-4C4C-B5D1-98AE5CF07ED4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4D4A1974-80A6-4C4C-B5D1-98AE5CF07ED4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD58058A-6283-4929-9123-F959C23AEF3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD58058A-6283-4929-9123-F959C23AEF3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD58058A-6283-4929-9123-F959C23AEF3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD58058A-6283-4929-9123-F959C23AEF3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

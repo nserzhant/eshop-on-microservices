@@ -1,13 +1,16 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { catchError, Observable, throwError } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { catchError, Observable, take, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HttpErrorInterceptor implements HttpInterceptor {
-  constructor(private matSnackBar: MatSnackBar) { }
+  constructor(
+    private matSnackBar: MatSnackBar,
+    private translateService: TranslateService) { }
 
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -19,21 +22,21 @@ export class HttpErrorInterceptor implements HttpInterceptor {
                 case 400 : //Application generated error should be handled by components/service code
                   break;
                 case 401 :
-                  errorMessage = 'Unathorized'
+                  errorMessage = 'errors.unathorized'
                   break;
                 case 403 : 
-                  errorMessage = 'Access is denied'
+                  errorMessage = 'errors.access-is-denied'
                   break;
                 case 500 : 
-                  errorMessage = 'Internal server error'
+                  errorMessage = 'errors.internal-server-error'
                   break;
                 default:
-                  errorMessage = 'Unknown error'               
-            
+                  errorMessage = 'errors.unknown-error'   
               }
 
               if (errorMessage) {
-                  this.matSnackBar.open(errorMessage , 'Close', { duration: 3000, panelClass: 'error-snack-bar' });
+                this.translateService.get(errorMessage).pipe(take(1))
+                  .subscribe( translated => this.matSnackBar.open(translated , 'Close', { duration: 3000, panelClass: 'error-snack-bar' }));                  
               }
             }
 

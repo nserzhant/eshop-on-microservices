@@ -49,7 +49,6 @@ export class ChangePasswordComponent implements OnInit {
         },
         complete: () => {
           this.isLoading = false;
-          this.router.navigate(['/login']);
         } 
     });
   }
