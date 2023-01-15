@@ -3,8 +3,8 @@
     <mat-card-title>{{ 'employees-list-header' | translate }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <form>
-      <mat-form-field>
+    <form>      
+      <mat-form-field appearance="outline">
         <mat-label>{{ 'filter-by-email' | translate }}</mat-label>
         <input matInput #emailFilter [ngModel] = "currentEmailFilter" name = "emailFilter">
       </mat-form-field>

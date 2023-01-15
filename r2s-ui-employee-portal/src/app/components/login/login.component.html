@@ -3,7 +3,7 @@
     <mat-card-title>{{ 'login-header' | translate }}</mat-card-title>
   </mat-card-header>
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <mat-form-field class="card-row">
+     <mat-form-field appearance="outline"class="card-row">
       <mat-label>{{ 'email' | translate }}</mat-label>
       <input type="email" matInput formControlName="email">
       <mat-error *ngIf="loginForm.controls['email']?.hasError('email')">
@@ -13,7 +13,7 @@
         {{ 'errors.email-required' | translate}}
       </mat-error>
     </mat-form-field>
-    <mat-form-field class="card-row">
+     <mat-form-field appearance="outline"class="card-row">
       <mat-label>{{ 'password' | translate }}</mat-label>
       <input type="password" matInput formControlName="password">
       <mat-error>{{ 'errors.missing-password' | translate }}</mat-error>

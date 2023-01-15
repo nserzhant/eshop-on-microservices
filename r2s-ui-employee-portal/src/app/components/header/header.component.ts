@@ -67,7 +67,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authenticationService.login().catch((error) => {
       this.translateService.get('errors.service-unavailable')
           .pipe(take(1))
-          .subscribe(translated=>this.matSnackBar.open(translated , 'Close', { duration: 3000, panelClass: 'error-snack-bar' }));                  
+          .subscribe(translated=>this.matSnackBar.open(translated , 'Close', { duration: 3000, panelClass: ['error-snack-bar'] }));                  
       }
     );
   }

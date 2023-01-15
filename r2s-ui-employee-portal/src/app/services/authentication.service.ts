@@ -26,7 +26,11 @@ export class AuthenticationService {
     this.userManager.events.addUserSignedOut(()=>this.handleUserLoggedOut());
     
     this.userManager.getUser().then(user => {
-      this.authUser.next(user);
+      if(user?.expired) {
+        this.userManager.removeUser();
+      } else {
+        this.authUser.next(user);
+      }
     });  
   }
 

@@ -3,7 +3,7 @@
     <mat-card-title>{{'edit-employee-hedader' | translate:  {'email' : user?.email} }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <mat-card class="child-card mat-elevation-z2">
+    <mat-card class="child-card">
       <mat-card-header>
         <mat-card-title>{{ 'change-roles' | translate }}</mat-card-title>
       </mat-card-header>
@@ -21,13 +21,13 @@
       </mat-card-content>      
     </mat-card>
     <div class="child-card-spacer"></div>
-    <mat-card class="child-card mat-elevation-z2">
+    <mat-card class="child-card">
       <mat-card-header>
         <mat-card-title>{{ 'set-password' | translate }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <form #setPasswordForm="ngForm"  (ngSubmit)="changePassword(setPasswordForm)">
-          <mat-form-field class="card-row">
+           <mat-form-field appearance="outline"class="card-row">
             <mat-label>{{ 'password' | translate }}</mat-label>
             <input type="password" matInput name="password" required ngModel>
             <mat-error>{{ 'errors.missing-password' | translate }}</mat-error>
@@ -40,9 +40,7 @@
           <mat-spinner *ngIf="isPasswordUpdating" class="action-spinner"></mat-spinner>
         </form>
       </mat-card-content>      
-    </mat-card> 
-    <mat-card-actions align="end">
-      <button mat-button mat-raised-button  color="primary" (click)="back()">{{ 'back' | translate }}</button>
-    </mat-card-actions>  
-  </mat-card-content>  
+    </mat-card>
+    <button class="back-button" mat-button mat-raised-button  color="primary" (click)="back()">{{ 'back' | translate }}</button>  
+  </mat-card-content>
 </mat-card>
