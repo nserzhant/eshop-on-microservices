@@ -23,81 +23,80 @@ namespace R2S.EmployeeManagement.Api.IntegrationTests
         }
 
         [Test]
-        [Category("Register User")]
-        public async Task When_User_Is_Unauthenitcated_Then_User_Can_Register()
+        [Category("Register Employee")]
+        public async Task When_Employee_Is_Unauthenitcated_Then_Employee_Can_Register()
         {
             _testAuthenticationContextBuilder.SetUnauthenticated();
-            var usersClient = _webApplicationFactory.CreateClient();
-            var userDTO = new UserDTO { Email = "sample@email.com", Password = defaultUserPassword };
-            var content = new StringContent(JsonSerializer.Serialize(userDTO));
+            var employeeManagementClient = _webApplicationFactory.CreateClient();
+            var employeeDTO = new EmployeeDTO { Email = "sample@email.com", Password = defaultPassword };
+            var content = new StringContent(JsonSerializer.Serialize(employeeDTO));
             content.Headers.Remove(HeaderNames.ContentType);
             content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
 
-
-            var response = await usersClient.PostAsync(Post.Register, content);
+            var response = await employeeManagementClient.PostAsync(Post.Register, content);
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
         [Test]
         [Category("Change Password")]
-        public async Task When_User_Is_Authenticated_Then_Passwod_Could_Be_Changed()
+        public async Task When_Employee_Is_Authenticated_Then_Passwod_Could_Be_Changed()
         {
-            _testAuthenticationContextBuilder.SetAuthorizedAs(defaultUserId);
-            var usersClient = _webApplicationFactory.CreateClient();
-            var changePasswodDTO = new ChangePasswordDTO { OldPassword = defaultUserPassword, NewPassword = $"{defaultUserPassword}_updated" };
+            _testAuthenticationContextBuilder.SetAuthorizedAs(defaultemployeeId);
+            var employeeManagementClient = _webApplicationFactory.CreateClient();
+            var changePasswodDTO = new ChangePasswordDTO { OldPassword = defaultPassword, NewPassword = $"{defaultPassword}_updated" };
             var content = new StringContent(JsonSerializer.Serialize(changePasswodDTO));
             content.Headers.Remove(HeaderNames.ContentType);
             content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
 
-            var response = await usersClient.PatchAsync(Patch.ChangePassword, content);
+            var response = await employeeManagementClient.PatchAsync(Patch.ChangePassword, content);
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
         [Test]
         [Category("Change Password")]
-        public async Task When_User_Is_Unauthenitcated_Then_Change_Password_Returns_Unathorized()
+        public async Task When_Employee_Is_Unauthenitcated_Then_Change_Password_Returns_Unathorized()
         {
             _testAuthenticationContextBuilder.SetUnauthenticated();
-            var usersClient = _webApplicationFactory.CreateClient();
-            var changePasswodDTO = new ChangePasswordDTO { OldPassword = defaultUserPassword, NewPassword = $"{defaultUserPassword}_updated" };
+            var employeeManagementClient = _webApplicationFactory.CreateClient();
+            var changePasswodDTO = new ChangePasswordDTO { OldPassword = defaultPassword, NewPassword = $"{defaultPassword}_updated" };
             var content = new StringContent(JsonSerializer.Serialize(changePasswodDTO));
             content.Headers.Remove(HeaderNames.ContentType);
             content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
 
-            var response = await usersClient.PatchAsync(Patch.ChangePassword, content);
+            var response = await employeeManagementClient.PatchAsync(Patch.ChangePassword, content);
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
         }
 
         [Test]
         [Category("Change Email")]
-        public async Task When_User_Is_Authenticated_Then_Email_Could_Be_Changed()
+        public async Task When_Employee_Is_Authenticated_Then_Email_Could_Be_Changed()
         {
-            _testAuthenticationContextBuilder.SetAuthorizedAs(defaultUserId);
-            var usersClient = _webApplicationFactory.CreateClient();
-            var userDTO = new UserDTO { Email = "newEmail@email.com", Password = defaultUserPassword };
-            var content = new StringContent(JsonSerializer.Serialize(userDTO));
+            _testAuthenticationContextBuilder.SetAuthorizedAs(defaultemployeeId);
+            var employeeManagementClient = _webApplicationFactory.CreateClient();
+            var employeeDTO = new EmployeeDTO { Email = "newEmail@email.com", Password = defaultPassword };
+            var content = new StringContent(JsonSerializer.Serialize(employeeDTO));
             content.Headers.Remove(HeaderNames.ContentType);
             content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
 
-            var response = await usersClient.PatchAsync(Patch.ChangeEmail, content);
+            var response = await employeeManagementClient.PatchAsync(Patch.ChangeEmail, content);
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
         [Test]
         [Category("Change Email")]
-        public async Task When_User_Is_Unauthenitcated_Then_Change_Email_Returns_Unathorized()
+        public async Task When_Employee_Is_Unauthenitcated_Then_Change_Email_Returns_Unathorized()
         {
             _testAuthenticationContextBuilder.SetUnauthenticated();
-            var usersClient = _webApplicationFactory.CreateClient();
+            var employeeManagementClient = _webApplicationFactory.CreateClient();
             var content = new StringContent(JsonSerializer.Serialize("newEmail@email.com"));
             content.Headers.Remove(HeaderNames.ContentType);
             content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
 
-            var response = await usersClient.PatchAsync(Patch.ChangeEmail, content);
+            var response = await employeeManagementClient.PatchAsync(Patch.ChangeEmail, content);
 
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
         }

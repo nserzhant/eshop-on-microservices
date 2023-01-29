@@ -12,16 +12,16 @@ using System.Text;
 
 namespace R2S.EmployeeManagement.Api.IntegrationTests
 {
-    public class BaseControllerTests : BaseUsersIntegrationTests
+    public class BaseControllerTests : BaseEmployeeIntegrationTests
     {
         protected WebApplicationFactory<Program> _webApplicationFactory;
         protected TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
-        protected Guid defaultUserId;
-        protected string defaultUserEmail = "test@user.com";
-        protected string defaultUserPassword = "3242f$fDc%dD";
+        protected Guid defaultemployeeId;
+        protected string defaultEmail = "test@user.com";
+        protected string defaultPassword = "3242f$fDc%dD";
 
-        private IEmployeeService _userService;
-        private IEmployeeQueryService _userQueryService;
+        private IEmployeeService _employeeService;
+        private IEmployeeQueryService _employeeQueryService;
 
         [SetUp]
         public override async Task Setup()
@@ -50,10 +50,10 @@ namespace R2S.EmployeeManagement.Api.IntegrationTests
             });
 
 
-            _userService = serviceProvier.GetRequiredService<IEmployeeService>();
-            _userQueryService = serviceProvier.GetRequiredService<IEmployeeQueryService>();
+            _employeeService = serviceProvier.GetRequiredService<IEmployeeService>();
+            _employeeQueryService = serviceProvier.GetRequiredService<IEmployeeQueryService>();
 
-            defaultUserId = await createUserAsync(defaultUserEmail, defaultUserPassword);
+            defaultemployeeId = await registerEmployeeAsync(defaultEmail, defaultPassword);
         }
 
         [TearDown]
@@ -64,12 +64,12 @@ namespace R2S.EmployeeManagement.Api.IntegrationTests
             _webApplicationFactory.Dispose();
         }
 
-        private async Task<Guid> createUserAsync(string userEmail, string password)
+        private async Task<Guid> registerEmployeeAsync(string email, string password)
         {
-            await _userService.Register(userEmail, password);
-            var user = await _userQueryService.GetByEmail(userEmail);
+            await _employeeService.Register(email, password);
+            var employee = await _employeeQueryService.GetByEmail(email);
 
-            return user.Id;
+            return employee.Id;
         }
 
         protected static string ConvertToQueryParams<T>(T obj) where T : class

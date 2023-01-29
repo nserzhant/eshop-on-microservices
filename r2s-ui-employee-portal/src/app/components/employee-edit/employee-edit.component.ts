@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Params } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { ApiErrorDTO, Roles, UserReadModel, UsersClient } from 'src/app/services/api/users.api.client';
 import { Location } from '@angular/common';
+import { ApiErrorDTO, EmployeeManagementClient, EmployeeReadModel, Roles } from 'src/app/services/api/employee.api.client';
 
 @Component({
   selector: 'app-employee-edit',
@@ -12,7 +12,7 @@ import { Location } from '@angular/common';
 })
 export class EmployeeEditComponent implements OnInit {
 
-  user?: UserReadModel;
+  employee?: EmployeeReadModel;
   roles?: String[];
   isRolesUpdating  = false;
   isPasswordUpdating = false;
@@ -20,7 +20,7 @@ export class EmployeeEditComponent implements OnInit {
   updatePasswordApiError : ApiErrorDTO | null = null;
 
   constructor(    
-    private usersClient: UsersClient,
+    private employeeManagementClient: EmployeeManagementClient,
     private route: ActivatedRoute,
     private location: Location) { 
    }
@@ -33,16 +33,16 @@ export class EmployeeEditComponent implements OnInit {
   }
 
   async loadUser(employeeId: string) {
-    const user$ = this.usersClient.get(employeeId);
-    this.user = await lastValueFrom(user$);
-    this.roles = this.user.roles!.map(r=>r.name!);
+    const user$ = this.employeeManagementClient.get(employeeId);
+    this.employee = await lastValueFrom(user$);
+    this.roles = this.employee.roles!.map(r=>r.name!);
   }
 
   changeRoles() {
     const roles = this.roles?.map(r=> Roles[r as keyof typeof Roles]) || new Array<Roles>();
     
     this.isRolesUpdating = true;
-    this.usersClient.saveRoles(this.user?.id!, roles).subscribe({
+    this.employeeManagementClient.setRoles(this.employee?.id!, roles).subscribe({
           error: (e) => {
           this.isRolesUpdating = false;
           this.updateRolesApiError = e; 
@@ -62,7 +62,7 @@ export class EmployeeEditComponent implements OnInit {
     const password = form.value.password;
     
     this.isPasswordUpdating = true;
-    this.usersClient.setPassword(this.user?.id!,password).subscribe({
+    this.employeeManagementClient.setPassword(this.employee?.id!,password).subscribe({
           error: (e) => {
           this.isPasswordUpdating = false;
           this.updatePasswordApiError = e; 

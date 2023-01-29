@@ -5,7 +5,7 @@ using R2S.EmployeeManagement.Core.Exceptions;
 
 namespace R2S.EmployeeManagement.Api.Filters
 {
-    public class UsersDomainExceptionFilter : IActionFilter, IOrderedFilter
+    public class EmployeeDomainExceptionFilter : IActionFilter, IOrderedFilter
     {
         public int Order => int.MaxValue - 10;
 
@@ -13,11 +13,11 @@ namespace R2S.EmployeeManagement.Api.Filters
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
-            if (context.Exception is BaseEmployeeDomainException usersDomainException)
+            if (context.Exception is BaseEmployeeDomainException employeeDomainException)
             {
                 context.Result =
                     new BadRequestObjectResult(
-                        new ApiErrorDTO(usersDomainException));
+                        new ApiErrorDTO(employeeDomainException));
 
                 context.ExceptionHandled = true;
             }

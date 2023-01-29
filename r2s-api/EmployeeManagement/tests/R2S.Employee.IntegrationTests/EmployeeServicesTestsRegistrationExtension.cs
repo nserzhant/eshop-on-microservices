@@ -4,13 +4,13 @@ using Microsoft.Extensions.Logging;
 
 namespace R2S.EmployeeManagement.Core.IntegrationTests
 {
-    public static class UsersServicesTestsRegistrationExtension
+    public static class EmployeeServicesTestsRegistrationExtension
     {
-        public static IServiceCollection AddTestUsersServices(this IServiceCollection services)
+        public static IServiceCollection AddTestEmployeeServices(this IServiceCollection services)
         {
             var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
-            services.AddUsersServices(configuration);
+            services.AddEmployeeServices(configuration);
             services.AddLogging(logging => logging.AddConsole());
 
             return services;

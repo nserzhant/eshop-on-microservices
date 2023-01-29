@@ -20,9 +20,9 @@ jwtSettingsSection.Bind(jwtSettings);
 // Add services to the container.
 
 builder.Services.Configure<JWTSettings>(jwtSettingsSection);
-builder.Services.AddControllers(options => options.Filters.Add<UsersDomainExceptionFilter>());
+builder.Services.AddControllers(options => options.Filters.Add<EmployeeDomainExceptionFilter>());
 
-builder.Services.AddUsersServices(builder.Configuration);
+builder.Services.AddEmployeeServices(builder.Configuration);
 
 builder.Services.AddAuthentication(auth =>
 {

@@ -16,7 +16,6 @@ import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common
 import { AuthenticationInterceptorService } from './services/authentication-interceptor.service';
 import { HeaderComponent } from './components/header/header.component';
 import { environment } from 'src/environments/environment';
-import { EmployeeAccountClient, EMPLOYEES_API_URL, UsersClient } from './services/api/users.api.client';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { ApiErrorsSummaryComponent } from './components/common/api-errors-summary/api-errors-summary.component';
@@ -24,6 +23,7 @@ import { HttpErrorInterceptor } from './services/http-error-interceptor.service'
 import { LoginCallbackComponent } from './components/login-callback/login-callback.component';
 import { MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS } from '@angular/material/progress-spinner';
 import { MaterialModule } from 'src/material.module';
+import { EmployeeAccountClient, EmployeeManagementClient, EMPLOYEE_API_URL } from './services/api/employee.api.client';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -72,7 +72,7 @@ export function HttpLoaderFactory(http: HttpClient) {
       multi: true
     },
     {
-      provide: EMPLOYEES_API_URL,
+      provide: EMPLOYEE_API_URL,
       useValue: environment.apiRoot
     },
     {
@@ -82,7 +82,7 @@ export function HttpLoaderFactory(http: HttpClient) {
       }
     },
     EmployeeAccountClient,
-    UsersClient],
+    EmployeeManagementClient],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

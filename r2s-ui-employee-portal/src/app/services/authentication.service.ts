@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { User, UserManager, UserManagerSettings } from 'oidc-client-ts';
 import { BehaviorSubject, Observable, tap} from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ChangePasswordDTO, EmployeeAccountClient, UserDTO } from './api/users.api.client';
+import { ChangePasswordDTO, EmployeeAccountClient, EmployeeDTO } from './api/employee.api.client';
 
 @Injectable({
   providedIn: 'root'
@@ -43,19 +43,19 @@ export class AuthenticationService {
   }
 
   register(email: string, password: string): Observable<void> {
-    const userDto = new UserDTO();
-    userDto.password = password;
-    userDto.email = email;
+    const employeeDTO = new EmployeeDTO();
+    employeeDTO.password = password;
+    employeeDTO.email = email;
 
-    return this.employeeAccountClient.regiser(userDto);
+    return this.employeeAccountClient.regiser(employeeDTO);
   }
 
   changeEmail(email: string, password: string): Observable<void> {
-    const userDto = new UserDTO();
-    userDto.password = password;
-    userDto.email = email;
+    const employeeDTO = new EmployeeDTO();
+    employeeDTO.password = password;
+    employeeDTO.email = email;
 
-    return this.employeeAccountClient.changeEmail(userDto).pipe(
+    return this.employeeAccountClient.changeEmail(employeeDTO).pipe(
       tap(() => this.logout())
     );
   }

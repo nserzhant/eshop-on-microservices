@@ -12,7 +12,7 @@ namespace R2S.EmployeeManagement.Api.IntegrationTests
         public void RunBeforeTestsExecution()
         {
             var sc = new ServiceCollection();
-            sc.AddTestUsersServices();
+            sc.AddTestEmployeeServices();
 
             using var services = sc.BuildServiceProvider();
             var db = services.GetRequiredService<EmployeeDbContext>();

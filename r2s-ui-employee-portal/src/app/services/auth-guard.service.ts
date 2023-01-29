@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from "@angular/router";
 import { map, Observable } from "rxjs";
-import { Roles } from "./api/users.api.client";
+import { Roles } from "./api/employee.api.client";
 import { AuthenticationService } from './authentication.service';
 
 @Injectable({
@@ -18,14 +18,14 @@ export class AuthGuard implements CanActivate {
       const requiredRoleNames = route.data['roles'] as Array<string>;      
       const requiredRoles = requiredRoleNames?.map(r=> Roles[r as keyof typeof Roles]) || new Array<Roles>();
 
-      const userRoles  = authenticated && user.profile && user!.profile['role'];
+      const employeeRoles  = authenticated && user.profile && user!.profile['role'];
       let roleNames = new Array<string>();
 
-      if(userRoles) {
-        if ( typeof userRoles ===  'string') {
-          roleNames.push(userRoles);
-        } else if (Array.isArray(userRoles)) {
-          roleNames = userRoles;
+      if(employeeRoles) {
+        if ( typeof employeeRoles ===  'string') {
+          roleNames.push(employeeRoles);
+        } else if (Array.isArray(employeeRoles)) {
+          roleNames = employeeRoles;
         }
       }
       

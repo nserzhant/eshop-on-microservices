@@ -24,9 +24,9 @@ namespace R2S.EmployeeManagement.Api.IntegrationTests.Infrastructure
             IsAuthenticated = false;
         }
 
-        internal void SetAuthorizedAs(Guid defaultUserId)
+        internal void SetAuthorizedAs(Guid defaultemployeeId)
         {
-            Claims.Add(new Claim(ClaimTypes.NameIdentifier, defaultUserId.ToString()));
+            Claims.Add(new Claim(ClaimTypes.NameIdentifier, defaultemployeeId.ToString()));
         }
     }
 }

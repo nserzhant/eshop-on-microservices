@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "R2S.Users.Api": {
+    "R2S.Employee.Api": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

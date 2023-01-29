@@ -3,9 +3,9 @@ import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { ActivatedRoute, Router } from '@angular/router';
-import {BehaviorSubject, merge, of as observableOf, Subject} from 'rxjs';
-import {catchError, debounceTime, delay, map, startWith, switchMap, timeout} from 'rxjs/operators';
-import { ListUserOrderBy, OrderByDirections, UserReadModel, UsersClient } from 'src/app/services/api/users.api.client';
+import { BehaviorSubject, merge, of as observableOf} from 'rxjs';
+import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
+import { EmployeeManagementClient, EmployeeReadModel, ListEmployeeOrderBy, OrderByDirections } from 'src/app/services/api/employee.api.client';
 
 @Component({
   selector: 'app-emloyees-list',
@@ -19,7 +19,7 @@ export class EmloyeesListComponent implements OnInit, AfterViewInit {
   emailFilterSubject = new BehaviorSubject<string | null>(null);
   resultsLength = 0;
   isLoadingResults = true;
-  data: UserReadModel[] = [];
+  data: EmployeeReadModel[] = [];
 
   @ViewChild(MatSort) sort!: MatSort;  
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -28,7 +28,7 @@ export class EmloyeesListComponent implements OnInit, AfterViewInit {
   }
   
   constructor(
-    private usersClient: UsersClient,
+    private employeeManagementClient: EmployeeManagementClient,
     private router: Router,
     private route: ActivatedRoute,
     private location: Location) { 
@@ -55,9 +55,9 @@ export class EmloyeesListComponent implements OnInit, AfterViewInit {
       switchMap((val, index) => {
         this.updateLocation();
         this.isLoadingResults = true;
-        const orderBy = ListUserOrderBy[this.sort.active  as keyof typeof ListUserOrderBy];
+        const orderBy = ListEmployeeOrderBy[this.sort.active  as keyof typeof ListEmployeeOrderBy];
         const orderByDirection = OrderByDirections[this.sort.direction.toUpperCase() as keyof typeof OrderByDirections];
-        return this.usersClient.getUsers(
+        return this.employeeManagementClient.getEmployees(
           orderBy,
           orderByDirection,
           this.paginator.pageSize,
@@ -77,14 +77,14 @@ export class EmloyeesListComponent implements OnInit, AfterViewInit {
         // limit errors, we do not want to reset the paginator to zero, as that
         // would prevent users from re-triggering requests.
         this.resultsLength = data.totalCount ?? 0;
-        return data.users ?? [];
+        return data.employees ?? [];
       }),
     )
     .subscribe(data => (this.data = data));
   }
 
-  openEditUser(user: UserReadModel) {
-    this.router.navigate([user.id], {relativeTo: this.route});
+  openEditUser(employee: EmployeeReadModel) {
+    this.router.navigate([employee.id], {relativeTo: this.route});
   }
 
   applyEmailFilter(emailFilter : string) {
@@ -96,8 +96,8 @@ export class EmloyeesListComponent implements OnInit, AfterViewInit {
     this.emailFilterSubject.next(this.currentEmailFilter);
   }
 
-  getRoles(user: UserReadModel) {
-    let roles = user.roles?.map( r =>' ' + r.name).join().trim();
+  getRoles(employee: EmployeeReadModel) {
+    const roles = employee.roles?.map( r =>' ' + r.name).join().trim();
 
     return roles;
   }

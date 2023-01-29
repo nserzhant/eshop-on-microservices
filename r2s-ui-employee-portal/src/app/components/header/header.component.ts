@@ -3,7 +3,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { Subject, take, takeUntil } from 'rxjs';
-import { Roles } from 'src/app/services/api/users.api.client';
+import { Roles } from 'src/app/services/api/employee.api.client';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 
 @Component({

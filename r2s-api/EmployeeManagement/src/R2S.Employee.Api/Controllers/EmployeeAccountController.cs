@@ -14,21 +14,21 @@ namespace R2S.EmployeeManagement.Api.Controllers
     public class EmployeeAccountController : ControllerBase
     {
         private readonly JWTSettings _jwtSettings;
-        private readonly IEmployeeService _userService;
+        private readonly IEmployeeService _employeeService;
 
-        public EmployeeAccountController(IOptions<JWTSettings> options, IEmployeeService userService)
+        public EmployeeAccountController(IOptions<JWTSettings> options, IEmployeeService employeeService)
         {
             _jwtSettings = options.Value ?? throw new ArgumentNullException(nameof(JWTSettings));
-            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _employeeService = employeeService ?? throw new ArgumentNullException(nameof(employeeService));
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorDTO), StatusCodes.Status400BadRequest)]
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> Regiser(UserDTO userDTO)
+        public async Task<IActionResult> Regiser(EmployeeDTO employeeDTO)
         {
-            var result = await _userService.Register(userDTO.Email, userDTO.Password);
+            var result = await _employeeService.Register(employeeDTO.Email, employeeDTO.Password);
 
             if (!result.Succeeded)
             {
@@ -43,8 +43,8 @@ namespace R2S.EmployeeManagement.Api.Controllers
         [HttpPatch("changepassword")]
         public async Task<IActionResult> ChangePassword(ChangePasswordDTO changePasswordDTO)
         {
-            var userId = getUserId();
-            var result = await _userService.ChangePassword(userId, changePasswordDTO.OldPassword, changePasswordDTO.NewPassword);
+            var employeeId = getEmployeeId();
+            var result = await _employeeService.ChangePassword(employeeId, changePasswordDTO.OldPassword, changePasswordDTO.NewPassword);
 
             if (!result.Succeeded)
             {
@@ -57,10 +57,10 @@ namespace R2S.EmployeeManagement.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorDTO), StatusCodes.Status400BadRequest)]
         [HttpPatch("changeemail")]
-        public async Task<IActionResult> ChangeEmail(UserDTO userDTO)
+        public async Task<IActionResult> ChangeEmail(EmployeeDTO employeeDTO)
         {
-            var userId = getUserId();
-            var result = await _userService.ChangeEmail(userId, userDTO.Email, userDTO.Password);
+            var employeeId = getEmployeeId();
+            var result = await _employeeService.ChangeEmail(employeeId, employeeDTO.Email, employeeDTO.Password);
 
             if (!result.Succeeded)
             {
@@ -70,16 +70,16 @@ namespace R2S.EmployeeManagement.Api.Controllers
             return Ok();
         }
 
-        private Guid getUserId()
+        private Guid getEmployeeId()
         {
-            var userId = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+            var employeeId = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            if (userId == null)
+            if (employeeId == null)
             {
                 return Guid.Empty;
             }
 
-            return new Guid(userId);
+            return new Guid(employeeId);
         }
     }
 }

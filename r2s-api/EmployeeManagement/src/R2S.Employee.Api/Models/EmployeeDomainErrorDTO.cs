@@ -2,11 +2,11 @@
 
 namespace R2S.EmployeeManagement.Api.Models
 {
-    public class UsersDomainErrorDTO
+    public class EmployeeDomainErrorDTO
     {
         public string ErrorType { get; private set; }
 
-        public UsersDomainErrorDTO(BaseEmployeeDomainException applicationException)
+        public EmployeeDomainErrorDTO(BaseEmployeeDomainException applicationException)
         {
             ErrorType = camelize(applicationException.GetType().Name);
         }

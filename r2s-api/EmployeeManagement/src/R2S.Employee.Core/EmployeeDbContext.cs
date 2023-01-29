@@ -23,12 +23,12 @@ namespace R2S.EmployeeManagement.Core
         }
     }
 
-    public class UsersDBContextFactory : IDesignTimeDbContextFactory<EmployeeDbContext>
+    public class EmployeeDBContextFactory : IDesignTimeDbContextFactory<EmployeeDbContext>
     {
         public EmployeeDbContext CreateDbContext(string[] args)
         {
             var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-            var connectionString = configuration.GetConnectionString("usersDbConnectionString");
+            var connectionString = configuration.GetConnectionString("employeeDbConnectionString");
             var optionsBuilder = new DbContextOptionsBuilder<EmployeeDbContext>();
 
             optionsBuilder.UseSqlServer(connectionString, x => x.MigrationsHistoryTable("_EFMigrationsHistory", "employee"));
@@ -37,37 +37,36 @@ namespace R2S.EmployeeManagement.Core
         }
     }
 
-    public class UsersDbContextInitializer
+    public class EmployeeDbContextInitializer
     {
         const string DEFAULT_ADMINISTRATOR_EMAIL = "administrator@yourdomain.com";
-        private UserManager<Entities.Employee> _userManager;
+        private UserManager<Employee> _userManager;
 
-        public UsersDbContextInitializer(UserManager<Entities.Employee> userManager)
+        public EmployeeDbContextInitializer(UserManager<Employee> userManager)
         {
             _userManager = userManager;
         }
 
-        public async Task InitializeDB(string adminUserPassword)
+        public async Task InitializeDB(string administratorPassword)
         {
-            var usersDbContextFactory = new UsersDBContextFactory();
-            var dbContext = usersDbContextFactory.CreateDbContext(null);
+            var employeeDBContextFactory = new EmployeeDBContextFactory();
+            var dbContext = employeeDBContextFactory.CreateDbContext(null);
 
             dbContext.Database.EnsureDeleted();
             dbContext.Database.Migrate();
 
-            await createDefaultAdminUser(adminUserPassword);
+            await createDefaultAdministrator(administratorPassword);
         }
 
-        private async Task createDefaultAdminUser(string adminUserPassword)
+        private async Task createDefaultAdministrator(string administratorPassword)
         {
-
-            var user = new Entities.Employee
+            var administrator = new Employee
             {
                 Email = DEFAULT_ADMINISTRATOR_EMAIL,
                 UserName = DEFAULT_ADMINISTRATOR_EMAIL
             };
 
-            var result = await _userManager.CreateAsync(user, adminUserPassword);
+            var result = await _userManager.CreateAsync(administrator, administratorPassword);
 
             if (!result.Succeeded)
             {
@@ -75,7 +74,7 @@ namespace R2S.EmployeeManagement.Core
                 throw new Exception($"Failed to create default admin account: {errors}");
             }
 
-            result = await _userManager.AddToRolesAsync(user, new[] { Roles.Administrator.ToString() });
+            result = await _userManager.AddToRolesAsync(administrator, new[] { Roles.Administrator.ToString() });
 
             if (!result.Succeeded)
             {

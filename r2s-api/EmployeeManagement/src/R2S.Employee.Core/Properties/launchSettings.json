@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "R2S.Users.Core": {
+    "R2S.Employee.Core": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

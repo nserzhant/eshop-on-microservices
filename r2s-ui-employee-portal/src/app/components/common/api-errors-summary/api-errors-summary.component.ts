@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ApiErrorDTO, IdentityErrorsDTO, UsersDomainErrorDTO } from 'src/app/services/api/users.api.client';
+import { ApiErrorDTO, EmployeeDomainErrorDTO, IdentityErrorsDTO } from 'src/app/services/api/employee.api.client';
 
 @Component({
   selector: 'api-errors-summary',
@@ -9,7 +9,7 @@ import { ApiErrorDTO, IdentityErrorsDTO, UsersDomainErrorDTO } from 'src/app/ser
 export class ApiErrorsSummaryComponent implements OnInit {
 
   identityErrors: IdentityErrorsDTO | null = null;
-  userDomainError: UsersDomainErrorDTO | null = null;
+  userDomainError: EmployeeDomainErrorDTO | null = null;
 
   @Input()
   set apiError(apiError : ApiErrorDTO | null) {

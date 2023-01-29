@@ -20,37 +20,37 @@ namespace R2S.EmployeeManagement.Core.Services
 
         public async Task<IdentityResult> Register(string email, string password)
         {
-            var user = new Employee
+            var employee = new Employee
             {
                 Email = email,
                 UserName = email
             };
 
-            var result = await _userManager.CreateAsync(user, password);
+            var result = await _userManager.CreateAsync(employee, password);
 
             if (result.Succeeded)
-                _logger.LogInformation($"User registered");
+                _logger.LogInformation($"Employee registered");
 
             return result;
         }
 
         public async Task<IEnumerable<Claim>> Login(string email, string password)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var employee = await _userManager.FindByEmailAsync(email);
 
-            if (user == null)
-                throw new InvalidUserOrPasswordException();
+            if (employee == null)
+                throw new InvalidEmailOrPasswordException();
 
-            if (!await _userManager.CheckPasswordAsync(user, password))
-                throw new InvalidUserOrPasswordException();
+            if (!await _userManager.CheckPasswordAsync(employee, password))
+                throw new InvalidEmailOrPasswordException();
 
-            _logger.LogInformation("User login credentials checked successfully");
+            _logger.LogInformation("Employee login credentials checked successfully");
 
-            var existingRoles = await _userManager.GetRolesAsync(user);
+            var existingRoles = await _userManager.GetRolesAsync(employee);
             var claims = new List<Claim>();
 
-            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-            claims.Add(new Claim(ClaimTypes.Name, user.UserName));
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, employee.Id.ToString()));
+            claims.Add(new Claim(ClaimTypes.Name, employee.UserName));
 
             foreach (var role in existingRoles)
                 claims.Add(new Claim(ClaimTypes.Role, role));
@@ -59,110 +59,110 @@ namespace R2S.EmployeeManagement.Core.Services
             return claims;
         }
 
-        public async Task<IdentityResult> SaveUserRoles(Guid userId, params Roles[] roles)
+        public async Task<IdentityResult> SetRoles(Guid employeeId, params Roles[] roles)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var employee = await _userManager.FindByIdAsync(employeeId.ToString());
 
-            if (user == null)
-                throw new UserNotFoundException();
+            if (employee == null)
+                throw new EmployeeNotFoundException();
 
             var roleNames = roles.Select(r => r.ToString());
-            var existingRoles = await _userManager.GetRolesAsync(user);
+            var existingRoles = await _userManager.GetRolesAsync(employee);
             var rolesToRemove = existingRoles.Except(roleNames);
             var rolesToAdd = roleNames.Except(existingRoles);
 
-            var result = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+            var result = await _userManager.RemoveFromRolesAsync(employee, rolesToRemove);
 
             if (!result.Succeeded)
             {
-                _logger.LogError($"Failed to update roles for UserId: {userId}");
+                _logger.LogError($"Failed to update roles for employeeId: {employeeId}");
 
                 return result;
             }
 
-            result = await _userManager.AddToRolesAsync(user, rolesToAdd);
+            result = await _userManager.AddToRolesAsync(employee, rolesToAdd);
 
 
             if (!result.Succeeded)
             {
-                _logger.LogError($"Failed to update roles for UserId: {userId}");
+                _logger.LogError($"Failed to update roles for employeeId: {employeeId}");
             }
             else
             {
-                _logger.LogInformation($"Roles successfully updated for UserId: {userId} ");
+                _logger.LogInformation($"Roles successfully updated for employeeId: {employeeId} ");
             }
 
             return result;
         }
 
-        public async Task<IdentityResult> SetPassword(Guid userId, string newPassword)
+        public async Task<IdentityResult> SetPassword(Guid employeeId, string newPassword)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var employee = await _userManager.FindByIdAsync(employeeId.ToString());
 
-            if (user == null)
-                throw new UserNotFoundException();
+            if (employee == null)
+                throw new EmployeeNotFoundException();
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            var token = await _userManager.GeneratePasswordResetTokenAsync(employee);
+            var result = await _userManager.ResetPasswordAsync(employee, token, newPassword);
 
             if (!result.Succeeded)
             {
-                _logger.LogError($"Failed to set password for UserId: {userId}");
+                _logger.LogError($"Failed to set password for employeeId: {employeeId}");
             }
             else
             {
-                _logger.LogInformation($"Password successfully set for UserId: {userId} ");
+                _logger.LogInformation($"Password successfully set for employeeId: {employeeId} ");
             }
 
             return result;
         }
 
-        public async Task<IdentityResult> ChangePassword(Guid userId, string oldPassword, string newPassword)
+        public async Task<IdentityResult> ChangePassword(Guid employeeId, string oldPassword, string newPassword)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var employee = await _userManager.FindByIdAsync(employeeId.ToString());
 
-            if (user == null)
-                throw new UserNotFoundException();
+            if (employee == null)
+                throw new EmployeeNotFoundException();
 
-            if (!await _userManager.CheckPasswordAsync(user, oldPassword))
+            if (!await _userManager.CheckPasswordAsync(employee, oldPassword))
                 throw new InvalidPasswordException();
 
-            var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+            var result = await _userManager.ChangePasswordAsync(employee, oldPassword, newPassword);
 
             if (!result.Succeeded)
             {
-                _logger.LogError($"Failed to change password for UserId: {userId}");
+                _logger.LogError($"Failed to change password for employeeId: {employeeId}");
             }
             else
             {
-                _logger.LogInformation($"Password successfully changed for UserId: {userId} ");
+                _logger.LogInformation($"Password successfully changed for employeeId: {employeeId} ");
             }
 
             return result;
         }
 
-        public async Task<IdentityResult> ChangeEmail(Guid userId, string newEmail, string password)
+        public async Task<IdentityResult> ChangeEmail(Guid employeeId, string newEmail, string password)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var employee = await _userManager.FindByIdAsync(employeeId.ToString());
 
-            if (user == null)
-                throw new UserNotFoundException();
+            if (employee == null)
+                throw new EmployeeNotFoundException();
 
-            if (!await _userManager.CheckPasswordAsync(user, password))
+            if (!await _userManager.CheckPasswordAsync(employee, password))
                 throw new InvalidPasswordException();
 
-            user.UserName = newEmail;
-            user.Email = newEmail;
+            employee.UserName = newEmail;
+            employee.Email = newEmail;
 
-            var result = await _userManager.UpdateAsync(user);
+            var result = await _userManager.UpdateAsync(employee);
 
             if (!result.Succeeded)
             {
-                _logger.LogError($"Failed to change password for UserId: {userId}");
+                _logger.LogError($"Failed to change password for employeeId: {employeeId}");
             }
             else
             {
-                _logger.LogInformation($"Password successfully changed for UserId: {userId} ");
+                _logger.LogInformation($"Password successfully changed for employeeId: {employeeId} ");
             }
 
             return result;

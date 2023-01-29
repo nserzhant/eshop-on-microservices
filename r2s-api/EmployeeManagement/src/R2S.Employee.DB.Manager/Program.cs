@@ -21,13 +21,13 @@ if (commandArgument == "-create-administrator")
         return;
     }
 
-    string adminiUserEmail = args[1];
-    string adminUserPassword = args[2];
+    string adminEmail = args[1];
+    string adminPassword = args[2];
 
     using var services = setupServices();
 
-    var seeder = services.GetRequiredService<CreateAdminUserSeeder>();
-    await seeder.Seed(adminiUserEmail, adminUserPassword);
+    var seeder = services.GetRequiredService<CreateAdministratorSeeder>();
+    await seeder.Seed(adminEmail, adminPassword);
     return;
 }
 
@@ -47,9 +47,9 @@ static ServiceProvider setupServices()
     var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
     ServiceCollection sc = new ServiceCollection();
 
-    sc.AddUsersServices(configuration);
+    sc.AddEmployeeServices(configuration);
     sc.AddLogging(logging => logging.AddConsole());
-    sc.AddTransient<CreateAdminUserSeeder>();
+    sc.AddTransient<CreateAdministratorSeeder>();
 
     var serviceProvier = sc.BuildServiceProvider();
 

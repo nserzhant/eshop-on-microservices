@@ -42,9 +42,10 @@
         "unknown-error" : "Unknown error",
         "service-unavailable" : "Service unavailable",
         "api" : {
-            "invalidUserOrPasswordException" : "Email or password is not valid.",
-            "userNotFoundException" : "User not found.",
-            "invalidPasswordException" : "Password is not valid."
+            "invalidEmailOrPasswordException" : "Email or password is not valid.",
+            "employeeNotFoundException" : "Employee not found.",
+            "invalidPasswordException" : "Password is not valid.",
+            "rolesNotFoundException" : "Roles not found"
         }        
     }
 }

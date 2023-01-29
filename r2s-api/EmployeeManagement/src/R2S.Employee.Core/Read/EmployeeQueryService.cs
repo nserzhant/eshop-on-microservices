@@ -8,51 +8,51 @@ namespace R2S.EmployeeManagement.Core.Read
 {
     public class EmployeeQueryService : IEmployeeQueryService
     {
-        private readonly EmployeeReadDbContext _usersReadDbContext;
+        private readonly EmployeeReadDbContext _employeeReadDbContext;
 
-        public EmployeeQueryService(EmployeeReadDbContext usersReadDbContext)
+        public EmployeeQueryService(EmployeeReadDbContext employeeReadDbContext)
         {
-            _usersReadDbContext = usersReadDbContext;
+            _employeeReadDbContext = employeeReadDbContext;
         }
 
-        public async Task<EmployeeReadModel> GetByEmail(string userEmail)
+        public async Task<EmployeeReadModel> GetByEmail(string email)
         {
-            var user = await _usersReadDbContext.Users
+            var employee = await _employeeReadDbContext.Users
                 .Include(u => u.Roles)
-                .FirstOrDefaultAsync(u => u.UserName == userEmail);
+                .FirstOrDefaultAsync(u => u.Email == email);
 
-            return user;
+            return employee;
         }
 
-        public async Task<EmployeeReadModel> GetById(Guid userId)
+        public async Task<EmployeeReadModel> GetById(Guid employeeId)
         {
-            var user = await _usersReadDbContext.Users
+            var employee = await _employeeReadDbContext.Users
                 .Include(u => u.Roles)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.Id == employeeId);
 
-            return user;
+            return employee;
         }
 
-        public async Task<ListEmployeeQueryResult> GetUsers(ListEmployeeQuery listUserQuery)
+        public async Task<ListEmployeeQueryResult> GetEmployees(ListEmployeeQuery listEmployeeQuery)
         {
-            var count = _usersReadDbContext.Users
+            var count = _employeeReadDbContext.Users
                 .Where(u => 
-                    listUserQuery.EmailFilter == null 
-                    || u.Email.Contains(listUserQuery.EmailFilter)).Count();
-            var orderByExpression = $"{listUserQuery.OrderBy} {listUserQuery.OrderByDirection}";
+                    listEmployeeQuery.EmailFilter == null 
+                    || u.Email.Contains(listEmployeeQuery.EmailFilter)).Count();
+            var orderByExpression = $"{listEmployeeQuery.OrderBy} {listEmployeeQuery.OrderByDirection}";
 
-            var users = await _usersReadDbContext.Users.Include(u => u.Roles)
+            var employees = await _employeeReadDbContext.Users.Include(u => u.Roles)
                 .Where(u => 
-                    listUserQuery.EmailFilter == null 
-                    || u.Email.Contains(listUserQuery.EmailFilter))
+                    listEmployeeQuery.EmailFilter == null 
+                    || u.Email.Contains(listEmployeeQuery.EmailFilter))
                 .OrderBy(orderByExpression)
-                .Skip(listUserQuery.PageIndex * listUserQuery.PageSize)
-                .Take(listUserQuery.PageSize).ToListAsync();
+                .Skip(listEmployeeQuery.PageIndex * listEmployeeQuery.PageSize)
+                .Take(listEmployeeQuery.PageSize).ToListAsync();
 
             var result = new ListEmployeeQueryResult()
             {
                 TotalCount = count,
-                Users = users
+                Employees = employees
             };
 
             return result;

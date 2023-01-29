@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { ApiErrorDTO } from 'src/app/services/api/users.api.client';
+import { ApiErrorDTO } from 'src/app/services/api/employee.api.client';
 import { AuthenticationService } from 'src/app/services/authentication.service';
 import { passwordMatchConfirmPasswordValidator } from '../validators';
 
@@ -17,7 +16,6 @@ export class ChangePasswordComponent implements OnInit {
   apiError : ApiErrorDTO | null = null;
 
   constructor(
-    private router: Router,
     private authenticationService: AuthenticationService) { 
   }
 

@@ -1,18 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
-using R2S.EmployeeManagement.Core.Entities;
+﻿using Microsoft.Extensions.DependencyInjection;
 using R2S.EmployeeManagement.Core.IntegrationTests.Infrastructure;
 
 namespace R2S.EmployeeManagement.Core.IntegrationTests
 {
-    public class BaseUsersIntegrationTests
+    public class BaseEmployeeIntegrationTests
     {
         protected ServiceProvider serviceProvier;
-
 
         [SetUp]
         public virtual async Task Setup()
@@ -20,7 +13,7 @@ namespace R2S.EmployeeManagement.Core.IntegrationTests
             //Setup services
             ServiceCollection sc = new ServiceCollection();
 
-            sc.AddTestUsersServices();
+            sc.AddTestEmployeeServices();
 
             serviceProvier = sc.BuildServiceProvider();
             var dbContext = serviceProvier.GetRequiredService<EmployeeDbContext>();

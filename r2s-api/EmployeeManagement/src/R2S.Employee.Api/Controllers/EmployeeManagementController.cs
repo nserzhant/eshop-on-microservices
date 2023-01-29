@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using R2S.EmployeeManagement.Api.Models;
-using R2S.EmployeeManagement.Core;
 using R2S.EmployeeManagement.Core.Enums;
 using R2S.EmployeeManagement.Core.Read;
 using R2S.EmployeeManagement.Core.Read.Queries;
@@ -15,48 +13,47 @@ namespace R2S.EmployeeManagement.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Administrator")]
-    public class UsersController : ControllerBase
+    public class EmployeeManagementController : ControllerBase
     {
-        private IEmployeeQueryService _userQueryService;
-        private IEmployeeService _userService;
+        private IEmployeeQueryService _employeeQueryService;
+        private IEmployeeService _employeeService;
 
-        public UsersController(IEmployeeQueryService userQueryService,
-            IEmployeeService userService)
+        public EmployeeManagementController(IEmployeeQueryService employeeQueryService,
+            IEmployeeService employeeService)
         {
-            _userQueryService = userQueryService ?? throw new ArgumentNullException(nameof(userQueryService));
-            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _employeeQueryService = employeeQueryService ?? throw new ArgumentNullException(nameof(employeeQueryService));
+            _employeeService = employeeService ?? throw new ArgumentNullException(nameof(employeeService));
         }
 
         [ProducesResponseType(typeof(EmployeeReadModel), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [HttpGet("{userId:Guid}")]
-        public async Task<IActionResult> GetAsync(Guid userId)
+        [HttpGet("{employeeId:Guid}")]
+        public async Task<IActionResult> GetAsync(Guid employeeId)
         {
-            var user = await _userQueryService.GetById(userId);
+            var employee = await _employeeQueryService.GetById(employeeId);
 
-            if (user == null)
+            if (employee == null)
                 return NotFound();
 
-            return Ok(user);
+            return Ok(employee);
         }
-
 
         [ProducesResponseType(typeof(ListEmployeeQueryResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet("list")]
-        public async Task<IActionResult> GetUsersAsync([FromQuery] ListEmployeeQuery listUserQuery)
+        public async Task<IActionResult> GetEmployeesAsync([FromQuery] ListEmployeeQuery listEmployeeQuery)
         {
-            var result = await _userQueryService.GetUsers(listUserQuery);
+            var result = await _employeeQueryService.GetEmployees(listEmployeeQuery);
 
             return Ok(result);
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorDTO), StatusCodes.Status400BadRequest)]
-        [HttpPatch("{userId:Guid}/roles")]
-        public async Task<IActionResult> SaveRolesAsync(Guid userId, [FromBody]Roles[] roles)
+        [HttpPatch("{employeeId:Guid}/roles")]
+        public async Task<IActionResult> SetRolesAsync(Guid employeeId, [FromBody]Roles[] roles)
         {
-            var result = await _userService.SaveUserRoles(userId, roles);
+            var result = await _employeeService.SetRoles(employeeId, roles);
 
             if (!result.Succeeded)
             {
@@ -68,10 +65,10 @@ namespace R2S.EmployeeManagement.Api.Controllers
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorDTO), StatusCodes.Status400BadRequest)]
-        [HttpPatch("{userId:Guid}/password")]
-        public async Task<IActionResult> SetPassword(Guid userId, [FromBody] string newPassword)
+        [HttpPatch("{employeeId:Guid}/password")]
+        public async Task<IActionResult> SetPassword(Guid employeeId, [FromBody] string newPassword)
         {
-            var result = await _userService.SetPassword(userId, newPassword);
+            var result = await _employeeService.SetPassword(employeeId, newPassword);
 
             if (!result.Succeeded)
             {

@@ -9,7 +9,7 @@ namespace R2S.EmployeeManagement.Api.Models
     public class ApiErrorDTO
     {
         public IdentityErrorsDTO? IdentityErrors { get; private set; }
-        public UsersDomainErrorDTO? DomainError { get; private set; }
+        public EmployeeDomainErrorDTO? DomainError { get; private set; }
 
         public ApiErrorDTO(IEnumerable<IdentityError> identityErrors)
         {
@@ -18,7 +18,7 @@ namespace R2S.EmployeeManagement.Api.Models
 
         public ApiErrorDTO(BaseEmployeeDomainException applicationException)
         {
-            DomainError = new UsersDomainErrorDTO(applicationException);
+            DomainError = new EmployeeDomainErrorDTO(applicationException);
         }
     }
 }
