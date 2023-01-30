@@ -27,11 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\R2S.Employee.Core\R2S.Employee.Core.csproj" />
+  	<InternalsVisibleTo Include="R2S.EmployeeManagement.Api.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>
-  	<InternalsVisibleTo Include="R2S.Employee.Api.IntegrationTests" />
+    <ProjectReference Include="..\R2S.EmployeeManagement.Core\R2S.EmployeeManagement.Core.csproj" />
   </ItemGroup>
   
   <Target Name="NSwag" AfterTargets="Build">

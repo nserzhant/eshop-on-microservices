@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using R2S.EmployeeManagement.AuthorizationServer.Data;
 using static OpenIddict.Abstractions.OpenIddictConstants;

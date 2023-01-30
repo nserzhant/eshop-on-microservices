@@ -7,9 +7,12 @@
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <ItemGroup>
+	<FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 	
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
     <PackageReference Include="NUnit" Version="3.13.3" />
@@ -23,11 +26,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
+	
   <ItemGroup>
-    <ProjectReference Include="..\..\src\R2S.Employee.Api\R2S.Employee.Api.csproj" />
-    <ProjectReference Include="..\..\src\R2S.Employee.Core\R2S.Employee.Core.csproj" />
-    <ProjectReference Include="..\R2S.Employee.IntegrationTests\R2S.Employee.Core.IntegrationTests.csproj" />
+    <ProjectReference Include="..\..\src\R2S.EmployeeManagement.Core\R2S.EmployeeManagement.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

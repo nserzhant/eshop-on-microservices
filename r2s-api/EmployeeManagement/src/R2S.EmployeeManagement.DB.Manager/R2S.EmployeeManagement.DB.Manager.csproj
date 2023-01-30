@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\R2S.Employee.Core\R2S.Employee.Core.csproj" />
+    <ProjectReference Include="..\R2S.EmployeeManagement.Core\R2S.EmployeeManagement.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

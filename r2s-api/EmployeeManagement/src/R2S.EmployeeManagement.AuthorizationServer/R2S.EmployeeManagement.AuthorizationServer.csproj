@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\R2S.EmployeeManagement.Core\R2S.EmployeeManagement.Core.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.1">
@@ -22,10 +26,6 @@
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="4.0.0" />
     <PackageReference Include="OpenIddict.Quartz" Version="4.0.0" />
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\R2S.Employee.Core\R2S.Employee.Core.csproj" />
   </ItemGroup>
 
 </Project>

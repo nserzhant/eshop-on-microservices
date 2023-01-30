@@ -11,7 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 //Get settings to configure JWT tokens
 
 var jwtSecretKey = builder.Configuration["JWTSettings:JWTSecretKey"];
-
 builder.Services.AddEmployeeServices(builder.Configuration);
 
 // Add services to the container.
@@ -93,7 +92,7 @@ builder.Services.AddOpenIddict()
 
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
-    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+    builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
 }));
 
 var app = builder.Build();

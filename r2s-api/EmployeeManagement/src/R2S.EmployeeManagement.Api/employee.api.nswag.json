@@ -55,7 +55,7 @@
       "outputType": "Swagger2",
       "newLineBehavior": "Auto",
       "assemblyPaths": [
-        "bin/Debug/net7.0/R2S.Employee.Api.dll"
+        "bin/Debug/net7.0/R2S.EmployeeManagement.Api.dll"
       ],
       "assemblyConfig": null,
       "referencePaths": [],
