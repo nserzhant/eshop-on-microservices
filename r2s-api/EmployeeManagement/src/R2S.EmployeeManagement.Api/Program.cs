@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NSwag.Generation.Processors.Security;
+using R2S.EmployeeManagement.Api;
 using R2S.EmployeeManagement.Api.Filters;
 using R2S.EmployeeManagement.Api.Settings;
 using R2S.EmployeeManagement.Core;
@@ -10,18 +11,20 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Get settings to configure JWT tokens
+// Get settings to configure JWT tokens
 
-var jwtSettingsSection = builder.Configuration.GetSection("JWTSettings");
+var jwtSettingsSection = builder.Configuration.GetSection(Consts.JWT_CONFIG_NAME);
 var jwtSettings = new JWTSettings();
 
 jwtSettingsSection.Bind(jwtSettings);
+
+// Configure settings for Client app
+var clientIp = builder.Configuration[Consts.SPA_CLIENT_IP_CONFIG_NAME];
 
 // Add services to the container.
 
 builder.Services.Configure<JWTSettings>(jwtSettingsSection);
 builder.Services.AddControllers(options => options.Filters.Add<EmployeeDomainExceptionFilter>());
-
 builder.Services.AddEmployeeServices(builder.Configuration);
 
 builder.Services.AddAuthentication(auth =>
@@ -57,7 +60,8 @@ builder.Services.AddOpenApiDocument(document =>
 });
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
-    builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+    if (clientIp != null)
+        builder.WithOrigins(clientIp).AllowAnyMethod().AllowAnyHeader();
 }));
 
 var app = builder.Build();

@@ -1,19 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using R2S.EmployeeManagement.AuthorizationServer.Data;
 using static OpenIddict.Abstractions.OpenIddictConstants;
-using static System.Net.WebRequestMethods;
 
 namespace R2S.EmployeeManagement.AuthorizationServer
 {
     public class Worker : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IOptions<List<ClientConfiguration>> _clientConfigurations;
 
-        public Worker(IServiceProvider serviceProvider)
+        public Worker(IServiceProvider serviceProvider, IOptions<List<ClientConfiguration>> clientConfigurations)
         {
             _serviceProvider = serviceProvider;
+            _clientConfigurations = clientConfigurations;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -25,34 +25,33 @@ namespace R2S.EmployeeManagement.AuthorizationServer
 
             var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
-            if (await manager.FindByClientIdAsync("public_spa", cancellationToken) is null)
+            _clientConfigurations.Value.ForEach(async clientConfiguration =>
             {
-                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                if (await manager.FindByClientIdAsync(clientConfiguration.clientId, cancellationToken) is null)
                 {
-                    ClientId = "public_spa",
-                    Type = OpenIddictConstants.ClientTypes.Public,
-                    DisplayName = "public spa",
-                    RedirectUris = {
-                        new Uri("http://localhost:4200/login-callback")
-                    },
-                    PostLogoutRedirectUris =
+                    await manager.CreateAsync(new OpenIddictApplicationDescriptor
                     {
-                        new Uri("http://localhost:4200/")
-                    },
-                    Permissions =
-                    {
-                        OpenIddictConstants.Permissions.Endpoints.Authorization,
-                        OpenIddictConstants.Permissions.Endpoints.Token,
-                        OpenIddictConstants.Permissions.Endpoints.Logout,
-                        OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-                        OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
-                        OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
-                        OpenIddictConstants.Permissions.Prefixes.Scope + "api",
-                        OpenIddictConstants.Permissions.Prefixes.Scope + Scopes.Roles,
-                        OpenIddictConstants.Permissions.ResponseTypes.Code
-                    }
-                }, cancellationToken);
-            }
+                        ClientId = clientConfiguration.clientId,
+                        Type = ClientTypes.Public,
+                        DisplayName = clientConfiguration.displayName,
+                        RedirectUris = { new Uri($"{clientConfiguration.clientIP}/login-callback") },
+                        PostLogoutRedirectUris = { new Uri($"{clientConfiguration.clientIP}/") },
+                        Permissions =
+                        {
+                            Permissions.Endpoints.Authorization,
+                            Permissions.Endpoints.Token,
+                            Permissions.Endpoints.Logout,
+                            Permissions.GrantTypes.AuthorizationCode,
+                            Permissions.GrantTypes.ClientCredentials,
+                            Permissions.GrantTypes.RefreshToken,
+                            Permissions.Prefixes.Scope + "api",
+                            Permissions.Prefixes.Scope + Scopes.Roles,
+                            Permissions.ResponseTypes.Code
+                        }
+                    }, cancellationToken);
+
+                }
+            });
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

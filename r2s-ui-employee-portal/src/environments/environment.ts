@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   stsAuthority: 'https://localhost:7272/',
-  clientId: 'public_spa',  
+  clientId: 'employee-portal',  
   clientRoot: 'http://localhost:4200/',
   apiRoot: "https://localhost:7158"
 };

@@ -10,8 +10,14 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 var builder = WebApplication.CreateBuilder(args);
 //Get settings to configure JWT tokens
 
-var jwtSecretKey = builder.Configuration["JWTSettings:JWTSecretKey"];
+var jwtSecretKey = builder.Configuration[Consts.JWT_SECRET_KEY_CONFIG_NAME];
 builder.Services.AddEmployeeServices(builder.Configuration);
+
+//Configure settings for Client apps
+
+var clientConfigurations = builder.Configuration.GetSection(Consts.CLIENT_CONFIGURATION_CONFIG_NAME);
+builder.Services.Configure<List<ClientConfiguration>>(clientConfigurations);
+var clients = clientConfigurations.Get<List<ClientConfiguration>>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -92,7 +98,10 @@ builder.Services.AddOpenIddict()
 
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
-    builder.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
+    var clientIps = clients?.Select(client => client.clientIP)?.ToArray();
+
+    if (clientIps != null)
+        builder.WithOrigins(clientIps).AllowAnyMethod().AllowAnyHeader();
 }));
 
 var app = builder.Build();
