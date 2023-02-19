@@ -1,0 +1,58 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
+using R2S.Catalog.Core.Interfaces;
+using R2S.Catalog.Core.Models;
+
+namespace R2S.Catalog.Infrastructure.Repositories;
+
+public class CatalogItemRepository : ICatalogItemRepository
+{
+    private readonly CatalogDbContext _catalogDbContext;
+
+    public CatalogItemRepository(CatalogDbContext catalogDbContext)
+    {
+        _catalogDbContext = catalogDbContext;
+    }
+
+    public async Task CreateCatalogItemAsync(CatalogItem catalogItemToCreate)
+    {
+        await _catalogDbContext.AddAsync(catalogItemToCreate);
+    }
+
+    public void UpdateCatalogItem(CatalogItem catalogItemToUpdate)
+    {
+        _catalogDbContext.Update(catalogItemToUpdate);
+    }
+
+    public void DeleteCatalogItem(CatalogItem catalogItem)
+    {
+        _catalogDbContext.Remove(catalogItem);
+    }
+
+    public async Task<CatalogItem?> GetCatalogItemAsync(Guid catalogItemId)
+    {
+        var item = await _catalogDbContext.CatalogItems
+            .FirstOrDefaultAsync(cb => cb.Id == catalogItemId);
+
+        return item;
+    }
+
+    public async Task<bool> DoesCatalogItemsWithTypeExistsAsync(Guid catalogTypeId)
+    {
+        var exists = await _catalogDbContext.CatalogItems.AnyAsync(ci => ci.CatalogTypeId == catalogTypeId);
+
+        return exists;
+    }
+
+    public async Task<bool> DoesCatalogItemsWithBrandExistsAsync(Guid catalogBrandId)
+    {
+        var exists = await _catalogDbContext.CatalogItems.AnyAsync(ci => ci.CatalogBrandId == catalogBrandId);
+
+        return exists;
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _catalogDbContext.SaveChangesAsync();
+    }
+}
