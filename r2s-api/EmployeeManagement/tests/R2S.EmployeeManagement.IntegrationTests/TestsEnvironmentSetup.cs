@@ -1,22 +1,21 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using R2S.EmployeeManagement.Core.IntegrationTests.Infrastructure;
 
-namespace R2S.EmployeeManagement.Core.IntegrationTests
+namespace R2S.EmployeeManagement.Core.IntegrationTests;
+
+[SetUpFixture]
+public class TestsEnvironmentSetup
 {
-    [SetUpFixture]
-    public class TestsEnvironmentSetup
+    [OneTimeSetUp]
+    public void RunBeforeTestsExecution()
     {
-        [OneTimeSetUp]
-        public void RunBeforeTestsExecution()
-        {
-            var sc = new ServiceCollection();
-            sc.AddTestEmployeeServices();
+        var sc = new ServiceCollection();
+        sc.AddTestEmployeeServices();
 
-            using var services = sc.BuildServiceProvider();
-            var db = services.GetRequiredService<EmployeeDbContext>();
+        using var services = sc.BuildServiceProvider();
+        var db = services.GetRequiredService<EmployeeDbContext>();
 
-            //Recreate Db
-            db.RecreateDb();
-        }
+        //Recreate Db
+        db.RecreateDb();
     }
 }

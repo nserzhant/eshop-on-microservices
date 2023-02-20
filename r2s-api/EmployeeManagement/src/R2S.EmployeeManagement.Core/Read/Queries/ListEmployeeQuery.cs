@@ -1,22 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace R2S.EmployeeManagement.Core.Read.Queries;
 
-namespace R2S.EmployeeManagement.Core.Read.Queries
+public enum ListEmployeeOrderBy
 {
-    public enum ListEmployeeOrderBy
-    {
-        Email,
-        UserName
-    }
-    public class ListEmployeeQuery
-    {
-        public ListEmployeeOrderBy OrderBy { get; set; }
-        public OrderByDirections OrderByDirection { get; set; }
-        public int PageSize { get; set; }
-        public int PageIndex { get; set; }
-        public string? EmailFilter { get; set; }
-    }
+    Email,
+    UserName
+}
+public class ListEmployeeQuery
+{
+    public ListEmployeeOrderBy OrderBy { get; set; }
+    public OrderByDirections OrderByDirection { get; set; }
+    public int PageSize { get; set; }
+    public int PageIndex { get; set; }
+    public string? EmailFilter { get; set; }
 }

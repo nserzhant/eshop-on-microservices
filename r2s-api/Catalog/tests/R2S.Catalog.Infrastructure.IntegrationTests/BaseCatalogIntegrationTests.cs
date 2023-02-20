@@ -3,7 +3,6 @@ using R2S.Catalog.Core.Interfaces;
 using R2S.Catalog.Core.Models;
 using R2S.Catalog.Core.Services;
 using R2S.Catalog.Infrastructure.IntegrationTests.Extensions;
-using R2S.Catalog.Infrastructure.Repositories;
 
 namespace R2S.Catalog.Infrastructure.IntegrationTests;
 

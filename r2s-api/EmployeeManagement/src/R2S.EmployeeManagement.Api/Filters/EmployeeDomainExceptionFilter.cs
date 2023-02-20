@@ -3,24 +3,23 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using R2S.EmployeeManagement.Api.Models;
 using R2S.EmployeeManagement.Core.Exceptions;
 
-namespace R2S.EmployeeManagement.Api.Filters
+namespace R2S.EmployeeManagement.Api.Filters;
+
+public class EmployeeDomainExceptionFilter : IActionFilter, IOrderedFilter
 {
-    public class EmployeeDomainExceptionFilter : IActionFilter, IOrderedFilter
+    public int Order => int.MaxValue - 10;
+
+    public void OnActionExecuting(ActionExecutingContext context) { }
+
+    public void OnActionExecuted(ActionExecutedContext context)
     {
-        public int Order => int.MaxValue - 10;
-
-        public void OnActionExecuting(ActionExecutingContext context) { }
-
-        public void OnActionExecuted(ActionExecutedContext context)
+        if (context.Exception is BaseEmployeeDomainException employeeDomainException)
         {
-            if (context.Exception is BaseEmployeeDomainException employeeDomainException)
-            {
-                context.Result =
-                    new BadRequestObjectResult(
-                        new ApiErrorDTO(employeeDomainException));
+            context.Result =
+                new BadRequestObjectResult(
+                    new ApiErrorDTO(employeeDomainException));
 
-                context.ExceptionHandled = true;
-            }
+            context.ExceptionHandled = true;
         }
     }
 }

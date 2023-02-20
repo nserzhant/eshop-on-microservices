@@ -2,46 +2,46 @@
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
-namespace R2S.EmployeeManagement.Core.IntegrationTests.Infrastructure
+namespace R2S.EmployeeManagement.Core.IntegrationTests.Infrastructure;
+
+public static class DbContextTestsExtensions
 {
-    public static class DbContextTestsExtensions
+    public static async Task ClearDb(this DbContext dbContext, params string[] tablesToPreserve)
     {
-        public static async Task ClearDb(this DbContext dbContext, params string[] tablesToPreserve)
-        {
-            var schema = dbContext.Model.GetDefaultSchema();
-            var tablesToClear = dbContext.Model.GetEntityTypes()
-                .Select(t => t.GetTableName())
-                .Where(t => tablesToPreserve == null || !tablesToPreserve.Contains(t))
-                .Distinct()
-                .ToList();
+        var schema = dbContext.Model.GetDefaultSchema();
+        var tablesToClear = dbContext.Model.GetEntityTypes()
+            .Select(t => t.GetTableName())
+            .Where(t => tablesToPreserve == null || !tablesToPreserve.Contains(t))
+            .Distinct()
+            .ToList();
 
-            if (tablesToClear == null || tablesToClear.Count == 0)
-                return;
+        if (tablesToClear == null || tablesToClear.Count == 0)
+            return;
 
-            var clearSql = getClearTablesCommandText(schema ?? "dbo", tablesToClear);
+        var clearSql = getClearTablesCommandText(schema ?? "dbo", tablesToClear);
 
-            using var connection = new SqlConnection(dbContext.Database.GetConnectionString());
+        using var connection = new SqlConnection(dbContext.Database.GetConnectionString());
 
-            connection.Open();
+        connection.Open();
 
-            using var command = connection.CreateCommand();
+        using var command = connection.CreateCommand();
 
-            command.CommandType = CommandType.Text;
-            command.CommandText = clearSql;
-            await command.ExecuteNonQueryAsync();
-        }
+        command.CommandType = CommandType.Text;
+        command.CommandText = clearSql;
+        await command.ExecuteNonQueryAsync();
+    }
 
-        public static void RecreateDb(this DbContext dbContext)
-        {
-            dbContext.Database.EnsureDeleted();
-            dbContext.Database.Migrate();
-        }
+    public static void RecreateDb(this DbContext dbContext)
+    {
+        dbContext.Database.EnsureDeleted();
+        dbContext.Database.Migrate();
+    }
 
-        private static string getClearTablesCommandText(string schemaName, List<string?> tablesToClear)
-        {
-            var tables = tablesToClear.Select(t => $"'{t}'").Aggregate((a, i) => a + ',' + i);
+    private static string getClearTablesCommandText(string schemaName, List<string?> tablesToClear)
+    {
+        var tables = tablesToClear.Select(t => $"'{t}'").Aggregate((a, i) => a + ',' + i);
 
-            var clearDbSql = @$"DECLARE @tableNames NVARCHAR(MAX) = '';
+        var clearDbSql = @$"DECLARE @tableNames NVARCHAR(MAX) = '';
                 SELECT
 	                @tableNames = @tableNames + ',' + val 
                 FROM 
@@ -67,7 +67,6 @@ namespace R2S.EmployeeManagement.Core.IntegrationTests.Infrastructure
 	                EXEC sp_MSForEachTable 'ALTER TABLE ? CHECK CONSTRAINT ALL', @whereand = @tableNames
                 END";
 
-            return clearDbSql;
-        }
+        return clearDbSql;
     }
 }

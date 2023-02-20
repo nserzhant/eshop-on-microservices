@@ -1,30 +1,29 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using R2S.EmployeeManagement.Core.IntegrationTests.Infrastructure;
 
-namespace R2S.EmployeeManagement.Core.IntegrationTests
+namespace R2S.EmployeeManagement.Core.IntegrationTests;
+
+public class BaseEmployeeIntegrationTests
 {
-    public class BaseEmployeeIntegrationTests
+    protected ServiceProvider serviceProvier;
+
+    [SetUp]
+    public virtual async Task Setup()
     {
-        protected ServiceProvider serviceProvier;
+        //Setup services
+        ServiceCollection sc = new ServiceCollection();
 
-        [SetUp]
-        public virtual async Task Setup()
-        {
-            //Setup services
-            ServiceCollection sc = new ServiceCollection();
+        sc.AddTestEmployeeServices();
 
-            sc.AddTestEmployeeServices();
+        serviceProvier = sc.BuildServiceProvider();
+        var dbContext = serviceProvier.GetRequiredService<EmployeeDbContext>();
 
-            serviceProvier = sc.BuildServiceProvider();
-            var dbContext = serviceProvier.GetRequiredService<EmployeeDbContext>();
+        await dbContext.ClearDb("AspNetRoles");
+    }
 
-            await dbContext.ClearDb("AspNetRoles");
-        }
-
-        [TearDown]
-        public virtual void TearDown()
-        {
-            serviceProvier.Dispose();
-        }
+    [TearDown]
+    public virtual void TearDown()
+    {
+        serviceProvier.Dispose();
     }
 }

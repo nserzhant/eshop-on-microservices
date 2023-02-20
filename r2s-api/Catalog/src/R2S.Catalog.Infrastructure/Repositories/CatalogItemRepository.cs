@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using R2S.Catalog.Core.Interfaces;
 using R2S.Catalog.Core.Models;
 

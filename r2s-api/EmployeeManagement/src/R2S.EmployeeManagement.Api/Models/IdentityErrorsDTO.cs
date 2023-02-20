@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace R2S.EmployeeManagement.Api.Models
-{
-    public class IdentityErrorsDTO
-    {
-        public IEnumerable<IdentityError> Errors { get; private set; }
+namespace R2S.EmployeeManagement.Api.Models;
 
-        public IdentityErrorsDTO(IEnumerable<IdentityError> errors)
-        {
-            Errors = errors;
-        }
+public class IdentityErrorsDTO
+{
+    public IEnumerable<IdentityError> Errors { get; private set; }
+
+    public IdentityErrorsDTO(IEnumerable<IdentityError> errors)
+    {
+        Errors = errors;
     }
 }

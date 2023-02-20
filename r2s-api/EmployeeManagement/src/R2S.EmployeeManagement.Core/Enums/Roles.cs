@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace R2S.EmployeeManagement.Core.Enums;
 
-namespace R2S.EmployeeManagement.Core.Enums
+public enum Roles
 {
-    public enum Roles
-    {
-        Administrator,
-        SalesManager
-    }
+    Administrator,
+    SalesManager
 }

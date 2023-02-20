@@ -10,86 +10,85 @@ using R2S.EmployeeManagement.Core.Services;
 using System.Reflection;
 using System.Text;
 
-namespace R2S.EmployeeManagement.Api.IntegrationTests
+namespace R2S.EmployeeManagement.Api.IntegrationTests;
+
+public class BaseControllerTests : BaseEmployeeIntegrationTests
 {
-    public class BaseControllerTests : BaseEmployeeIntegrationTests
+    protected WebApplicationFactory<Program> _webApplicationFactory;
+    protected TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
+    protected Guid defaultemployeeId;
+    protected string defaultEmail = "test@user.com";
+    protected string defaultPassword = "3242f$fDc%dD";
+
+    private IEmployeeService _employeeService;
+    private IEmployeeQueryService _employeeQueryService;
+
+    [SetUp]
+    public override async Task Setup()
     {
-        protected WebApplicationFactory<Program> _webApplicationFactory;
-        protected TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
-        protected Guid defaultemployeeId;
-        protected string defaultEmail = "test@user.com";
-        protected string defaultPassword = "3242f$fDc%dD";
+        await base.Setup();
 
-        private IEmployeeService _employeeService;
-        private IEmployeeQueryService _employeeQueryService;
-
-        [SetUp]
-        public override async Task Setup()
+        var projectDir = Directory.GetCurrentDirectory();
+        var configPath = Path.Combine(projectDir, "appsettings.json");
+        _testAuthenticationContextBuilder = new TestAuthenticationContextBuilder();
+        _webApplicationFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            await base.Setup();
-
-            var projectDir = Directory.GetCurrentDirectory();
-            var configPath = Path.Combine(projectDir, "appsettings.json");
-            _testAuthenticationContextBuilder = new TestAuthenticationContextBuilder();
-            _webApplicationFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((context, conf) =>
             {
-                builder.ConfigureAppConfiguration((context, conf) =>
-                {
-                    conf.AddJsonFile(configPath);
-                });
-                builder.ConfigureTestServices(services =>
-                {
-                    services.AddAuthentication(s =>
-                    {
-                        s.DefaultAuthenticateScheme = "Test";
-                        s.DefaultChallengeScheme = "Test";
-                    })
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
-                    services.AddSingleton(_testAuthenticationContextBuilder);
-                });
+                conf.AddJsonFile(configPath);
             });
-
-
-            _employeeService = serviceProvier.GetRequiredService<IEmployeeService>();
-            _employeeQueryService = serviceProvier.GetRequiredService<IEmployeeQueryService>();
-
-            defaultemployeeId = await registerEmployeeAsync(defaultEmail, defaultPassword);
-        }
-
-        [TearDown]
-        public override void TearDown()
-        {
-            base.TearDown();
-
-            _webApplicationFactory.Dispose();
-        }
-
-        private async Task<Guid> registerEmployeeAsync(string email, string password)
-        {
-            await _employeeService.Register(email, password);
-            var employee = await _employeeQueryService.GetByEmail(email);
-
-            return employee.Id;
-        }
-
-        protected static string ConvertToQueryParams<T>(T obj) where T : class
-        {
-            var stringBuilder = new StringBuilder();
-            var t = obj.GetType();
-            var properties = t.GetProperties();
-
-            foreach (PropertyInfo p in properties)
+            builder.ConfigureTestServices(services =>
             {
-                var val = p.GetValue(obj);
-
-                if (val != null)
+                services.AddAuthentication(s =>
                 {
+                    s.DefaultAuthenticateScheme = "Test";
+                    s.DefaultChallengeScheme = "Test";
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+                services.AddSingleton(_testAuthenticationContextBuilder);
+            });
+        });
 
-                    stringBuilder.Append(String.Format("{0}={1}&", p.Name, val.ToString()));
-                }
+
+        _employeeService = serviceProvier.GetRequiredService<IEmployeeService>();
+        _employeeQueryService = serviceProvier.GetRequiredService<IEmployeeQueryService>();
+
+        defaultemployeeId = await registerEmployeeAsync(defaultEmail, defaultPassword);
+    }
+
+    [TearDown]
+    public override void TearDown()
+    {
+        base.TearDown();
+
+        _webApplicationFactory.Dispose();
+    }
+
+    private async Task<Guid> registerEmployeeAsync(string email, string password)
+    {
+        await _employeeService.Register(email, password);
+        var employee = await _employeeQueryService.GetByEmail(email);
+
+        return employee.Id;
+    }
+
+    protected static string ConvertToQueryParams<T>(T obj) where T : class
+    {
+        var stringBuilder = new StringBuilder();
+        var t = obj.GetType();
+        var properties = t.GetProperties();
+
+        foreach (PropertyInfo p in properties)
+        {
+            var val = p.GetValue(obj);
+
+            if (val != null)
+            {
+
+                stringBuilder.Append(String.Format("{0}={1}&", p.Name, val.ToString()));
             }
-
-            return stringBuilder.ToString().TrimEnd('&');
         }
+
+        return stringBuilder.ToString().TrimEnd('&');
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace R2S.EmployeeManagement.Api.Models
-{
-    public class ChangePasswordDTO
-    {
-        public string? OldPassword { get; set; } = "";
+﻿namespace R2S.EmployeeManagement.Api.Models;
 
-        public string? NewPassword { get; set; } = "";
-    }
+public class ChangePasswordDTO
+{
+    public string? OldPassword { get; set; } = "";
+
+    public string? NewPassword { get; set; } = "";
 }

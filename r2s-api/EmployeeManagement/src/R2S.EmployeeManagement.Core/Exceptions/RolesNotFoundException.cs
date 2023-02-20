@@ -1,6 +1,5 @@
-﻿namespace R2S.EmployeeManagement.Core.Exceptions
+﻿namespace R2S.EmployeeManagement.Core.Exceptions;
+
+public class RolesNotFoundException : BaseEmployeeDomainException
 {
-    public class RolesNotFoundException : BaseEmployeeDomainException
-    {
-    }
 }

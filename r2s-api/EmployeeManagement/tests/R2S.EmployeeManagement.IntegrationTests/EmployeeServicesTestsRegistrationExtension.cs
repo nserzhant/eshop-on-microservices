@@ -2,18 +2,17 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace R2S.EmployeeManagement.Core.IntegrationTests
+namespace R2S.EmployeeManagement.Core.IntegrationTests;
+
+public static class EmployeeServicesTestsRegistrationExtension
 {
-    public static class EmployeeServicesTestsRegistrationExtension
+    public static IServiceCollection AddTestEmployeeServices(this IServiceCollection services)
     {
-        public static IServiceCollection AddTestEmployeeServices(this IServiceCollection services)
-        {
-            var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
-            services.AddEmployeeServices(configuration);
-            services.AddLogging(logging => logging.AddConsole());
+        services.AddEmployeeServices(configuration);
+        services.AddLogging(logging => logging.AddConsole());
 
-            return services;
-        }
+        return services;
     }
 }

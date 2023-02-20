@@ -1,10 +1,5 @@
 ﻿using R2S.Catalog.Api.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace R2S.Catalog.Api.IntegrationTests.Infrastructure;
 public class TestAuthenticationContextBuilder

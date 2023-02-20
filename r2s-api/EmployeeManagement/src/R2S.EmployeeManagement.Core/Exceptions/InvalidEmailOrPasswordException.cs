@@ -1,6 +1,5 @@
-﻿namespace R2S.EmployeeManagement.Core.Exceptions
+﻿namespace R2S.EmployeeManagement.Core.Exceptions;
+
+public class InvalidEmailOrPasswordException : BaseEmployeeDomainException
 {
-    public class InvalidEmailOrPasswordException : BaseEmployeeDomainException
-    {
-    }
 }

@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using NSwag.Generation.Processors.Security;
 using R2S.EmployeeManagement.Api;
 using R2S.EmployeeManagement.Api.Filters;
