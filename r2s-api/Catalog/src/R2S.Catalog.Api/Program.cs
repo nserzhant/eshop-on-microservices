@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using NSwag.Generation.Processors.Security;
 using R2S.Catalog.Api.Constants;
 using R2S.Catalog.Api.Settings;
 using R2S.Catalog.Infrastructure;
@@ -14,6 +14,9 @@ var jwtSettingsSection = builder.Configuration.GetSection(ConfigurationKeys.JWT_
 var jwtSettings = new JWTSettings();
 
 jwtSettingsSection.Bind(jwtSettings);
+
+// Configure settings for Client app
+var allowedClients = builder.Configuration[ConfigurationKeys.SPA_CLIENT_IP_CONFIG_NAME];
 
 // Add services to the container.
 builder.Services.AddCatalogServices(builder.Configuration);
@@ -38,40 +41,31 @@ builder.Services.AddAuthentication(auth =>
 });
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddOpenApiDocument(document =>
 {
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    document.AddSecurity("Bearer", new NSwag.OpenApiSecurityScheme
     {
-        Type = SecuritySchemeType.Http,
+        Type = NSwag.OpenApiSecuritySchemeType.Http,
         Scheme = JwtBearerDefaults.AuthenticationScheme,
         BearerFormat = "JWT",
         Description = "Type into the textbox: {your JWT token}."
     });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[]{ }
-        }
-    });
+    document.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("Bearer"));
 });
+builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
+{
+    if (allowedClients != null)
+        builder.WithOrigins(allowedClients).AllowAnyMethod().AllowAnyHeader();
+}));
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseOpenApi();
+    app.UseSwaggerUi3();
+    app.UseCors("corsapp");
 }
 
 app.UseHttpsRedirection();

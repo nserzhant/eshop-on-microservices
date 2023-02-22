@@ -1,0 +1,68 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title-group>
+    <mat-card-title>Brands</mat-card-title>
+    <button mat-raised-button color="primary" class="right" (click)="openCreateBrand()">Add Brand</button>
+  </mat-card-title-group>
+  </mat-card-header>
+  <mat-card-content>
+
+    <table mat-table [dataSource]="data"  matSort>
+
+      <!-- Brand Column -->
+      <ng-container matColumnDef="Brand">
+        <th mat-header-cell *matHeaderCellDef  mat-sort-header> {{ 'email' | translate }} </th>
+        <td mat-cell *matCellDef="let brand"> {{ brand.brand }} </td>
+      </ng-container>
+
+      <!-- Edit Column -->
+      <ng-container matColumnDef="Edit">
+        <th mat-header-cell *matHeaderCellDef   style="width: 40px">
+            <div class="center">{{ 'edit' | translate }}</div>
+        </th>
+        <td mat-cell *matCellDef="let brand">
+          <button mat-icon-button color="primary" class="right" (click)="editBrand(brand)"><mat-icon>edit</mat-icon></button>
+        </td>
+      </ng-container>
+
+      <!-- Delete Column -->
+      <ng-container matColumnDef="Delete">
+        <th mat-header-cell *matHeaderCellDef   style="width: 40px">
+            <div class="center">Delete</div>
+        </th>
+        <td mat-cell *matCellDef="let brand">
+          <button mat-icon-button color="primary" class="right" (click)="deleteBrand(brand)"><mat-icon>close</mat-icon></button>
+        </td>
+      </ng-container>
+
+      <!-- Edit Brand column -->
+      <ng-container matColumnDef="editBrand">
+        <td mat-footer-cell *matFooterCellDef colspan="3">
+          <form #editBrandForm="ngForm" (ngSubmit)="saveBrand(editBrandForm)" class="standard-top-indent">
+            <mat-form-field appearance="outline"class="card-row">
+              <mat-label>Brand Name</mat-label>
+              <input matInput name="brand" required [(ngModel)]="selectedBrand && selectedBrand!.brand">
+              <mat-error>Brand Name is required</mat-error>
+            </mat-form-field>
+            <button type="submit" mat-raised-button color="primary" class="standard-top-indent">
+              Save
+            </button>
+            <mat-spinner *ngIf="isBrandSaving" class="action-spinner"></mat-spinner>
+            <button type="button" mat-raised-button color="primary" class="right" (click)="close(editBrandForm)">
+              Cancel
+            </button>
+          </form>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      <tr mat-footer-row *matFooterRowDef="['editBrand']" [hidden] = "selectedBrand === null"></tr>
+    </table>
+    <mat-spinner *ngIf="isLoadingResults" class="grid-spinner"></mat-spinner>
+    <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+                   [length]="resultsLength"
+                   showFirstLastButtons>
+    </mat-paginator>
+  </mat-card-content>
+</mat-card>

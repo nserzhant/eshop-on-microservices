@@ -24,6 +24,7 @@ import { LoginCallbackComponent } from './components/login-callback/login-callba
 import { MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS } from '@angular/material/progress-spinner';
 import { MaterialModule } from 'src/material.module';
 import { EmployeeAccountClient, EmployeeManagementClient, EMPLOYEE_API_URL } from './services/api/employee.api.client';
+import { CatalogModule } from './catalog/catalog.module';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -50,8 +51,9 @@ export function HttpLoaderFactory(http: HttpClient) {
     FormsModule,
     ReactiveFormsModule,
     AppRoutingModule,
-    BrowserAnimationsModule,    
+    BrowserAnimationsModule,
     HttpClientModule,
+    CatalogModule,
     TranslateModule.forRoot({
         loader: {
             provide: TranslateLoader,
@@ -62,12 +64,12 @@ export function HttpLoaderFactory(http: HttpClient) {
   ],
   providers: [
     {
-      provide: HTTP_INTERCEPTORS,      
+      provide: HTTP_INTERCEPTORS,
       useClass: AuthenticationInterceptorService,
       multi: true
     },
     {
-      provide: HTTP_INTERCEPTORS,      
+      provide: HTTP_INTERCEPTORS,
       useClass: HttpErrorInterceptor,
       multi: true
     },
@@ -78,7 +80,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     {
     provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
     useValue: {
-        diameter: 24, 
+        diameter: 24,
       }
     },
     EmployeeAccountClient,

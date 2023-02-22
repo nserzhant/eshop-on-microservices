@@ -7,8 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="catalog.api.nswag.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.1" />
+    <PackageReference Include="NSwag.AspNetCore" Version="13.18.2" />
+    <PackageReference Include="NSwag.MSBuild" Version="13.18.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
@@ -16,5 +25,13 @@
     <ProjectReference Include="..\R2S.Catalog.Core\R2S.Catalog.Core.csproj" />
     <ProjectReference Include="..\R2S.Catalog.Infrastructure\R2S.Catalog.Infrastructure.csproj" />
   </ItemGroup>
-
+  
+  <Target Name="NSwag" AfterTargets="Build">
+  	<Exec ConsoleToMSBuild="true" ContinueOnError="true" Command="$(NSwagExe_Net70) run catalog.api.nswag.json /variables:Configuration=$(Configuration)">
+  		<Output TaskParameter="ExitCode" PropertyName="NSwagExitCode" />
+  		<Output TaskParameter="ConsoleOutput" PropertyName="NSwagOutput" />
+  	</Exec>
+  	<Message Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' == '0'" Importance="low" />
+  	<Error Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' != '0'" />
+  </Target>
 </Project>

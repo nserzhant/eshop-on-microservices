@@ -27,7 +27,7 @@ mat-card-title {
 }
 div.child-card-spacer {
     margin-top: 15px;
-} 
+}
 
 .mat-mdc-card:not([class*=mat-elevation-z]) {
     @include mat.elevation(4);
@@ -49,7 +49,7 @@ div.child-card-spacer {
 
 .grid-spinner {
     margin: 6px;
-    float: left; 
+    float: left;
 }
 
 .errors-container {
@@ -61,7 +61,7 @@ div.child-card-spacer {
     padding: 5px;
 }
 
-.error-snack-bar {    
+.error-snack-bar {
   padding: 16px;
   --mdc-snackbar-container-color: red;
   --mat-mdc-snack-bar-button-color: white;
@@ -71,4 +71,8 @@ div.child-card-spacer {
 .back-button {
     float: right;
     margin-top: 12px;
+}
+
+.standard-top-indent {
+  margin-top: 4px
 }

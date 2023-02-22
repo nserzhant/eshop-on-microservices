@@ -46,7 +46,7 @@ public class CatalogTypeController : ControllerBase
         return Ok(catalogType);
     }
 
-    [ProducesResponseType(typeof(CatalogTypeReadModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CatalogTypeReadModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpPost()]
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
@@ -62,7 +62,7 @@ public class CatalogTypeController : ControllerBase
         return CreatedAtAction(nameof(GetCatalogType), new { catalogTypeId = catalogTypeToCreate.Id }, catalogTypeCreated);
     }
 
-    [ProducesResponseType(typeof(CatalogTypeReadModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CatalogTypeReadModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpPut("{catalogTypeId:Guid}")]
