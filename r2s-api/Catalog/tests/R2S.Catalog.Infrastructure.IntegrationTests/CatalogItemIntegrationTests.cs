@@ -58,8 +58,63 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Repository")]
+    public async Task When_Catalog_Item_Created_Then_It_Could_Be_Retreived_By_Name_Brand_Type()
+    {
+        var catalogBrand = await createCatalogBrandAsync("Brand");
+        var catalogType = await createCatalogTypeAsync("Type");
+        var catalogItemName = "test catalog item";
+        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
+
+        var catalogItemSaved = await _catalogItemRepository.GetCatalogItemAsync(catalogItemName, catalogType.Id, catalogBrand.Id);
+
+        Assert.That(catalogItemSaved, Is.Not.Null);
+        Assert.That(catalogItemSaved.Id, Is.EqualTo(catalogItemToCreate.Id));
+        Assert.That(catalogItemSaved.Name, Is.EqualTo("test catalog item"));
+    }
+
+    [Test]
+    [Category("Catalog Item Repository")]
+    public async Task When_Catalog_Item_Created_Then_Catalog_Brand_Exists_Check_Working()
+    {
+        var catalogBrand = await createCatalogBrandAsync("Brand");
+        var catalogType = await createCatalogTypeAsync("Type");
+        var catalogItemName = "test catalog item";
+        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
+        var catalogBrandWithItemId = catalogBrand.Id;
+        var catalogBrandWithoutItemId = Guid.NewGuid();
+
+        var itemsWithBrandExists = await _catalogItemRepository.DoesCatalogItemsWithBrandExistsAsync(catalogBrandWithItemId);
+        var itemsWithoutBrandExists = await _catalogItemRepository.DoesCatalogItemsWithBrandExistsAsync(catalogBrandWithoutItemId);
+
+        Assert.That(itemsWithBrandExists, Is.True);
+        Assert.That(itemsWithoutBrandExists, Is.False);
+    }
+
+    [Test]
+    [Category("Catalog Item Repository")]
+    public async Task When_Catalog_Item_Created_Then_Catalog_Type_Exists_Check_Working()
+    {
+        var catalogBrand = await createCatalogBrandAsync("Brand");
+        var catalogType = await createCatalogTypeAsync("Type");
+        var catalogItemName = "test catalog item";
+        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
+        var catalogTypeWithItemId = catalogType.Id;
+        var catalogTypeWithoutItemId = Guid.NewGuid();
+
+        var itemsWithTypeExists = await _catalogItemRepository.DoesCatalogItemsWithTypeExistsAsync(catalogTypeWithItemId);
+        var itemsWithoutTypeExists = await _catalogItemRepository.DoesCatalogItemsWithTypeExistsAsync(catalogTypeWithoutItemId);
+
+        Assert.That(itemsWithTypeExists, Is.True);
+        Assert.That(itemsWithoutTypeExists, Is.False);
+    }
+
+    [Test]
+    [Category("Catalog Item Repository")]
     [Category("Catalog Item Query Service")]
-    public async Task When_Update_Catalog_Item_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Update_Catalog_Item_Name_Then_It_Could_Be_Retreived_By_Id()
     {
         string catalogItemName = "test catalog item";
         string updatedCatalogItemName = "updated catalog item";
@@ -68,11 +123,28 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         catalogItem.UpdateName(updatedCatalogItemName);
 
         await _catalogItemService.UpdateCatalogItemAsync(catalogItem);
-        await _catalogItemRepository.SaveChangesAsync();
 
         var catalogItemUpdated = await _catalogItemQueryService.GetById(catalogItem.Id);
         Assert.That(catalogItemUpdated, Is.Not.Null);
         Assert.That(catalogItemUpdated.Name, Is.EqualTo(updatedCatalogItemName));
+    }
+
+    [Test]
+    [Category("Catalog Item Repository")]
+    [Category("Catalog Item Query Service")]
+    public async Task When_Update_Catalog_Item_Qty_Then_It_Could_Be_Retreived_By_Id()
+    {
+        string catalogItemName = "test catalog item";
+        CatalogItem catalogItem = await createCatalogItemAsync(catalogItemName);
+        await _catalogItemRepository.SaveChangesAsync();
+        var updatedCatalogItemPrice = catalogItem.Price + 100;
+        catalogItem.UpdatePrice(updatedCatalogItemPrice);
+
+        await _catalogItemService.UpdateCatalogItemAsync(catalogItem);
+
+        var catalogItemUpdated = await _catalogItemQueryService.GetById(catalogItem.Id);
+        Assert.That(catalogItemUpdated, Is.Not.Null);
+        Assert.That(catalogItemUpdated.Price, Is.EqualTo(updatedCatalogItemPrice));
     }
 
     [Test]

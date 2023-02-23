@@ -43,6 +43,8 @@ public class CatalogItemService : ICatalogItemService
     {
         var catalogBrand = await _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId);
         var catalogType = await _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId);
+        var catalogItemAlreadyExists = await _catalogItemRepository.GetCatalogItemAsync(catalogItem.Name,
+            catalogItem.CatalogTypeId, catalogItem.CatalogBrandId);
 
         if (catalogBrand == null)
         {
@@ -52,6 +54,11 @@ public class CatalogItemService : ICatalogItemService
         if (catalogType == null)
         {
             throw new CatalogTypeNotExistsException();
+        }
+
+        if(catalogItemAlreadyExists != null && catalogItemAlreadyExists.Id != catalogItem.Id)
+        {
+            throw new CatalogItemAlreadyExistsException();
         }
     }
 }

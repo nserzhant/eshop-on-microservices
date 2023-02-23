@@ -33,10 +33,10 @@ public class BaseCatalogIntegrationTests
     protected async Task<CatalogType> createCatalogTypeAsync(string catalogTypeName)
     {
         var catalogTypeRepository = serviceProvider.GetRequiredService<ICatalogTypeRepository>();
+        var catalogTypeService = serviceProvider.GetRequiredService<ICatalogTypeService>();
         var catalogTypeToCreate = new CatalogType(catalogTypeName);
         
-        await catalogTypeRepository.CreateCatalogTypeAsync(catalogTypeToCreate);
-        await catalogTypeRepository.SaveChangesAsync();
+        await catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
 
         var result = await catalogTypeRepository.GetCatalogTypeAsync(catalogTypeToCreate.Id);
 
@@ -46,10 +46,10 @@ public class BaseCatalogIntegrationTests
     protected async Task<CatalogBrand> createCatalogBrandAsync(string catalogBrandName)
     {
         var catalogBrandRepository = serviceProvider.GetRequiredService<ICatalogBrandRepository>();
+        var catalogBrandService = serviceProvider.GetRequiredService<ICatalogBrandService>();
         var catalogBrandToCreate = new CatalogBrand(catalogBrandName);
 
-        await catalogBrandRepository.CreateCatalogBrandAsync(catalogBrandToCreate);
-        await catalogBrandRepository.SaveChangesAsync();
+        await catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
 
         var result = await catalogBrandRepository.GetCatalogBrandAsync(catalogBrandToCreate.Id);
 

@@ -4,9 +4,10 @@ namespace R2S.Catalog.Core.Interfaces;
 
 public interface ICatalogTypeRepository
 {
-    Task CreateCatalogTypeAsync(CatalogType catalogTypeToCreate);
+    internal Task CreateCatalogTypeAsync(CatalogType catalogTypeToCreate);
+    internal void UpdateCatalogType(CatalogType catalogTypeToUpdate);
     Task<CatalogType?> GetCatalogTypeAsync(Guid catalogTypeId);
-    void UpdateCatalogType(CatalogType catalogTypeToUpdate);
     internal void DeleteCatalogType(CatalogType catalogType);
+    Task<CatalogType?> GetCatalogTypeByNameAsync(string catalogTypeName);
     Task SaveChangesAsync();
 }

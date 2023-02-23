@@ -13,6 +13,8 @@ internal class CatalogTypeConfiguration : IEntityTypeConfiguration<CatalogType>
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.HasIndex(ct => ct.Type).IsUnique(true);
+
         builder.Property(ct => ct.Ts)
             .IsRowVersion();
     }

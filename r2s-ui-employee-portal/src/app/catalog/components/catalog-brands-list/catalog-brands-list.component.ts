@@ -4,12 +4,11 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { merge, of as observableOf, Subject} from 'rxjs';
 import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
-import { CatalogBrandClient, CatalogBrandDTO, CatalogBrandReadModel, ICatalogBrandDTO, OrderByDirections } from '../../services/api/catalog.api.client';
+import { CatalogBrandClient, CatalogBrandDTO, CatalogBrandReadModel, CatalogDomainErrorDTO, ICatalogBrandDTO, OrderByDirections } from '../../services/api/catalog.api.client';
 
 @Component({
   selector: 'app-catalog-brands-list',
-  templateUrl: './catalog-brands-list.component.html',
-  styleUrls: ['./catalog-brands-list.component.css']
+  templateUrl: './catalog-brands-list.component.html'
 })
 export class CatalogBrandsListComponent implements AfterViewInit {
   displayedColumns: string[] = ['Brand', 'Edit', 'Delete'];
@@ -25,6 +24,7 @@ export class CatalogBrandsListComponent implements AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   isBrandSaving = false;
+  apiError : CatalogDomainErrorDTO | null = null;
 
   ngOnInit(): void {
   }
@@ -83,12 +83,14 @@ export class CatalogBrandsListComponent implements AfterViewInit {
     saveObservable.subscribe({
       error: (e) => {
         this.isBrandSaving = false;
+        this.apiError = e;
       },
       complete: () => {
         this.isBrandSaving = false;
         this.selectedBrand = null;
         this.refreshDataSubject$.next();
-        form.reset();
+        form.resetForm();
+        this.apiError = null;
       }
     });
   }
@@ -98,17 +100,20 @@ export class CatalogBrandsListComponent implements AfterViewInit {
     this.catalogBrandClient.deleteCatalogBrand(brand.id!).subscribe({
       error: (e) => {
         this.isLoadingResults = false;
+        this.apiError = e;
       },
       complete: () => {
         this.isBrandSaving = false;
         this.refreshDataSubject$.next();
+        this.apiError = null;
       }
     });
   }
 
   close(form: NgForm) {
     this.selectedBrand = null;
-    form.reset();
+    form.resetForm();
+    this.apiError = null;
   }
 
   openCreateBrand() {

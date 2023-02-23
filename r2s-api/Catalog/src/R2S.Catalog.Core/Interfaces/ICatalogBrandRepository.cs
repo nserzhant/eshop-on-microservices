@@ -4,9 +4,10 @@ namespace R2S.Catalog.Core.Interfaces;
 
 public interface ICatalogBrandRepository
 {
-    Task CreateCatalogBrandAsync(CatalogBrand catalogBrandToCreate);
+    internal Task CreateCatalogBrandAsync(CatalogBrand catalogBrandToCreate);
     Task<CatalogBrand?> GetCatalogBrandAsync(Guid catalogBrandId);
-    void UpdateCatalogBrand(CatalogBrand catalogBrandToUpdate);
+    internal void UpdateCatalogBrand(CatalogBrand catalogBrandToUpdate);
     internal void DeleteCatalogBrand(CatalogBrand catalogBrand);
+    Task<CatalogBrand?> GetCatalogBrandByNameAsync(string catalogBrandName);
     Task SaveChangesAsync();
 }

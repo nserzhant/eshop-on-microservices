@@ -1,4 +1,4 @@
 ﻿namespace R2S.Catalog.Core.Exceptions;
-public class CatalogItemsForBrandExistsException : BaseCatalogException
+public class CatalogItemsForBrandExistsException : BaseCatalogDomainException
 {
 }

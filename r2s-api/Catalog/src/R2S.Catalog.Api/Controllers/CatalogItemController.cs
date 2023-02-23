@@ -47,7 +47,7 @@ public class CatalogItemController : ControllerBase
     }
 
     [ProducesResponseType(typeof(CatalogItemReadModel), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPost()]
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> CreateCatalogItemAsync(CatalogItemDTO catalogItem)
@@ -68,7 +68,7 @@ public class CatalogItemController : ControllerBase
 
     [ProducesResponseType(typeof(CatalogItemReadModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPut("{catalogItemId:Guid}")]
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> UpdateCatalogItemAsync(Guid catalogItemId, CatalogItemDTO catalogItem)
@@ -98,7 +98,7 @@ public class CatalogItemController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpDelete("{catalogItemId:Guid}")]
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> DeleteCatalogItemAsync(Guid catalogItemId)

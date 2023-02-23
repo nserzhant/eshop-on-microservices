@@ -31,21 +31,34 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
     {
         var catalogBrandToCreate = new CatalogBrand("test brand");
 
-        await _catalogBrandRepository.CreateCatalogBrandAsync(catalogBrandToCreate);
-        await _catalogBrandRepository.SaveChangesAsync();
+        await _catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
 
         Assert.That(catalogBrandToCreate.Id, Is.Not.EqualTo(Guid.Empty));
     }
 
     [Test]
     [Category("Catalog Brand Repository")]
-    public async Task When_Save_Catalog_Brand_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Save_Catalog_Brand_Exists_It_Could_Be_Retreived_By_Id()
     {
         var catalogBrandToCreate = new CatalogBrand("test brand");
-        await _catalogBrandRepository.CreateCatalogBrandAsync(catalogBrandToCreate);
-        await _catalogBrandRepository.SaveChangesAsync();
+        await _catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
 
         var catalogBrandSaved = await _catalogBrandRepository.GetCatalogBrandAsync(catalogBrandToCreate.Id);
+
+        Assert.That(catalogBrandSaved, Is.Not.Null);
+        Assert.That(catalogBrandSaved.Id, Is.EqualTo(catalogBrandToCreate.Id));
+        Assert.That(catalogBrandSaved.Brand, Is.EqualTo("test brand"));
+    }
+
+    [Test]
+    [Category("Catalog Brand Repository")]
+    public async Task When_Save_Catalog_Brand_Exists_It_Could_Be_Retreived_By_Name()
+    {
+        var catalogBrandName = "test brand";
+        var catalogBrandToCreate = new CatalogBrand(catalogBrandName);
+        await _catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
+
+        var catalogBrandSaved = await _catalogBrandRepository.GetCatalogBrandByNameAsync(catalogBrandName);
 
         Assert.That(catalogBrandSaved, Is.Not.Null);
         Assert.That(catalogBrandSaved.Id, Is.EqualTo(catalogBrandToCreate.Id));
@@ -59,11 +72,9 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
     {
         string catalogBrandName = "catalog brand";
         CatalogBrand catalogBrand = await createCatalogBrandAsync(catalogBrandName);
-        await _catalogBrandRepository.SaveChangesAsync();
         catalogBrand.UpdateBrand("updated brand");
 
-        _catalogBrandRepository.UpdateCatalogBrand(catalogBrand);
-        await _catalogBrandRepository.SaveChangesAsync();
+        await _catalogBrandService.UpdateCatalogBrandAsync(catalogBrand);
 
         var catalogBrandUpdated = await _catalogBrandQueryService.GetById(catalogBrand.Id);
         Assert.That(catalogBrandUpdated, Is.Not.Null);
@@ -119,8 +130,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
     public async Task When_Catalog_Brand_Exists_Then_It_Could_Be_Queried_By_Id()
     {
         var catalogBrandToCreate = new CatalogBrand("test brand");
-        await _catalogBrandRepository.CreateCatalogBrandAsync(catalogBrandToCreate);
-        await _catalogBrandRepository.SaveChangesAsync();
+        await _catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
 
         var catalogBrandReadModel = await _catalogBrandQueryService.GetById(catalogBrandToCreate.Id);
 

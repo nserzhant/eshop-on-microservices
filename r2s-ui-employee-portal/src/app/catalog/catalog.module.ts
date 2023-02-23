@@ -9,6 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CatalogBrandClient, CatalogItemClient, CatalogTypeClient, CATALOG_API_URL } from './services/api/catalog.api.client';
 import { environment } from 'src/environments/environment';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { CatalogApiErrorsSummaryComponent } from './components/catalog-api-errors-summary/catalog-api-errors-summary.component';
 
 
 
@@ -16,7 +17,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
   declarations: [
     CatalogBrandsListComponent,
     CatalogTypesListComponent,
-    CatalogItemsListComponent
+    CatalogItemsListComponent,
+    CatalogApiErrorsSummaryComponent
   ],
   imports: [
     CommonModule,

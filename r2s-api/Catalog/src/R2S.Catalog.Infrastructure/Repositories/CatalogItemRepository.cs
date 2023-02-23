@@ -31,7 +31,7 @@ public class CatalogItemRepository : ICatalogItemRepository
     public async Task<CatalogItem?> GetCatalogItemAsync(Guid catalogItemId)
     {
         var item = await _catalogDbContext.CatalogItems
-            .FirstOrDefaultAsync(cb => cb.Id == catalogItemId);
+            .FirstOrDefaultAsync(ci => ci.Id == catalogItemId);
 
         return item;
     }
@@ -48,6 +48,16 @@ public class CatalogItemRepository : ICatalogItemRepository
         var exists = await _catalogDbContext.CatalogItems.AnyAsync(ci => ci.CatalogBrandId == catalogBrandId);
 
         return exists;
+    }
+
+    public async Task<CatalogItem?> GetCatalogItemAsync(string catalogItemName, Guid catalogTypeId, Guid catalogBrandId)
+    {
+        var item = await _catalogDbContext.CatalogItems
+            .FirstOrDefaultAsync(ci => ci.Name == catalogItemName &&
+            ci.CatalogTypeId == catalogTypeId &&
+            ci.CatalogBrandId == catalogBrandId );
+
+        return item;
     }
 
     public async Task SaveChangesAsync()

@@ -33,6 +33,7 @@ public class CatalogItemConfiguration : IEntityTypeConfiguration<CatalogItem>
         builder.HasOne<CatalogType>()
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(ci => new { ci.Name, ci.CatalogBrandId, ci.CatalogTypeId }).IsUnique(true);
 
         // Timestamp column
         builder.Property(ci => ci.Ts)

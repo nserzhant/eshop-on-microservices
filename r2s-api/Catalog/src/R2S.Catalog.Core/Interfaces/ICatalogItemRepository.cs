@@ -8,7 +8,8 @@ public interface ICatalogItemRepository
     Task<CatalogItem?> GetCatalogItemAsync(Guid catalogItemId);
     internal void UpdateCatalogItem(CatalogItem catalogItemToUpdate);
     void DeleteCatalogItem(CatalogItem catalogItem);
-    internal Task<bool> DoesCatalogItemsWithTypeExistsAsync(Guid catalogTypeId);
-    internal Task<bool> DoesCatalogItemsWithBrandExistsAsync(Guid catalogBrandId);
+    Task<bool> DoesCatalogItemsWithTypeExistsAsync(Guid catalogTypeId);
+    Task<bool> DoesCatalogItemsWithBrandExistsAsync(Guid catalogBrandId);
+    Task<CatalogItem?> GetCatalogItemAsync(string catalogItemName, Guid catalogTypeId, Guid catalogBrandId);
     Task SaveChangesAsync();
 }

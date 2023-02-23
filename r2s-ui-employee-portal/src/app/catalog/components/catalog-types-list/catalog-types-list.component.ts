@@ -4,12 +4,11 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { merge, of as observableOf, Subject} from 'rxjs';
 import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
-import { CatalogTypeClient, CatalogTypeDTO, CatalogTypeReadModel, ICatalogTypeDTO, OrderByDirections } from '../../services/api/catalog.api.client';
+import { CatalogDomainErrorDTO, CatalogTypeClient, CatalogTypeDTO, CatalogTypeReadModel, ICatalogTypeDTO, OrderByDirections } from '../../services/api/catalog.api.client';
 
 @Component({
   selector: 'app-catalog-types-list',
-  templateUrl: './catalog-types-list.component.html',
-  styleUrls: ['./catalog-types-list.component.css']
+  templateUrl: './catalog-types-list.component.html'
 })
 export class CatalogTypesListComponent {
   displayedColumns: string[] = ['Type', 'Edit', 'Delete'];
@@ -25,6 +24,7 @@ export class CatalogTypesListComponent {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   isTypeSaving = false;
+  apiError : CatalogDomainErrorDTO | null = null;
 
   ngOnInit(): void {
   }
@@ -83,12 +83,14 @@ export class CatalogTypesListComponent {
     saveObservable.subscribe({
       error: (e) => {
         this.isTypeSaving = false;
+        this.apiError = e;
       },
       complete: () => {
         this.isTypeSaving = false;
         this.selectedType = null;
         this.refreshDataSubject$.next();
-        form.reset();
+        form.resetForm();
+        this.apiError = null;
       }
     });
   }
@@ -98,17 +100,20 @@ export class CatalogTypesListComponent {
     this.catalogTypeClient.deleteCatalogType(type.id!).subscribe({
       error: (e) => {
         this.isLoadingResults = false;
+        this.apiError = e;
       },
       complete: () => {
         this.isTypeSaving = false;
         this.refreshDataSubject$.next();
+        this.apiError = null;
       }
     });
   }
 
   close(form: NgForm) {
     this.selectedType = null;
-    form.reset();
+    form.resetForm();
+    this.apiError = null;
   }
 
   openCreateType() {

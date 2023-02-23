@@ -1,5 +1,5 @@
 ﻿namespace R2S.Catalog.Core.Exceptions;
 
-public class CatalogItemNegativePriceException : BaseCatalogException
+public class CatalogItemNegativePriceException : BaseCatalogDomainException
 {
 }

@@ -31,8 +31,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
     {
         var catalogTypeToCreate = new CatalogType("test catalog type");
 
-        await _catalogTypeRepository.CreateCatalogTypeAsync(catalogTypeToCreate);
-        await _catalogTypeRepository.SaveChangesAsync();
+        await _catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
 
         Assert.That(catalogTypeToCreate.Id, Is.Not.EqualTo(Guid.Empty));
     }
@@ -42,8 +41,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
     public async Task When_Save_Catalog_Type_Then_It_Could_Be_Retreived_By_Id()
     {
         var catalogTypeToCreate = new CatalogType("test catalog type");
-        await _catalogTypeRepository.CreateCatalogTypeAsync(catalogTypeToCreate);
-        await _catalogTypeRepository.SaveChangesAsync();
+        await _catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
 
         var catalogTypeSaved = await _catalogTypeRepository.GetCatalogTypeAsync(catalogTypeToCreate.Id);
 
@@ -63,8 +61,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
         await _catalogTypeRepository.SaveChangesAsync();
         catalogType.UpdateType(updatedCatalogTypeName);
 
-        _catalogTypeRepository.UpdateCatalogType(catalogType);
-        await _catalogTypeRepository.SaveChangesAsync();
+        await _catalogTypeService.UpdateCatalogTypeAsync(catalogType);
 
         var catalogTypeUpdated = await _catalogTypeQueryService.GetById(catalogType.Id);
         Assert.That(catalogTypeUpdated, Is.Not.Null);
@@ -121,8 +118,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
     {
         var catalogTypeName = "test catalog type";
         var catalogTypeToCreate = new CatalogType(catalogTypeName);
-        await _catalogTypeRepository.CreateCatalogTypeAsync(catalogTypeToCreate);
-        await _catalogTypeRepository.SaveChangesAsync();
+        await _catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
 
         var catalogTypeReadModel = await _catalogTypeQueryService.GetById(catalogTypeToCreate.Id);
 

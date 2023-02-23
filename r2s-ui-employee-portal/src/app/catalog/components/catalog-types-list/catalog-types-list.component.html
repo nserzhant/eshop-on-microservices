@@ -44,14 +44,17 @@
               <input matInput name="type" required [(ngModel)]="selectedType && selectedType!.type">
               <mat-error>Type Name is required</mat-error>
             </mat-form-field>
-            <button type="submit" mat-raised-button color="primary" class="standard-top-indent">
+            <button type="submit" mat-raised-button color="primary"  [disabled]="editTypeForm.invalid || isTypeSaving">
               Save
             </button>
-            <mat-spinner *ngIf="isTypeSaving" class="action-spinner"></mat-spinner>
             <button type="button" mat-raised-button color="primary" class="right" (click)="close(editTypeForm)">
               Cancel
             </button>
+            <mat-spinner *ngIf="isTypeSaving" class="action-spinner"></mat-spinner>
           </form>
+          <div  class="standard-top-indent">
+            <catalog-api-errors-summary [error]="apiError"></catalog-api-errors-summary>
+          </div>
         </td>
       </ng-container>
 

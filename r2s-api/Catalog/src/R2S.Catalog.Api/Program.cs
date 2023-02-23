@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using NSwag.Generation.Processors.Security;
 using R2S.Catalog.Api.Constants;
+using R2S.Catalog.Api.Filters;
 using R2S.Catalog.Api.Settings;
 using R2S.Catalog.Infrastructure;
 using System.Text;
@@ -40,7 +41,7 @@ builder.Services.AddAuthentication(auth =>
     };
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<CatalogDomainExceptionFilter>());
 builder.Services.AddOpenApiDocument(document =>
 {
     document.AddSecurity("Bearer", new NSwag.OpenApiSecurityScheme

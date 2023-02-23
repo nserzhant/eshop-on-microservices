@@ -1,5 +1,5 @@
 ﻿namespace R2S.Catalog.Core.Exceptions;
 
-public class CatalogTypeIsNullOrEmptyException : BaseCatalogException
+public class CatalogTypeIsNullOrEmptyException : BaseCatalogDomainException
 {
 }

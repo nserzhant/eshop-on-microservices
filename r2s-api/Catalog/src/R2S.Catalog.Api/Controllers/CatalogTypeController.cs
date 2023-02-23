@@ -47,15 +47,14 @@ public class CatalogTypeController : ControllerBase
     }
 
     [ProducesResponseType(typeof(CatalogTypeReadModel), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPost()]
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> CreateCatalogTypeAsync(CatalogTypeDTO catalogType)
     {
         var catalogTypeToCreate = new CatalogType(catalogType.Type);
 
-        await _catalogTypeRepository.CreateCatalogTypeAsync(catalogTypeToCreate);
-        await _catalogTypeRepository.SaveChangesAsync();
+        await _catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
 
         var catalogTypeCreated = await _catalogTypeQueryService.GetById(catalogTypeToCreate.Id);
 
@@ -64,7 +63,7 @@ public class CatalogTypeController : ControllerBase
 
     [ProducesResponseType(typeof(CatalogTypeReadModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPut("{catalogTypeId:Guid}")]
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> UpdateCatalogTypeAsync(Guid catalogTypeId, CatalogTypeDTO catalogType)
@@ -79,8 +78,7 @@ public class CatalogTypeController : ControllerBase
         catalogTypeToUpdate.UpdateType(catalogType.Type);
         catalogTypeToUpdate.UpdateTs(catalogType.Ts);
 
-        _catalogTypeRepository.UpdateCatalogType(catalogTypeToUpdate);
-        await _catalogTypeRepository.SaveChangesAsync();
+        await _catalogTypeService.UpdateCatalogTypeAsync(catalogTypeToUpdate);
 
         var catalogTypeUpdated = await _catalogTypeQueryService.GetById(catalogTypeId);
 
@@ -89,7 +87,7 @@ public class CatalogTypeController : ControllerBase
 
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpDelete("{catalogTypeId:Guid}")]
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> DeleteCatalogTypeAsync(Guid catalogTypeId)

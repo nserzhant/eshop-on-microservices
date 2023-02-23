@@ -36,6 +36,14 @@ public class CatalogTypeRepository : ICatalogTypeRepository
         return catalogType;
     }
 
+    public async Task<CatalogType?> GetCatalogTypeByNameAsync(string catalogTypeName)
+    {
+        var catalogType = await _catalogDbContext.CatalogTypes
+            .FirstOrDefaultAsync(ct => ct.Type == catalogTypeName);
+
+        return catalogType;
+    }
+
     public async Task SaveChangesAsync()
     {
         await _catalogDbContext.SaveChangesAsync();

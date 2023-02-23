@@ -10,8 +10,10 @@ public class CatalogBrandEntityTypeConfiguration : IEntityTypeConfiguration<Cata
     {
         builder.HasKey(cb => cb.Id);
         builder.Property(cb => cb.Brand)
-            .IsRequired()
+            .IsRequired()            
             .HasMaxLength(100);
+
+        builder.HasIndex(cb => cb.Brand).IsUnique(true);
 
         builder.Property(cb => cb.Ts)
             .IsRowVersion();

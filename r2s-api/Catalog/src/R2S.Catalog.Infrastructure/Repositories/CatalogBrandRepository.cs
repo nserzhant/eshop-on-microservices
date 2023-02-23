@@ -36,6 +36,14 @@ public class CatalogBrandRepository : ICatalogBrandRepository
         return item;
     }
 
+    public async Task<CatalogBrand?> GetCatalogBrandByNameAsync(string catalogBrandName)
+    {
+        var item = await _catalogDbContext.CatalogBrands
+            .FirstOrDefaultAsync(cb => cb.Brand == catalogBrandName);
+
+        return item;
+    }
+
     public async Task SaveChangesAsync()
     {
         await _catalogDbContext.SaveChangesAsync();
