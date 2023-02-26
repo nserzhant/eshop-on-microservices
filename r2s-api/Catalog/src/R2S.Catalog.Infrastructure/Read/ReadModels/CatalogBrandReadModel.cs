@@ -2,7 +2,7 @@
 
 public class CatalogBrandReadModel
 {
-    public byte[] Ts { get; set; }
-    public Guid Id { get; set; }
-    public string Brand { get; set; }
+    public byte[] Ts { get; init; }
+    public Guid Id { get; init; }
+    public string Brand { get; init; }
 }

@@ -66,6 +66,7 @@ export class CatalogBrandsListComponent implements AfterViewInit {
   editBrand(brand: CatalogBrandReadModel) {
     this.selectedBrand = { ...brand};
     this.selectedBrandId = brand.id!;
+    this.apiError = null;
   }
 
   saveBrand(form: NgForm) {
@@ -119,5 +120,6 @@ export class CatalogBrandsListComponent implements AfterViewInit {
   openCreateBrand() {
     this.selectedBrand = { brand: ''};
     this.selectedBrandId = null;
+    this.apiError = null;
   }
 }

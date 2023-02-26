@@ -54,7 +54,7 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
         }
 
         var stringContent = await response.Content.ReadAsStringAsync();
-        var jsonSerializationOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, IgnoreReadOnlyProperties = false };
+        var jsonSerializationOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, IgnoreReadOnlyProperties = false, IncludeFields = true };
         var result = JsonSerializer.Deserialize<T>(stringContent, jsonSerializationOptions);
 
         return result;

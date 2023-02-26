@@ -10,16 +10,13 @@ public class CatalogItem : BaseEntity
     public string? PictureUri { get; set; }
     public Guid CatalogTypeId { get; set; }
     public Guid CatalogBrandId { get; set; }
+    public int AvailableQty { get; private set; } = 0;
 
-    public CatalogItem(string? name, string? description, decimal? price, string? pictureUri, Guid catalogTypeId, Guid catalogBrandId)
+    public CatalogItem(string? name, Guid catalogTypeId, Guid catalogBrandId)
     {
         UpdateName(name);
-        UpdatePrice(price);
         UpdateBrand(catalogBrandId);
         UpdateType(catalogTypeId);
-
-        Description = description;
-        PictureUri = pictureUri;
     }
 
     public void UpdateName(string? name)
@@ -60,5 +57,13 @@ public class CatalogItem : BaseEntity
             throw new CatalogItemBrandIsEmptyException();
 
         CatalogBrandId = catalogBrandId;
+    }
+
+    public void UpdateAvailableQty(int availableQty)
+    {
+        if (availableQty < 0)
+            throw new CatalogItemNegativeQtyException();
+
+        AvailableQty = availableQty;
     }
 }

@@ -52,12 +52,12 @@ public class CatalogItemController : ControllerBase
     [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> CreateCatalogItemAsync(CatalogItemDTO catalogItem)
     {
-        var catalogItemToCreate = new CatalogItem(catalogItem.Name,
-            catalogItem.Description,
-            catalogItem.ItemPrice,
-            catalogItem.PictureUri,
-            catalogItem.TypeId,
-            catalogItem.BrandId);
+        var catalogItemToCreate = new CatalogItem(catalogItem.Name, catalogItem.TypeId, catalogItem.BrandId);
+
+        catalogItemToCreate.Description = catalogItem.Description;
+        catalogItemToCreate.PictureUri = catalogItem.PictureUri;
+        catalogItemToCreate.UpdatePrice(catalogItem.Price);
+        catalogItemToCreate.UpdateAvailableQty(catalogItem.AvailableQty);
 
         await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
 
@@ -66,7 +66,7 @@ public class CatalogItemController : ControllerBase
         return CreatedAtAction(nameof(GetCatalogItem), new { catalogItemId = catalogItemToCreate.Id }, catalogItemCreated);
     }
 
-    [ProducesResponseType(typeof(CatalogItemReadModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CatalogItemReadModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPut("{catalogItemId:Guid}")]
@@ -83,8 +83,9 @@ public class CatalogItemController : ControllerBase
         catalogItemToUpdate.UpdateName(catalogItem.Name);
         catalogItemToUpdate.UpdateType(catalogItem.TypeId);
         catalogItemToUpdate.UpdateBrand(catalogItem.BrandId);
-        catalogItemToUpdate.UpdatePrice(catalogItem.ItemPrice);
+        catalogItemToUpdate.UpdatePrice(catalogItem.Price);
         catalogItemToUpdate.UpdateTs(catalogItem.Ts);
+        catalogItemToUpdate.UpdateAvailableQty(catalogItem.AvailableQty);
         catalogItemToUpdate.PictureUri = catalogItem.PictureUri;
         catalogItemToUpdate.Description = catalogItem.Description;
 

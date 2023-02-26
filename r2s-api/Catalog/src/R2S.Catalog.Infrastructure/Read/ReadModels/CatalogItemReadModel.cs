@@ -2,12 +2,15 @@
 
 public class CatalogItemReadModel
 {
-    public byte[] Ts { get; set; }
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public string? Description { get; set; }
-    public decimal? Price { get; set; }
-    public string? PictureUri { get; set; }
-    public CatalogTypeReadModel CatalogType { get; set; }
-    public CatalogBrandReadModel CatalogBrand { get; set; }
+    public byte[] Ts { get; init; }
+    public Guid Id { get; init; }
+    public string Name { get; init; }
+    public string? Description { get; init; }
+    public decimal? Price { get; init; }
+    public string? PictureUri { get; init; }
+    public Guid CatalogTypeId { get; init; }
+    public Guid CatalogBrandId { get; init; }
+    public CatalogTypeReadModel CatalogType { get; init; }
+    public CatalogBrandReadModel CatalogBrand { get; init; }
+    public int AvailableQty { get; init; }
 }

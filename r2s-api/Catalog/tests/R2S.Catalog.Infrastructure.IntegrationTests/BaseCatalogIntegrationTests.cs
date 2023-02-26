@@ -65,7 +65,10 @@ public class BaseCatalogIntegrationTests
         var catalogBrandId = (await createCatalogBrandAsync(catalogBrandNameToCreate)).Id;
         var catalogTypeId =  (await createCatalogTypeAsync(catalogTypeNameToCreate)).Id;
         var itemPrice = price ?? 1m;
-        var catalogItemToCreate = new CatalogItem(catalogItemName, description, itemPrice, null, catalogTypeId, catalogBrandId);
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
+
+        catalogItemToCreate.UpdatePrice(itemPrice);
+        catalogItemToCreate.Description = description;
         
         await catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
 

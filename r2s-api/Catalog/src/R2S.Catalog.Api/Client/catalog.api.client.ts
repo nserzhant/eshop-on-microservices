@@ -464,12 +464,12 @@ export class CatalogItemClient {
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        if (status === 201) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = CatalogItemReadModel.fromJS(resultData200);
-            return _observableOf(result200);
+            let result201: any = null;
+            let resultData201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result201 = CatalogItemReadModel.fromJS(resultData201);
+            return _observableOf(result201);
             }));
         } else if (status === 404) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -1268,8 +1268,11 @@ export class CatalogItemReadModel implements ICatalogItemReadModel {
     description?: string | undefined;
     price?: number | undefined;
     pictureUri?: string | undefined;
+    catalogTypeId?: string;
+    catalogBrandId?: string;
     catalogType?: CatalogTypeReadModel;
     catalogBrand?: CatalogBrandReadModel;
+    availableQty?: number;
 
     constructor(data?: ICatalogItemReadModel) {
         if (data) {
@@ -1288,8 +1291,11 @@ export class CatalogItemReadModel implements ICatalogItemReadModel {
             this.description = _data["description"];
             this.price = _data["price"];
             this.pictureUri = _data["pictureUri"];
+            this.catalogTypeId = _data["catalogTypeId"];
+            this.catalogBrandId = _data["catalogBrandId"];
             this.catalogType = _data["catalogType"] ? CatalogTypeReadModel.fromJS(_data["catalogType"]) : <any>undefined;
             this.catalogBrand = _data["catalogBrand"] ? CatalogBrandReadModel.fromJS(_data["catalogBrand"]) : <any>undefined;
+            this.availableQty = _data["availableQty"];
         }
     }
 
@@ -1308,8 +1314,11 @@ export class CatalogItemReadModel implements ICatalogItemReadModel {
         data["description"] = this.description;
         data["price"] = this.price;
         data["pictureUri"] = this.pictureUri;
+        data["catalogTypeId"] = this.catalogTypeId;
+        data["catalogBrandId"] = this.catalogBrandId;
         data["catalogType"] = this.catalogType ? this.catalogType.toJSON() : <any>undefined;
         data["catalogBrand"] = this.catalogBrand ? this.catalogBrand.toJSON() : <any>undefined;
+        data["availableQty"] = this.availableQty;
         return data;
     }
 }
@@ -1321,8 +1330,11 @@ export interface ICatalogItemReadModel {
     description?: string | undefined;
     price?: number | undefined;
     pictureUri?: string | undefined;
+    catalogTypeId?: string;
+    catalogBrandId?: string;
     catalogType?: CatalogTypeReadModel;
     catalogBrand?: CatalogBrandReadModel;
+    availableQty?: number;
 }
 
 export class CatalogTypeReadModel implements ICatalogTypeReadModel {
@@ -1372,11 +1384,12 @@ export interface ICatalogTypeReadModel {
 export class CatalogItemDTO implements ICatalogItemDTO {
     name?: string | undefined;
     description?: string | undefined;
-    itemPrice?: number | undefined;
+    price?: number | undefined;
     pictureUri?: string | undefined;
     typeId?: string;
     brandId?: string;
     ts?: string | undefined;
+    availableQty?: number;
 
     constructor(data?: ICatalogItemDTO) {
         if (data) {
@@ -1391,11 +1404,12 @@ export class CatalogItemDTO implements ICatalogItemDTO {
         if (_data) {
             this.name = _data["name"];
             this.description = _data["description"];
-            this.itemPrice = _data["itemPrice"];
+            this.price = _data["price"];
             this.pictureUri = _data["pictureUri"];
             this.typeId = _data["typeId"];
             this.brandId = _data["brandId"];
             this.ts = _data["ts"];
+            this.availableQty = _data["availableQty"];
         }
     }
 
@@ -1410,11 +1424,12 @@ export class CatalogItemDTO implements ICatalogItemDTO {
         data = typeof data === 'object' ? data : {};
         data["name"] = this.name;
         data["description"] = this.description;
-        data["itemPrice"] = this.itemPrice;
+        data["price"] = this.price;
         data["pictureUri"] = this.pictureUri;
         data["typeId"] = this.typeId;
         data["brandId"] = this.brandId;
         data["ts"] = this.ts;
+        data["availableQty"] = this.availableQty;
         return data;
     }
 }
@@ -1422,11 +1437,12 @@ export class CatalogItemDTO implements ICatalogItemDTO {
 export interface ICatalogItemDTO {
     name?: string | undefined;
     description?: string | undefined;
-    itemPrice?: number | undefined;
+    price?: number | undefined;
     pictureUri?: string | undefined;
     typeId?: string;
     brandId?: string;
     ts?: string | undefined;
+    availableQty?: number;
 }
 
 export class ListCatalogItemResult implements IListCatalogItemResult {

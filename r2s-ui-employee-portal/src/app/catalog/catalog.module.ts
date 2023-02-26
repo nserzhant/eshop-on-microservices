@@ -10,6 +10,7 @@ import { CatalogBrandClient, CatalogItemClient, CatalogTypeClient, CATALOG_API_U
 import { environment } from 'src/environments/environment';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CatalogApiErrorsSummaryComponent } from './components/catalog-api-errors-summary/catalog-api-errors-summary.component';
+import { CatalogItemEditComponent } from './components/catalog-item-edit/catalog-item-edit.component';
 
 
 
@@ -18,7 +19,8 @@ import { CatalogApiErrorsSummaryComponent } from './components/catalog-api-error
     CatalogBrandsListComponent,
     CatalogTypesListComponent,
     CatalogItemsListComponent,
-    CatalogApiErrorsSummaryComponent
+    CatalogApiErrorsSummaryComponent,
+    CatalogItemEditComponent
   ],
   imports: [
     CommonModule,

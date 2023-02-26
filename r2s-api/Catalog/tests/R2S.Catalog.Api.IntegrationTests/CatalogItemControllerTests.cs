@@ -118,16 +118,18 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         var catalogItemClient = webApplicationFactory.CreateClient();
         var itemName = "Test Item";
         var description = "Test Item Description";
-        var itemPrice = 33m;
+        var price = 33m;
         var pictureURI = @"http:\\localhost\testpicture.png";
-        var catalogItem = new CatalogItemDTO 
-        { 
-            Name = itemName, 
+        var availableQty = 47;
+        var catalogItem = new CatalogItemDTO
+        {
+            Name = itemName,
             Description = description,
-            ItemPrice = itemPrice,
+            Price = price,
             PictureUri = pictureURI,
             BrandId = defaultCatalogBrand.Id,
-            TypeId = defaultCatalogType.Id 
+            TypeId = defaultCatalogType.Id,
+            AvailableQty = availableQty
         };
         var content = createItemContent(catalogItem);
         var response = await catalogItemClient.PostAsync(Post.Item, content);
@@ -142,10 +144,12 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         Assert.That(getCatalogItem, Is.Not.Null);
         Assert.That(getCatalogItem.Name, Is.EqualTo(itemName));
         Assert.That(getCatalogItem.Description, Is.EqualTo(description));
-        Assert.That(getCatalogItem.Price, Is.EqualTo(itemPrice));
+        Assert.That(getCatalogItem.Price, Is.EqualTo(price));
         Assert.That(getCatalogItem.PictureUri, Is.EqualTo(pictureURI));
+        Assert.That(getCatalogItem.CatalogBrandId, Is.EqualTo(defaultCatalogBrand.Id));
         Assert.That(getCatalogItem.CatalogBrand.Id, Is.EqualTo(defaultCatalogBrand.Id));
         Assert.That(getCatalogItem.CatalogType.Id, Is.EqualTo(defaultCatalogType.Id));
+        Assert.That(getCatalogItem.AvailableQty, Is.EqualTo(availableQty));
     }
 
     [Test]
@@ -196,6 +200,7 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         var itemNameUpdated = "Test Item Updated";
         var descriptionUpdated = "Test Item Description Updated";
         var itemPriceUpdated = 55m;
+        var availableQty = 467;
         var pictureURIUpdated = @"http:\\localhost\testpictureUpdated.png";
         var catalogBrand = await createCatalogBrandAsync("new catalog Brand");
         var catalogType = await createCatalogTypeAsync("new catalog Type");
@@ -203,11 +208,12 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         {
             Name = itemNameUpdated,
             Description = descriptionUpdated,
-            ItemPrice = itemPriceUpdated,
+            Price = itemPriceUpdated,
             PictureUri = pictureURIUpdated,
             BrandId = catalogBrand.Id,
             TypeId = catalogType.Id,
-            Ts = defaultCatalogItem!.Ts
+            Ts = defaultCatalogItem!.Ts,
+            AvailableQty = availableQty
         });
 
         var response = await catalogItemClient.PutAsync(Item(defaultCatalogItem.Id), updateContent);
@@ -218,8 +224,10 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         Assert.That(updatedItem.Name, Is.EqualTo(itemNameUpdated));
         Assert.That(updatedItem.Description, Is.EqualTo(descriptionUpdated));
         Assert.That(updatedItem.Price, Is.EqualTo(itemPriceUpdated));
+        Assert.That(updatedItem.CatalogTypeId, Is.EqualTo(catalogType.Id));
         Assert.That(updatedItem.CatalogType.Id, Is.EqualTo(catalogType.Id));
         Assert.That(updatedItem.CatalogBrand.Id, Is.EqualTo(catalogBrand.Id));
+        Assert.That(updatedItem.AvailableQty, Is.EqualTo(availableQty));
     }
 
 

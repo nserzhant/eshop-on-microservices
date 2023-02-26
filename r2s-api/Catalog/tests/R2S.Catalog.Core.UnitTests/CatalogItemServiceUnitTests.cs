@@ -27,9 +27,9 @@ public class CatalogItemServiceUnitTests
             _catalogTypeRepository,
             _catalogItemRepository);
         _catalogItem = new CatalogItem("test", 
-            "test", 
-            null, 
-            null, 
+            //"test", 
+            //null, 
+            //null, 
             Guid.NewGuid(), 
             Guid.NewGuid());
     }
@@ -84,8 +84,8 @@ public class CatalogItemServiceUnitTests
         var catalogItemName = "Catalog Item Sample";
         var catalogBrandId = Guid.NewGuid();
         var catalogTypeId = Guid.NewGuid();
-        var catalogItemAlreadyExists = new CatalogItem(catalogItemName, null, 1m, null, catalogTypeId, catalogBrandId);
-        var catalogItem = new CatalogItem(catalogItemName, null, 1m, null, catalogTypeId, catalogBrandId);
+        var catalogItemAlreadyExists = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
+        var catalogItem = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
         _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
         _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
         _catalogItemRepository.GetCatalogItemAsync(catalogItemName, catalogTypeId, catalogBrandId)
@@ -102,8 +102,8 @@ public class CatalogItemServiceUnitTests
         var catalogItemName = "Catalog Item Sample";
         var catalogBrandId = Guid.NewGuid();
         var catalogTypeId = Guid.NewGuid();
-        var catalogItemAlreadyExists = new CatalogItem(catalogItemName, null, 1m, null, catalogTypeId, catalogBrandId);
-        var catalogItem = new CatalogItem(catalogItemName, null, 1m, null, catalogTypeId, catalogBrandId);
+        var catalogItemAlreadyExists = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
+        var catalogItem = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
         _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
         _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
         _catalogItemRepository.GetCatalogItemAsync(catalogItemName, catalogTypeId, catalogBrandId)

@@ -32,7 +32,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
         var catalogItemName = "test catalog item";
-        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogType.Id, catalogBrand.Id);
 
         await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
 
@@ -46,7 +46,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
         var catalogItemName = "test catalog item";
-        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogType.Id, catalogBrand.Id);
         await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
 
         var catalogItemSaved = await _catalogItemRepository.GetCatalogItemAsync(catalogItemToCreate.Id);
@@ -63,7 +63,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
         var catalogItemName = "test catalog item";
-        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogType.Id, catalogBrand.Id);
         await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
 
         var catalogItemSaved = await _catalogItemRepository.GetCatalogItemAsync(catalogItemName, catalogType.Id, catalogBrand.Id);
@@ -80,7 +80,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
         var catalogItemName = "test catalog item";
-        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogType.Id, catalogBrand.Id);
         await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
         var catalogBrandWithItemId = catalogBrand.Id;
         var catalogBrandWithoutItemId = Guid.NewGuid();
@@ -99,7 +99,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
         var catalogItemName = "test catalog item";
-        var catalogItemToCreate = new CatalogItem(catalogItemName, null, 1, null, catalogType.Id, catalogBrand.Id);
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogType.Id, catalogBrand.Id);
         await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
         var catalogTypeWithItemId = catalogType.Id;
         var catalogTypeWithoutItemId = Guid.NewGuid();
@@ -114,7 +114,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     [Test]
     [Category("Catalog Item Repository")]
     [Category("Catalog Item Query Service")]
-    public async Task When_Update_Catalog_Item_Name_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Update_Catalog_Item_Then_It_Could_Be_Retreived_By_Id()
     {
         string catalogItemName = "test catalog item";
         string updatedCatalogItemName = "updated catalog item";
@@ -127,24 +127,6 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogItemUpdated = await _catalogItemQueryService.GetById(catalogItem.Id);
         Assert.That(catalogItemUpdated, Is.Not.Null);
         Assert.That(catalogItemUpdated.Name, Is.EqualTo(updatedCatalogItemName));
-    }
-
-    [Test]
-    [Category("Catalog Item Repository")]
-    [Category("Catalog Item Query Service")]
-    public async Task When_Update_Catalog_Item_Qty_Then_It_Could_Be_Retreived_By_Id()
-    {
-        string catalogItemName = "test catalog item";
-        CatalogItem catalogItem = await createCatalogItemAsync(catalogItemName);
-        await _catalogItemRepository.SaveChangesAsync();
-        var updatedCatalogItemPrice = catalogItem.Price + 100;
-        catalogItem.UpdatePrice(updatedCatalogItemPrice);
-
-        await _catalogItemService.UpdateCatalogItemAsync(catalogItem);
-
-        var catalogItemUpdated = await _catalogItemQueryService.GetById(catalogItem.Id);
-        Assert.That(catalogItemUpdated, Is.Not.Null);
-        Assert.That(catalogItemUpdated.Price, Is.EqualTo(updatedCatalogItemPrice));
     }
 
     [Test]
@@ -261,12 +243,18 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogItemName = "test catalog Item";
         var catalogItemDescription = "test catalog description";
         var price = 12.43m;
+        var availableQty = 54;
         var pictureUri = @"http:\\localhost\item.png";
         var catalogTypeName = "test catalog type name";
         var catalogBrandName = "test catalog brand name";
         var catalogType = await createCatalogTypeAsync(catalogTypeName);
         var catalogBrand = await createCatalogBrandAsync(catalogBrandName);
-        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogItemDescription, price, pictureUri, catalogType.Id, catalogBrand.Id);
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogType.Id, catalogBrand.Id);
+        catalogItemToCreate.UpdatePrice(price);
+        catalogItemToCreate.UpdateAvailableQty(availableQty);
+        catalogItemToCreate.PictureUri = pictureUri;
+        catalogItemToCreate.Description = catalogItemDescription;
+
         await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
 
         var catalogItemReadModel = await _catalogItemQueryService.GetById(catalogItemToCreate.Id);
@@ -276,7 +264,10 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         Assert.That(catalogItemReadModel.Name, Is.EqualTo(catalogItemName));
         Assert.That(catalogItemReadModel.Description, Is.EqualTo(catalogItemDescription));
         Assert.That(catalogItemReadModel.Price, Is.EqualTo(price));
+        Assert.That(catalogItemReadModel.AvailableQty, Is.EqualTo(availableQty));
         Assert.That(catalogItemReadModel.PictureUri, Is.EqualTo(pictureUri));
+        Assert.That(catalogItemReadModel.CatalogTypeId, Is.EqualTo(catalogType.Id));
+        Assert.That(catalogItemReadModel.CatalogBrandId, Is.EqualTo(catalogBrand.Id));
         Assert.That(catalogItemReadModel.CatalogBrand, Is.Not.Null);
         Assert.That(catalogItemReadModel.CatalogBrand.Brand, Is.EqualTo(catalogBrandName));
         Assert.That(catalogItemReadModel.CatalogType.Type, Is.EqualTo(catalogTypeName));

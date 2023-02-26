@@ -64,6 +64,7 @@ export class CatalogTypesListComponent {
   }
 
   editType(type: CatalogTypeReadModel) {
+    this.apiError = null;
     this.selectedType = { ...type};
     this.selectedTypeId = type.id!;
   }
@@ -117,6 +118,7 @@ export class CatalogTypesListComponent {
   }
 
   openCreateType() {
+    this.apiError = null;
     this.selectedType = { type: ''};
     this.selectedTypeId = null;
   }
