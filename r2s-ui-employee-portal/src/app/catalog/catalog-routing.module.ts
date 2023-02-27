@@ -1,5 +1,6 @@
 import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
+import { AuthGuard } from "../auth/auth-guard.service";
 import { CatalogBrandsListComponent } from "./components/catalog-brands-list/catalog-brands-list.component";
 import { CatalogItemEditComponent } from "./components/catalog-item-edit/catalog-item-edit.component";
 import { CatalogItemsListComponent } from "./components/catalog-items-list/catalog-items-list.component";
@@ -29,7 +30,9 @@ const routes: Routes = [
         path: 'types',
         component: CatalogTypesListComponent
       }
-    ]
+    ],
+    canActivate : [AuthGuard],
+    data: {roles: ['SalesManager']}
   }
 ];
 

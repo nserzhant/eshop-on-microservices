@@ -1,4 +1,5 @@
 {
+    "home" : "Home",
     "home-header" : "This is an Employee Portal. You can view, edit and register employees here.",
     "register-header" : "Register to the portal",
     "login-header" : "Log in to the portal",

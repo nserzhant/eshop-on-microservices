@@ -7,10 +7,10 @@ import { CatalogItemsListComponent } from './components/catalog-items-list/catal
 import { MaterialModule } from 'src/material.module';
 import { TranslateModule } from '@ngx-translate/core';
 import { CatalogBrandClient, CatalogItemClient, CatalogTypeClient, CATALOG_API_URL } from './services/api/catalog.api.client';
-import { environment } from 'src/environments/environment';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CatalogApiErrorsSummaryComponent } from './components/catalog-api-errors-summary/catalog-api-errors-summary.component';
 import { CatalogItemEditComponent } from './components/catalog-item-edit/catalog-item-edit.component';
+import { environment } from 'src/environments/environment';
 
 
 
