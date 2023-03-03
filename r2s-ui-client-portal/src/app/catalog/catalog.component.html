@@ -1,0 +1,37 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #sidenav [opened] = "isSideNavOpened" [mode]="mode">
+    <mat-expansion-panel hideToggle expanded="true">
+      <mat-expansion-panel-header>
+        <mat-panel-title>Types</mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-selection-list color="primary">
+        <mat-list-option value="{{ type.id }}" *ngFor="let type of types">{{ type.name }}</mat-list-option>
+      </mat-selection-list>
+    </mat-expansion-panel>
+    <mat-expansion-panel hideToggle expanded="true">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Brands
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-selection-list color="primary">
+        <mat-list-option value="{{ brand.id }}" *ngFor="let brand of brands">{{ brand.name }}</mat-list-option>
+      </mat-selection-list>
+    </mat-expansion-panel>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <button mat-button color='primary' (click) ='sidenav.toggle()' class ='expand-sidenav-button' *ngIf="!isSideNavOpened">
+      <mat-icon>menu</mat-icon> Filters
+    </button>
+    <div class="cards-container">
+      <mat-card *ngFor="let item of items" class="catalog-item">
+        <mat-card-header>
+          <span>{{ item }}</span>
+        </mat-card-header>
+        <mat-card-content>
+          <span>Content of the {{ item }}</span>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
