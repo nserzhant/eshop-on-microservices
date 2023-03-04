@@ -44,6 +44,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{72F997AB-E4EF-48BA-AD1C-864E52C27FD3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C72DCCF8-A148-4EDD-BDD9-65DDCD3A9984}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "R2S.Client.AuthorizationServer", "Client\src\R2S.Client.AuthorizationServer\R2S.Client.AuthorizationServer.csproj", "{61DD7C77-91F6-4713-A701-CF637926BF59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -98,6 +104,10 @@ Global
 		{0BF85D67-ED1D-493C-870E-DBB8CFD75FDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0BF85D67-ED1D-493C-870E-DBB8CFD75FDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0BF85D67-ED1D-493C-870E-DBB8CFD75FDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61DD7C77-91F6-4713-A701-CF637926BF59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61DD7C77-91F6-4713-A701-CF637926BF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61DD7C77-91F6-4713-A701-CF637926BF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61DD7C77-91F6-4713-A701-CF637926BF59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -119,6 +129,8 @@ Global
 		{4B47F9B0-8687-4ABC-81E2-F2FD36DAAAD0} = {8C3E2768-9399-49EF-8094-E7C7A8828C39}
 		{45C80A2A-4A2C-497F-81AE-FA336BAD5DBB} = {EDAD962C-CC7C-4BEB-8BCB-EE1763630D1D}
 		{0BF85D67-ED1D-493C-870E-DBB8CFD75FDA} = {EDAD962C-CC7C-4BEB-8BCB-EE1763630D1D}
+		{C72DCCF8-A148-4EDD-BDD9-65DDCD3A9984} = {72F997AB-E4EF-48BA-AD1C-864E52C27FD3}
+		{61DD7C77-91F6-4713-A701-CF637926BF59} = {C72DCCF8-A148-4EDD-BDD9-65DDCD3A9984}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53510C0E-3EF4-4200-BDE6-BBC6CF26B579}
