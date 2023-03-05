@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Authentication;
+using System.ComponentModel.DataAnnotations;
 
 namespace R2S.Client.AuthorizationServer.Models;
 
@@ -11,4 +12,5 @@ public class LoginViewModel
 
     public bool RememberMe { get; set; }
     public string? ReturnUrl { get; set; }
+    public List<AuthenticationScheme>? ExternalLogins { get; internal set; }
 }

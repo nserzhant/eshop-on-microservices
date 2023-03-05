@@ -1,20 +1,27 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using R2S.Client.AuthorizationServer.Data;
 using R2S.Client.AuthorizationServer.Models;
+using System.Security.Claims;
 
 namespace R2S.Client.AuthorizationServer.Controllers;
 public class AccountController : Controller
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserStore<ApplicationUser> _userStore;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, ILogger<AccountController> logger)
+    public AccountController(SignInManager<ApplicationUser> signInManager, 
+        UserManager<ApplicationUser> userManager,
+        IUserStore<ApplicationUser> userStore,
+        ILogger<AccountController> logger)
     {
         _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        _userStore = userStore;
         _logger = logger;
     }
 
@@ -63,10 +70,17 @@ public class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
-        return View();
+
+        LoginViewModel model = new LoginViewModel { ReturnUrl = returnUrl };
+        // Clear the existing external cookie to ensure a clean login process
+        await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+        model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+        return View(model);
     }
 
     [HttpPost]
@@ -113,11 +127,83 @@ public class AccountController : Controller
         }
     }
 
-    private void AddErrors(IdentityResult result)
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public IActionResult ExternalLogin(string provider, string returnUrl = null)
     {
-        foreach (var error in result.Errors)
+        // Request a redirect to the external login provider.
+        var redirectUrl = Url.Action("ExternalLoginCallback", values: new { returnUrl });
+        var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+        return new ChallengeResult(provider, properties);
+    }
+
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> ExternalLoginCallback(string returnUrl = null, string remoteError = null)
+    {
+        returnUrl = returnUrl ?? Url.Action("Index", "Home", values: new { returnUrl });
+
+        if (remoteError != null)
         {
-            ModelState.AddModelError(string.Empty, error.Description);
+            ModelState.AddModelError(string.Empty, $"Error from external provider: {remoteError}");
+            return RedirectToAction("Login", new { ReturnUrl = returnUrl });
         }
+        var info = await _signInManager.GetExternalLoginInfoAsync();
+        if (info == null)
+        {
+            ModelState.AddModelError(string.Empty, "Error loading external login information.");
+            return RedirectToAction("Login", new { ReturnUrl = returnUrl });
+        }
+
+        // Sign in the user with this external login provider if the user already has a login.
+        var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+        if (result.Succeeded)
+        {
+            _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
+            return LocalRedirect(returnUrl);
+        }
+        if (result.IsLockedOut)
+        {
+            return RedirectToPage("./Lockout");
+        }
+        else
+        {
+            var user = new ApplicationUser();
+            var emailStore = GetEmailStore();
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+            await _userStore.SetUserNameAsync(user, email, CancellationToken.None);
+            await emailStore.SetEmailAsync(user, email, CancellationToken.None);
+
+            var identityResult = await _userManager.CreateAsync(user);
+            if (identityResult.Succeeded)
+            {
+                identityResult = await _userManager.AddLoginAsync(user, info);
+                if (identityResult.Succeeded)
+                {
+                    _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+
+                    await _userManager.GetUserIdAsync(user);
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    await _userManager.ConfirmEmailAsync(user, code);
+                    await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+
+                    return LocalRedirect(returnUrl);
+                }
+            }
+            ModelState.AddModelError(string.Empty, "Error registering user with external login.");
+            return RedirectToAction("Login", new { ReturnUrl = returnUrl });
+        }
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        if (!_userManager.SupportsUserEmail)
+        {
+            throw new NotSupportedException("The default UI requires a user store with email support.");
+        }
+        return (IUserEmailStore<ApplicationUser>)_userStore;
     }
 }
