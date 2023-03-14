@@ -27,11 +27,17 @@ public class CatalogBrandQueryService : ICatalogBrandQueryService
     {
         var count = _catalogReadDbContext.CatalogBrands.Count();
         var orderByExpression = $"{nameof(CatalogBrandReadModel.Brand)} {listCatalogBrandQuery.OrderByDirection}";
-        
-        var catalogBrands = await _catalogReadDbContext.CatalogBrands
+        IQueryable<CatalogBrandReadModel> catalogBrandsQueryable = _catalogReadDbContext.CatalogBrands.OrderBy(orderByExpression);
+
+        if(listCatalogBrandQuery.PageSize > 0)
+        {
+            catalogBrandsQueryable = catalogBrandsQueryable
+                .Skip(listCatalogBrandQuery.PageIndex * listCatalogBrandQuery.PageSize)
+                .Take(listCatalogBrandQuery.PageSize);
+        }
+
+        var catalogBrands = await catalogBrandsQueryable
             .OrderBy(orderByExpression)
-            .Skip(listCatalogBrandQuery.PageIndex * listCatalogBrandQuery.PageSize)
-            .Take(listCatalogBrandQuery.PageSize)
             .ToListAsync();
        
         var result = new ListCatalogBrandResult()

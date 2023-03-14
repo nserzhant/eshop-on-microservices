@@ -1,42 +1,49 @@
-import { Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
-import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
+import { BehaviorSubject,  merge, of as observableOf, Subject, takeUntil } from 'rxjs';
+import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
+import { CatalogBrandClient, CatalogBrandReadModel, CatalogItemClient, CatalogItemReadModel, CatalogTypeClient, CatalogTypeReadModel, ListCatalogItemOrderBy, OrderByDirections } from '../services/api/catalog.api.client';
 
 @Component({
   selector: 'catalog',
   templateUrl: './catalog.component.html'
 })
-export class CatalogComponent implements OnInit, OnDestroy {
+export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   MAX_WIDTH = 700;
 
   isSideNavOpened:boolean= false;
   mode: MatDrawerMode = 'side';
   componentDestroyed$ = new Subject<void>();
   screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
+  filterChangedSubject$ = new Subject<void>();
 
   @ViewChild('sidenav') sidenav: MatSidenav | undefined;
   @HostListener('window:resize', ['$event'])
   onResize(event : any) {
     this.screenWidth$.next(event.target.innerWidth);
   }
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  items  = new Array<string>();
-  types = new Array<{name : string, id: number}>();
-  brands = new Array<{name : string, id: number}>();
+  items  = new Array<CatalogItemReadModel>();
+  types = new Array<CatalogTypeReadModel>();
+  brands = new Array<CatalogBrandReadModel>();
 
-  constructor() {
-    for( let i = 0; i < 24; i++) {
-      this.items.push(`item ${i}`);
-    }
-    for( let i = 0; i < 4; i++) {
-      this.types.push({name: `type ${i}`, id: i});
-    }
-    for( let i = 0; i < 9; i++) {
-      this.brands.push({name: `brand ${i}`, id: i});
-    }
+  nameFilter = '';
+  brandFilter = '';
+  typeFilter = '';
+
+  resultsLength = 0;
+  isLoadingResults = true;
+  hidePaginator = false;
+
+  constructor(private catalogTypeClient : CatalogTypeClient,
+    private catalogBrandClient : CatalogBrandClient,
+    private catalogItemClient : CatalogItemClient) {
   }
 
   ngOnInit(): void {
+
     this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
        if (width < this.MAX_WIDTH) {
         this.mode = 'over';
@@ -47,9 +54,67 @@ export class CatalogComponent implements OnInit, OnDestroy {
         this.isSideNavOpened = true;
       }
     });
+
+    this.catalogBrandClient.getCatalogBrands(OrderByDirections.ASC).subscribe(result => {
+      const items = result.catalogBrands;
+
+      if(items)
+        this.brands.push(...items);
+    });
+
+    this.catalogTypeClient.getCatalogTypes(OrderByDirections.ASC).subscribe(result => {
+      const items = result.catalogTypes;
+      if(items)
+        this.types.push(...items);
+    });
+  }
+
+  ngAfterViewInit(): void {
+
+
+    merge(this.paginator.page, this.filterChangedSubject$)
+    .pipe(
+      startWith({}),
+      debounceTime(0),
+      switchMap((val, index) => {
+        this.isLoadingResults = true;
+        const orderBy = ListCatalogItemOrderBy.Name;
+        const orderByDirection = OrderByDirections.ASC
+        return this.catalogItemClient.getCatalogItems(
+          orderBy,
+          orderByDirection,
+          this.paginator.pageIndex,
+          this.paginator.pageSize,
+          this.nameFilter,
+          this.brandFilter,
+          this.typeFilter).pipe(catchError(() => observableOf(null)));
+      }),
+      map(data => {
+        // Flip flag to show that loading has finished.
+        this.isLoadingResults = false;
+
+        if (data === null) {
+          return [];
+        }
+
+        // Only refresh the result length if there is new data. In case of rate
+        // limit errors, we do not want to reset the paginator to zero, as that
+        // would prevent users from re-triggering requests.
+        this.resultsLength = data.totalCount ?? 0;
+        return data.catalogItems ?? [];
+      }),
+    )
+    .subscribe(data => {
+      this.hidePaginator = data.length == 0;
+      this.items = data
+    });
   }
 
   ngOnDestroy(): void {
     this.componentDestroyed$.next();
+  }
+
+  onFilterChange() {
+    this.filterChangedSubject$.next();
   }
 }

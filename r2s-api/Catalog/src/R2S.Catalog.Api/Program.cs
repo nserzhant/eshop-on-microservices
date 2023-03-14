@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using NSwag.Generation.Processors.Security;
 using R2S.Catalog.Api.Constants;
@@ -11,34 +12,58 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Get settings to configure JWT tokens
 
-var jwtSettingsSection = builder.Configuration.GetSection(ConfigurationKeys.JWT_CONFIG_NAME);
-var jwtSettings = new JWTSettings();
+var employeeJwtSettingsSection = builder.Configuration.GetSection(ConfigurationKeys.EMPLOYEE_JWT_CONFIG_NAME);
+var employeeJwtSettings = new JWTSettings();
+employeeJwtSettingsSection.Bind(employeeJwtSettings);
 
-jwtSettingsSection.Bind(jwtSettings);
+var clientJwtSettingsSection = builder.Configuration.GetSection(ConfigurationKeys.CLIENT_JWT_CONFIG_NAME);
+var clientJwtSettings = new JWTSettings();
+clientJwtSettingsSection.Bind(clientJwtSettings);
 
 // Configure settings for Client app
 var allowedClients = builder.Configuration[ConfigurationKeys.SPA_CLIENT_IP_CONFIG_NAME];
 
 // Add services to the container.
 builder.Services.AddCatalogServices(builder.Configuration);
-builder.Services.AddAuthentication(auth =>
-{
-    auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer(AuthenticationSchemeNames.Employee, options =>
     {
-        ClockSkew = TimeSpan.FromSeconds(0),
-        ValidateIssuer = true,
-        ValidateAudience = false,
-        ValidAudience = jwtSettings.Audience,
-        ValidIssuer = jwtSettings.Issuer,
-        RequireExpirationTime = true,
-        ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.JWTSecretKey)),
-        ValidateIssuerSigningKey = true
-    };
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ClockSkew = TimeSpan.FromSeconds(0),
+            ValidateIssuer = true,
+            ValidateAudience = false,
+            ValidAudience = employeeJwtSettings.Audience,
+            ValidIssuer = employeeJwtSettings.Issuer,
+            RequireExpirationTime = true,
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(employeeJwtSettings.JWTSecretKey)),
+            ValidateIssuerSigningKey = true
+        };
+    })
+    .AddJwtBearer(AuthenticationSchemeNames.Client, options =>
+     {
+         options.TokenValidationParameters = new TokenValidationParameters
+         {
+             ClockSkew = TimeSpan.FromSeconds(0),
+             ValidateIssuer = true,
+             ValidateAudience = false,
+             ValidAudience = clientJwtSettings.Audience,
+             ValidIssuer = clientJwtSettings.Issuer,
+             RequireExpirationTime = true,
+             ValidateLifetime = true,
+             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(clientJwtSettings.JWTSecretKey)),
+             ValidateIssuerSigningKey = true
+         };
+     });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .AddAuthenticationSchemes(AuthenticationSchemeNames.Employee, AuthenticationSchemeNames.Client)
+        .Build();
 });
 
 builder.Services.AddControllers(options => options.Filters.Add<CatalogDomainExceptionFilter>());

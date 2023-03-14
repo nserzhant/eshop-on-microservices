@@ -114,6 +114,28 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Type Query Service")]
+    public async Task When_Page_Size_Is_Zero_Then_All_Types_Should_Be_ReturnedAsync()
+    {
+        await createCatalogTypeAsync("A Catalog Type");
+        await createCatalogTypeAsync("B Catalog Type");
+        await createCatalogTypeAsync("C Catalog Type");
+
+        var listCatalogTypeQuery = new ListCatalogTypeQuery()
+        {
+            OrderByDirection = OrderByDirections.ASC,
+            PageIndex = 0,
+            PageSize = 0
+        };
+
+        var result = await _catalogTypeQueryService.GetCatalogTypes(listCatalogTypeQuery);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.TotalCount, Is.EqualTo(3));
+        Assert.That(result.CatalogTypes.Count, Is.EqualTo(3));
+    }
+
+    [Test]
+    [Category("Catalog Type Query Service")]
     public async Task When_Catalog_Type_Exists_Then_It_Could_Be_Queried_By_Id()
     {
         var catalogTypeName = "test catalog type";

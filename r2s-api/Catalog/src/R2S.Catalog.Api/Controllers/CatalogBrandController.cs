@@ -33,7 +33,6 @@ public class CatalogBrandController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpGet("{catalogBrandId:Guid}")]
-    [Authorize]
     public async Task<IActionResult> GetCatalogBrand(Guid catalogBrandId)
     {
         var catalogBrand = await _catalogBrandQueryService.GetById(catalogBrandId);
@@ -49,7 +48,7 @@ public class CatalogBrandController : ControllerBase
     [ProducesResponseType(typeof(CatalogBrandReadModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpPost()]
-    [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemeNames.Employee, Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> CreateCatalogBrandAsync(CatalogBrandDTO catalogBrand)
     {
         var catalogBrandToCreate = new CatalogBrand(catalogBrand.Brand);
@@ -65,7 +64,7 @@ public class CatalogBrandController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPut("{catalogBrandId:Guid}")]
-    [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemeNames.Employee, Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> UpdateCatalogBrandAsync(Guid catalogBrandId, CatalogBrandDTO catalogBrand)
     {
         var catalogBrandToUpdate = await _catalogBrandRepository.GetCatalogBrandAsync(catalogBrandId);
@@ -89,7 +88,7 @@ public class CatalogBrandController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpDelete("{catalogBrandId:Guid}")]
-    [Authorize(Roles = Roles.SALES_MANAGER_ROLE_NAME)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemeNames.Employee, Roles = Roles.SALES_MANAGER_ROLE_NAME)]
     public async Task<IActionResult> DeleteCatalogBrandAsync(Guid catalogBrandId)
     {
         var catalogBrand = await _catalogBrandRepository.GetCatalogBrandAsync(catalogBrandId);
@@ -107,7 +106,6 @@ public class CatalogBrandController : ControllerBase
     [ProducesResponseType(typeof(ListCatalogBrandResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpGet("list")]
-    [Authorize]
     public async Task<IActionResult> GetCatalogBrandsAsync([FromQuery] ListCatalogBrandQuery listCatalogBrandQuery)
     {
         var result = await _catalogBrandQueryService.GetCatalogBrands(listCatalogBrandQuery);

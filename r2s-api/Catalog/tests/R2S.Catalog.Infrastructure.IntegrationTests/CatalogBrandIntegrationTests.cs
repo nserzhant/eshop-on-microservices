@@ -127,6 +127,27 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Brand Query Service")]
+    public async Task When_Page_Size_Is_Zero_Then_All_Brands_Should_Be_ReturnedAsync()
+    {
+        await createCatalogBrandAsync("A Brand");
+        await createCatalogBrandAsync("B Brand");
+        await createCatalogBrandAsync("C Brand");
+        var listCatalogBrandQuery = new ListCatalogBrandQuery()
+        {
+            OrderByDirection = OrderByDirections.ASC,
+            PageIndex = 0,
+            PageSize = 0
+        };
+
+        var result = await _catalogBrandQueryService.GetCatalogBrands(listCatalogBrandQuery);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.TotalCount, Is.EqualTo(3));
+        Assert.That(result.CatalogBrands.Count, Is.EqualTo(3));
+    }
+
+    [Test]
+    [Category("Catalog Brand Query Service")]
     public async Task When_Catalog_Brand_Exists_Then_It_Could_Be_Queried_By_Id()
     {
         var catalogBrandToCreate = new CatalogBrand("test brand");

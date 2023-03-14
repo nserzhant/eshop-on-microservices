@@ -42,15 +42,14 @@ mat-sidenav {
   width: 250px;
 }
 
+.mat-sidenav-container {
+  background-color: white;
+}
+
 .app {
   height: 100%;
   display: grid;
   grid-template-rows: auto 1fr; // mat-toolbar main
-}
-
-main {
-  display: flex;
-  justify-content: center;
 }
 
 .spacer {
@@ -67,10 +66,9 @@ main {
 }
 
 .catalog-item {
-    width: 300px;
-    height: 200px;
-    margin: 10px;
-    display:flex;
+  width: 300px;
+  margin: 10px;
+  display:flex;
 }
 
 .cards-container {
@@ -78,4 +76,36 @@ main {
   flex-wrap: wrap;
   flex-basis: 20px;
   justify-content: center;
+}
+
+.grid-spinner {
+  margin: 6px;
+  float: left;
+}
+
+.filter-row {
+  width: 100%;
+}
+
+.filter-container {
+  padding: 12px 16px;
+}
+
+.right {
+  float: right;
+}
+
+.not-found-container {
+  display: flex;
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.catalog-image {
+  width: 100%;
+}
+
+.subtitle-header {
+  width: 70px;
+  display: inline-block;
 }

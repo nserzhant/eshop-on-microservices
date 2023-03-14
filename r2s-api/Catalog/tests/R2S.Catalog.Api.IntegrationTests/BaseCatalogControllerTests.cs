@@ -32,16 +32,10 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
             });
             builder.ConfigureTestServices(services =>
             {
-                services.AddAuthentication(s =>
-                {
-                    s.DefaultAuthenticateScheme = "Test";
-                    s.DefaultChallengeScheme = "Test";
-                })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
                 services.AddSingleton(testAuthenticationContextBuilder);
+                services.AddTransient<IAuthenticationSchemeProvider, TestAuthenticationSchemeProvider>();
             });
         });
-
 
     }
 
@@ -55,9 +49,20 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
 
         var stringContent = await response.Content.ReadAsStringAsync();
         var jsonSerializationOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, IgnoreReadOnlyProperties = false, IncludeFields = true };
-        var result = JsonSerializer.Deserialize<T>(stringContent, jsonSerializationOptions);
 
-        return result;
+        try
+        {
+            var result = JsonSerializer.Deserialize<T>(stringContent, jsonSerializationOptions);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            if (!string.IsNullOrEmpty(stringContent))
+                throw new Exception(stringContent);
+
+            throw ex;
+        }
     }
 
     protected static string ConvertToQueryParams<T>(T obj) where T : class

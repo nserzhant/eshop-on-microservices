@@ -6,6 +6,7 @@ public class TestAuthenticationContextBuilder
 {
     public IList<Claim> Claims { get; } = new List<Claim>();
     public bool IsAuthenticated { get; private set; } = false;
+    public string AuthenticationScheme { get; private set; } = "Test";
 
     public TestAuthenticationContextBuilder AsSalesManager()
     {
@@ -19,8 +20,9 @@ public class TestAuthenticationContextBuilder
         return this;
     }
 
-    internal TestAuthenticationContextBuilder SetAuthenticated()
+    internal TestAuthenticationContextBuilder SetAuthenticated(string authenticationScheme)
     {
+        AuthenticationScheme = authenticationScheme;
         IsAuthenticated = true;
         return this;
     }

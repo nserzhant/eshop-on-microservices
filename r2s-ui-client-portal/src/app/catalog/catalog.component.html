@@ -1,23 +1,30 @@
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav #sidenav [opened] = "isSideNavOpened" [mode]="mode">
-    <mat-expansion-panel hideToggle expanded="true">
-      <mat-expansion-panel-header>
-        <mat-panel-title>Types</mat-panel-title>
-      </mat-expansion-panel-header>
-      <mat-selection-list color="primary">
-        <mat-list-option value="{{ type.id }}" *ngFor="let type of types">{{ type.name }}</mat-list-option>
-      </mat-selection-list>
-    </mat-expansion-panel>
-    <mat-expansion-panel hideToggle expanded="true">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          Brands
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <mat-selection-list color="primary">
-        <mat-list-option value="{{ brand.id }}" *ngFor="let brand of brands">{{ brand.name }}</mat-list-option>
-      </mat-selection-list>
-    </mat-expansion-panel>
+    <div class="filter-container">
+      <mat-form-field appearance="outline" class="filter-row">
+        <mat-label>Name</mat-label>
+        <input  matInput name="filter" [(ngModel)] = "nameFilter">
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="filter-row">
+        <mat-label>Brand</mat-label>
+        <mat-select  [(ngModel)] = "brandFilter">
+          <mat-option></mat-option>
+          <mat-option *ngFor="let brand of brands" [value]="brand.brand">
+            {{ brand.brand }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="filter-row">
+        <mat-label>Type</mat-label>
+        <mat-select [(ngModel)] = "typeFilter">
+          <mat-option></mat-option>
+          <mat-option *ngFor="let type of types" [value]="type.type">
+            {{ type.type }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button color="primary" class="filter-row" (click)="onFilterChange()">Apply</button>
+    </div>
   </mat-sidenav>
   <mat-sidenav-content>
     <button mat-button color='primary' (click) ='sidenav.toggle()' class ='expand-sidenav-button' *ngIf="!isSideNavOpened">
@@ -26,12 +33,24 @@
     <div class="cards-container">
       <mat-card *ngFor="let item of items" class="catalog-item">
         <mat-card-header>
-          <span>{{ item }}</span>
+          <mat-card-title><b>{{ item.name }}</b></mat-card-title>
+          <mat-card-subtitle><b class="subtitle-header">Brand:</b>{{item.catalogBrand?.brand}}</mat-card-subtitle>
+          <mat-card-subtitle><b class="subtitle-header">Type:</b>{{item.catalogType?.type}}</mat-card-subtitle>
+          <mat-card-subtitle><b class="subtitle-header">Price:</b>{{item.price}} $</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
-          <span>Content of the {{ item }}</span>
+          <img class="catalog-image" src="{{item.pictureUri}}">
         </mat-card-content>
       </mat-card>
     </div>
+    <div class="right" [hidden] ="hidePaginator">
+      <mat-spinner *ngIf="isLoadingResults" class="grid-spinner"></mat-spinner>
+      <mat-paginator [pageSizeOptions]="[5, 10, 20]"
+                    [length]="resultsLength"
+                    showFirstLastButtons
+                    attr.aria-label="{{'paginator-aria-label' | translate }}">
+      </mat-paginator>
+    </div>
+    <span *ngIf="hidePaginator" class="not-found-container">Items Not Found</span>
   </mat-sidenav-content>
 </mat-sidenav-container>

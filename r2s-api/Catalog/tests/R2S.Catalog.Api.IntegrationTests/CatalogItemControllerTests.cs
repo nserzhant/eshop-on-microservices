@@ -1,4 +1,5 @@
 ﻿using Microsoft.Net.Http.Headers;
+using R2S.Catalog.Api.Constants;
 using R2S.Catalog.Api.Models;
 using R2S.Catalog.Core.Models;
 using R2S.Catalog.Infrastructure.Read.Queries;
@@ -31,7 +32,7 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Item")]
-    public async Task When_Client_Is_Unauthenticated_Then_Create_Item_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Create_Item_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogItemClient = webApplicationFactory.CreateClient();
@@ -44,9 +45,9 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Item")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Create_Item()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Create_Item_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogItemClient = webApplicationFactory.CreateClient();
         var content = createItemContent(new CatalogItemDTO());
 
@@ -57,9 +58,22 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Item")]
-    public async Task When_Client_Is_Sales_Manager_Then_It_Can_Create_Item()
+    public async Task When_User_Is_Client_Then_Create_Item_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        var catalogItemClient = webApplicationFactory.CreateClient();
+        var content = createItemContent(new CatalogItemDTO());
+
+        var response = await catalogItemClient.PostAsync(Post.Item, content);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Create Item")]
+    public async Task When_Employee_Is_Sales_Manager_Then_Item_Can_Be_Created()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogItemClient = webApplicationFactory.CreateClient();
         var content = createItemContent(new CatalogItemDTO() 
         {
@@ -75,21 +89,9 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Get Item")]
-    public async Task When_Client_Is_Unauthenticated_Then_Get_Item_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Item_Can_Be_Gotten()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
-        var catalogItemClient = webApplicationFactory.CreateClient();
-
-        var response = await catalogItemClient.GetAsync(Item(Guid.NewGuid()));
-
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-    }
-
-    [Test]
-    [Category("Get Item")]
-    public async Task When_Client_Is_Authenticated_Then_It_Can_Get_Item()
-    {
-        testAuthenticationContextBuilder.SetAuthenticated();
         var catalogItemClient = webApplicationFactory.CreateClient();
 
         var response = await catalogItemClient.GetAsync(Item(defaultCatalogItem.Id));
@@ -99,9 +101,9 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Get Item")]
-    public async Task When_Client_Is_Requesting_Non_Existing_Item_Then_Not_Found_Returns()
+    public async Task When_User_Is_Requesting_Non_Existing_Item_Then_Not_Found_Returns()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogItemClient = webApplicationFactory.CreateClient();
 
         var response = await catalogItemClient.GetAsync(Item(Guid.NewGuid()));
@@ -112,9 +114,10 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
     [Test]
     [Category("Create Item")]
     [Category("Get Item")]
-    public async Task When_Client_Created_Item_Then_It_Can_Get_Created_Item()
+    public async Task When_Employee_Created_The_Item_Then_It_Can_Be_Requested_By_Id()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogItemClient = webApplicationFactory.CreateClient();
         var itemName = "Test Item";
         var description = "Test Item Description";
@@ -154,7 +157,7 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Item")]
-    public async Task When_Client_Is_Unauthenticated_Then_Update_Item_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Update_Item_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogItemClient = webApplicationFactory.CreateClient();
@@ -167,9 +170,9 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Item")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Update_Item()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Update_Item_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogItemClient = webApplicationFactory.CreateClient();
         var updateContent = createItemContent(new CatalogItemDTO());
 
@@ -180,9 +183,23 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Item")]
-    public async Task When_Client_Is_Updating_Non_Existing_Item_Then_Not_Found_Returns()
+    public async Task When_User_Is_Client_Then_Update_Item_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        var catalogItemClient = webApplicationFactory.CreateClient();
+        var updateContent = createItemContent(new CatalogItemDTO());
+
+        var response = await catalogItemClient.PutAsync(Item(Guid.NewGuid()), updateContent);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Update Item")]
+    public async Task When_Employee_Is_Updating_Non_Existing_Item_Then_Not_Found_Returns()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogItemClient = webApplicationFactory.CreateClient();
         var updateContent = createItemContent(new CatalogItemDTO() { Name = "Test" });
 
@@ -193,9 +210,10 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Item")]
-    public async Task When_Client_Is_Updating_Item_Then_Updated_Version_Could_Be_Requested()
+    public async Task When_Employee_Is_Updated_Item_Then_Updated_Version_Can_Be_Gotten()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogItemClient = webApplicationFactory.CreateClient();
         var itemNameUpdated = "Test Item Updated";
         var descriptionUpdated = "Test Item Description Updated";
@@ -230,10 +248,9 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         Assert.That(updatedItem.AvailableQty, Is.EqualTo(availableQty));
     }
 
-
     [Test]
     [Category("Delete Item")]
-    public async Task When_Client_Is_Unauthenticated_Then_Delete_Item_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Delete_Item_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogItemClient = webApplicationFactory.CreateClient();
@@ -245,9 +262,9 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Item")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Delete_Item()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Delete_Item_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogItemClient = webApplicationFactory.CreateClient();
 
         var response = await catalogItemClient.DeleteAsync(Item(Guid.NewGuid()));
@@ -257,9 +274,9 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Item")]
-    public async Task When_Client_Is_Deleting_Non_Existing_Item_Then_Not_Found_Returns()
+    public async Task When_Employee_Is_Deleting_Non_Existing_Item_Then_Not_Found_Returns()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogItemClient = webApplicationFactory.CreateClient();
 
         var response = await catalogItemClient.DeleteAsync(Item(Guid.NewGuid()));
@@ -269,9 +286,21 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Item")]
-    public async Task When_Client_Is_Deleting_Item_Then_Item_Could_Not_Be_Requested_Anymore()
+    public async Task When_User_Is_Client_Then_Delete_Item_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        var catalogItemClient = webApplicationFactory.CreateClient();
+
+        var response = await catalogItemClient.DeleteAsync(Item(Guid.NewGuid()));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Delete Item")]
+    public async Task When_Employee_Is_Deleting_Item_Then_Item_Could_Not_Be_Requested_Anymore()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogItemClient = webApplicationFactory.CreateClient();
 
         var response = await catalogItemClient.DeleteAsync(Item(defaultCatalogItem.Id));
@@ -282,25 +311,12 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
     }
 
     [Test]
-    [Category("List Items")]
-    public async Task When_Client_Is_Unauthenitcated_Then_List_Items_Returns_Unathorized()
-    {
-        testAuthenticationContextBuilder.SetUnauthenticated();
-        var catalogItemClient = webApplicationFactory.CreateClient();
-        var listCatalogItemQuery = new ListCatalogItemQuery();
-
-        var response = await catalogItemClient.GetAsync(Items(listCatalogItemQuery));
-
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-    }
-
-    [Test]
     [Category("List Catalog Items")]
-    public async Task When_User_Is_Administrator_Then_It_Can_List_Item()
+    public async Task When_User_Is_Unauthenitcated_Then_Items_Can_Be_Listed()
     {
         await createCatalogItemAsync("A Item");
         await createCatalogItemAsync("B Item");
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogItemClient = webApplicationFactory.CreateClient();
         var listCatalogItemQuery = new ListCatalogItemQuery()
         {

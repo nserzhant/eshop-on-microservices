@@ -1,4 +1,5 @@
 using Microsoft.Net.Http.Headers;
+using R2S.Catalog.Api.Constants;
 using R2S.Catalog.Api.Models;
 using R2S.Catalog.Core.Models;
 using R2S.Catalog.Infrastructure.Read.Queries;
@@ -29,7 +30,7 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Brand")]
-    public async Task When_Client_Is_Unauthenticated_Then_Create_Brand_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Create_Brand_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogBrandClient = webApplicationFactory.CreateClient();
@@ -42,9 +43,9 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Brand")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Create_Brand()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Create_Brand_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogBrandClient = webApplicationFactory.CreateClient();
         var content = createBrandContent(new CatalogBrandDTO());
 
@@ -55,9 +56,9 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Brand")]
-    public async Task When_Client_Is_Sales_Manager_Then_It_Can_Create_Brand()
+    public async Task When_Employee_Is_Sales_Manager_Then_Brand_Can_Be_Created()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogBrandClient = webApplicationFactory.CreateClient();
         var content = createBrandContent(new CatalogBrandDTO() { Brand = "Test Brand" });
 
@@ -67,22 +68,23 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
     }
 
     [Test]
-    [Category("Get Brand")]
-    public async Task When_Client_Is_Unauthenticated_Then_Get_Brand_Returns_Unathorized()
+    [Category("Create Brand")]
+    public async Task When_User_Is_Client_Then_Create_Brand_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetUnauthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
         var catalogBrandClient = webApplicationFactory.CreateClient();
+        var content = createBrandContent(new CatalogBrandDTO());
 
-        var response = await catalogBrandClient.GetAsync(Brand(Guid.NewGuid()));
+        var response = await catalogBrandClient.PostAsync(Post.Brand, content);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
     [Test]
     [Category("Get Brand")]
-    public async Task When_Client_Is_Authenticated_Then_It_Can_Get_Brand()
+    public async Task When_User_Is_Unauthenticated_Then_Brand_Can_Be_Gotten()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogBrandClient = webApplicationFactory.CreateClient();
 
         var response = await catalogBrandClient.GetAsync(Brand(defaultCatalogBrandId));
@@ -92,9 +94,9 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Get Brand")]
-    public async Task When_Client_Is_Requesting_Non_Existing_Brand_Then_Not_Found_Returns()
+    public async Task When_User_Is_Requesting_Non_Existing_Brand_Then_Not_Found_Returns()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogBrandClient = webApplicationFactory.CreateClient();
 
         var response = await catalogBrandClient.GetAsync(Brand(Guid.NewGuid()));
@@ -105,9 +107,10 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
     [Test]
     [Category("Create Brand")]
     [Category("Get Brand")]
-    public async Task When_Client_Created_Brand_Then_It_Can_Get_Created_Brand()
+    public async Task When_Employee_Created_The_Brand_Then_It_Can_Be_Requested_By_Id()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogBrandClient = webApplicationFactory.CreateClient();
         var brand = new CatalogBrandDTO { Brand = "Test Brand" };
         var content = createBrandContent(brand);
@@ -128,7 +131,7 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Brand")]
-    public async Task When_Client_Is_Unauthenticated_Then_Update_Brand_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Update_Brand_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogBrandClient = webApplicationFactory.CreateClient();
@@ -141,9 +144,22 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Brand")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Update_Brand()
+    public async Task When_User_Is_Client_Then_Update_Brand_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        var catalogBrandClient = webApplicationFactory.CreateClient();
+        var updateContent = createBrandContent(new CatalogBrandDTO());
+
+        var response = await catalogBrandClient.PutAsync(Brand(Guid.NewGuid()), updateContent);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Update Brand")]
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Update_Brand_Returns_Forbidden()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogBrandClient = webApplicationFactory.CreateClient();
         var updateContent = createBrandContent(new CatalogBrandDTO());
 
@@ -154,9 +170,10 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Brand")]
-    public async Task When_Client_Is_Updating_Non_Existing_Brand_Then_Not_Found_Returns()
+    public async Task When_Employee_Is_Updating_Non_Existing_Brand_Then_Not_Found_Returns()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogBrandClient = webApplicationFactory.CreateClient();
         var updateContent = createBrandContent(new CatalogBrandDTO() { Brand = "Test" });
 
@@ -167,9 +184,10 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Brand")]
-    public async Task When_Client_Is_Updating_Brand_Then_Updated_Version_Could_Be_Requested()
+    public async Task When_Employee_Is_Updated_Brand_Then_Updated_Version_Could_Be_Gotten()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogBrandClient = webApplicationFactory.CreateClient();            
         var updateContent = createBrandContent(new CatalogBrandDTO() 
         { 
@@ -188,7 +206,7 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Brand")]
-    public async Task When_Client_Is_Unauthenticated_Then_Delete_Brand_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Delete_Brand_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogBrandClient = webApplicationFactory.CreateClient();
@@ -200,9 +218,9 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Brand")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Delete_Brand()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Delete_Brand_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogBrandClient = webApplicationFactory.CreateClient();
 
         var response = await catalogBrandClient.DeleteAsync(Brand(Guid.NewGuid()));
@@ -212,9 +230,10 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Brand")]
-    public async Task When_Client_Is_Deleting_Non_Existing_Brand_Then_Not_Found_Returns()
+    public async Task When_Employee_Is_Deleting_Non_Existing_Brand_Then_Not_Found_Returns()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogBrandClient = webApplicationFactory.CreateClient();
 
         var response = await catalogBrandClient.DeleteAsync(Brand(Guid.NewGuid()));
@@ -224,9 +243,22 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Brand")]
-    public async Task When_Client_Is_Deleting_Brand_Then_Brand_Could_Not_Be_Requested_Anymore()
+    public async Task When_User_Is_Client_Then_Delete_Brand_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        var catalogBrandClient = webApplicationFactory.CreateClient();
+
+        var response = await catalogBrandClient.DeleteAsync(Brand(defaultCatalogBrandId));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Delete Brand")]
+    public async Task When_Employee_Is_Deleting_Brand_Then_Brand_Could_Not_Be_Requested_Anymore()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogBrandClient = webApplicationFactory.CreateClient();
 
         var response = await catalogBrandClient.DeleteAsync(Brand(defaultCatalogBrandId));
@@ -237,25 +269,12 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
     }
 
     [Test]
-    [Category("List Brands")]
-    public async Task When_Client_Is_Unauthenitcated_Then_List_Brands_Returns_Unathorized()
-    {
-        testAuthenticationContextBuilder.SetUnauthenticated();
-        var catalogBrandClient = webApplicationFactory.CreateClient();
-        var listCatalogBrandQuery = new ListCatalogBrandQuery();
-
-        var response = await catalogBrandClient.GetAsync(Brands(listCatalogBrandQuery));
-
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-    }
-
-    [Test]
     [Category("List Catalog Brands")]
-    public async Task When_User_Is_Administrator_Then_It_Can_List_Brand()
+    public async Task When_User_Is_Unauthenitcated_Then_Brands_Can_Be_Listed()
     {
         await createCatalogBrandAsync("A Brand");
         await createCatalogBrandAsync("B brand");
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogBrandClient = webApplicationFactory.CreateClient();
         var listCatalogBrandQuery = new ListCatalogBrandQuery()
         {

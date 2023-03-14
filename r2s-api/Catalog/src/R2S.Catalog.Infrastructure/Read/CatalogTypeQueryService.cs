@@ -27,11 +27,17 @@ public class CatalogTypeQueryService : ICatalogTypeQueryService
     {
         var count = _catalogReadDbContext.CatalogTypes.Count();
         var orderByExpression = $"{nameof(CatalogTypeReadModel.Type)} {listCatalogTypeQuery.OrderByDirection}";
+        IQueryable<CatalogTypeReadModel> catalogTypesQueryable = _catalogReadDbContext.CatalogTypes.OrderBy(orderByExpression);
 
-        var catalogTypes = await _catalogReadDbContext.CatalogTypes
+        if (listCatalogTypeQuery.PageSize > 0)
+        {
+            catalogTypesQueryable = catalogTypesQueryable
+                .Skip(listCatalogTypeQuery.PageIndex * listCatalogTypeQuery.PageSize)
+                .Take(listCatalogTypeQuery.PageSize);
+        }
+
+        var catalogTypes = await catalogTypesQueryable
             .OrderBy(orderByExpression)
-            .Skip(listCatalogTypeQuery.PageIndex * listCatalogTypeQuery.PageSize)
-            .Take(listCatalogTypeQuery.PageSize)
             .ToListAsync();
 
         var result = new ListCatalogTypeResult()

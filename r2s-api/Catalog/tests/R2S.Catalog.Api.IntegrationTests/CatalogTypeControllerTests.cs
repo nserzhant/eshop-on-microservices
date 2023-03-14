@@ -1,4 +1,5 @@
 ﻿using Microsoft.Net.Http.Headers;
+using R2S.Catalog.Api.Constants;
 using R2S.Catalog.Api.Models;
 using R2S.Catalog.Core.Models;
 using R2S.Catalog.Infrastructure.Read.Queries;
@@ -29,7 +30,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Catalog Type")]
-    public async Task When_Client_Is_Unauthenticated_Then_Create_Catalog_Type_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Create_Catalog_Type_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -42,9 +43,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Catalog Type")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Create_Catalog_Type()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Create_Catalog_Type_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var content = createCatalogTypeContent(new CatalogTypeDTO());
 
@@ -55,9 +56,10 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Catalog Type")]
-    public async Task When_Client_Is_Sales_Manager_Then_It_Can_Create_Catalog_Type()
+    public async Task When_Employee_Is_Sales_Manager_Then_Catalog_Type_Can_Be_Created()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var content = createCatalogTypeContent(new CatalogTypeDTO() { Type = "Test type" });
 
@@ -67,22 +69,23 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
     }
 
     [Test]
-    [Category("Get Catalog Type")]
-    public async Task When_Client_Is_Unauthenticated_Then_Get_Catalog_Type_Returns_Unathorized()
+    [Category("Create Catalog Type")]
+    public async Task When_User_Is_Client_Then_Create_Catalog_Type_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetUnauthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
         var catalogTypeClient = webApplicationFactory.CreateClient();
+        var content = createCatalogTypeContent(new CatalogTypeDTO() { Type = "Test type" });
 
-        var response = await catalogTypeClient.GetAsync(CatalogType(Guid.NewGuid()));
+        var response = await catalogTypeClient.PostAsync(Post.CatalogType, content);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
     [Test]
     [Category("Get Catalog Type")]
-    public async Task When_Client_Is_Authenticated_Then_It_Can_Get_Catalog_Type()
+    public async Task When_User_Is_Unauthenticated_Then_Catalog_Type_Can_Be_Gotten()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
 
         var response = await catalogTypeClient.GetAsync(CatalogType(defaultCatalogTypeId));
@@ -92,9 +95,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Get Catalog Type")]
-    public async Task When_Client_Is_Requesting_Non_Existing_Catalog_Type_Then_Not_Found_Returns()
+    public async Task When_User_Is_Requesting_Non_Existing_Catalog_Type_Then_Not_Found_Returned()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
 
         var response = await catalogTypeClient.GetAsync(CatalogType(Guid.NewGuid()));
@@ -105,9 +108,10 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
     [Test]
     [Category("Create Catalog Type")]
     [Category("Get Catalog Type")]
-    public async Task When_Client_Created_Type_Then_It_Can_Get_Created_Catalog_Type()
+    public async Task When_Employee_Created_The_Type_Then_It_Can_Be_Requested_By_Id()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var catalogType = new CatalogTypeDTO { Type = "Test catalog type" };
         var content = createCatalogTypeContent(catalogType);
@@ -127,7 +131,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_Client_Is_Unauthenticated_Then_Update_Catalog_Type_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Update_Catalog_Type_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -140,9 +144,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Update_Catalog_Type()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Update_Catalog_Type_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var updateContent = createCatalogTypeContent(new CatalogTypeDTO());
 
@@ -153,9 +157,23 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_Client_Is_Updating_Non_Existing_Catalog_Type_Then_Not_Found_Returns()
+    public async Task When_User_Is_Client_Then_Update_Catalog_Type_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        var catalogTypeClient = webApplicationFactory.CreateClient();
+        var updateContent = createCatalogTypeContent(new CatalogTypeDTO());
+
+        var response = await catalogTypeClient.PutAsync(CatalogType(Guid.NewGuid()), updateContent);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Update Catalog Type")]
+    public async Task When_Employee_Is_Updating_Non_Existing_Catalog_Type_Then_Not_Found_Returns()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var updateContent = createCatalogTypeContent(new CatalogTypeDTO() { Type = "Test" });
 
@@ -166,9 +184,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_Client_Is_Updating_Type_Then_Updated_Version_Could_Be_Requested()
+    public async Task When_Employee_Is_Updated_Type_Then_Updated_Version_Can_Be_Gotten()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var updateContent = createCatalogTypeContent(new CatalogTypeDTO()
         {
@@ -187,7 +205,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_Client_Is_Unauthenticated_Then_Delete_Catalog_Type_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Delete_Catalog_Type_Returns_Unathorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -199,9 +217,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_Client_Is_Not_Sales_Manager_Then_It_Cant_Delete_Catalog_Type()
+    public async Task When_Employee_Is_Not_Sales_Manager_Then_Delete_Catalog_Type_Returns_Forbidden()
     {
-        testAuthenticationContextBuilder.SetAuthenticated();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee);
         var catalogTypeClient = webApplicationFactory.CreateClient();
 
         var response = await catalogTypeClient.DeleteAsync(CatalogType(Guid.NewGuid()));
@@ -211,9 +229,10 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_Client_Is_Deleting_Non_Existing_Catalog_Type_Then_Not_Found_Returns()
+    public async Task When_Employee_Is_Deleting_Non_Existing_Catalog_Type_Then_Not_Found_Returns()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
 
         var response = await catalogTypeClient.DeleteAsync(CatalogType(Guid.NewGuid()));
@@ -223,9 +242,21 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_Client_Is_Deleting_Type_Then_Catalog_Type_Could_Not_Be_Requested_Anymore()
+    public async Task When_User_Is_Client_Then_Delete_Catalog_Type_Returns_Unathorized()
     {
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        var catalogTypeClient = webApplicationFactory.CreateClient();
+
+        var response = await catalogTypeClient.DeleteAsync(CatalogType(defaultCatalogTypeId));
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Delete Catalog Type")]
+    public async Task When_Employee_Is_Deleting_Type_Then_Catalog_Type_Could_Not_Be_Requested_Anymore()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
 
         var response = await catalogTypeClient.DeleteAsync(CatalogType(defaultCatalogTypeId));
@@ -237,24 +268,11 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("List Catalog Types")]
-    public async Task When_Client_Is_Unauthenitcated_Then_List_Catalog_Types_Returns_Unathorized()
-    {
-        testAuthenticationContextBuilder.SetUnauthenticated();
-        var catalogTypeClient = webApplicationFactory.CreateClient();
-        var listCatalogTypeQuery = new ListCatalogTypeQuery();
-
-        var response = await catalogTypeClient.GetAsync(CatalogTypes(listCatalogTypeQuery));
-
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-    }
-
-    [Test]
-    [Category("List Catalog Types")]
-    public async Task When_Client_Is_Administrator_Then_It_Can_List_Catalog_Catalog_Types()
+    public async Task When_User_Is_Unauthenitcated_Then_Types_Can_Be_Listed()
     {
         await createCatalogTypeAsync("A Type");
         await createCatalogTypeAsync("B Type");
-        testAuthenticationContextBuilder.SetAuthenticated().AsSalesManager();
+        testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var listCatalogTypeQuery = new ListCatalogTypeQuery()
         {
