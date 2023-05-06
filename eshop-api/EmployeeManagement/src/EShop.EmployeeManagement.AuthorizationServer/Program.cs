@@ -10,8 +10,10 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 var builder = WebApplication.CreateBuilder(args);
 //Get settings to configure JWT tokens
 
-var jwtSecretKey = builder.Configuration[Consts.JWT_SECRET_KEY_CONFIG_NAME];
+var configuration = builder.Configuration;
+var jwtSecretKey = configuration[Consts.JWT_SECRET_KEY_CONFIG_NAME];
 builder.Services.AddEmployeeServices(builder.Configuration);
+var accessTokenLifetime = configuration.GetValue<int>(Consts.ACCESS_TOKEN_LIFETIME_CONFIG_NAME); 
 
 //Configure settings for Client apps
 
@@ -92,7 +94,7 @@ builder.Services.AddOpenIddict()
                 .EnableAuthorizationEndpointPassthrough()
                 .EnableLogoutEndpointPassthrough();
 
-            options.SetAccessTokenLifetime(TimeSpan.FromSeconds(120));
+            options.SetAccessTokenLifetime(TimeSpan.FromSeconds(accessTokenLifetime));
 
         });
 
