@@ -81,7 +81,7 @@ builder.Services.AddOpenApiDocument(document =>
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
     if (allowedClients != null)
-        builder.WithOrigins(allowedClients).AllowAnyMethod().AllowAnyHeader();
+        builder.WithOrigins(allowedClients.Split(',')).AllowAnyMethod().AllowAnyHeader();
 }));
 
 var app = builder.Build();

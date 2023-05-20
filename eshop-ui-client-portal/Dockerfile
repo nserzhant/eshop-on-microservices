@@ -24,7 +24,7 @@ ENTRYPOINT ["nginx", "-g", "daemon off;"]
 # For development use:
 # docker build -t client-portal-development --target development --no-cache .
 # docker run -p 4201:4200 -p 49153:49153 -d --rm -v D:\VSProjects\eshop-on-microservices\eshop-ui-client-portal\src:/app/src --name client-portal-dev  client-portal-development
-# docker run -d --rm client-portal-dev
+# docker run -p 4201:4200 -d --rm client-portal-development
 
 # For production use:
 # docker build --target release --no-cache  -t client-portal-release .
