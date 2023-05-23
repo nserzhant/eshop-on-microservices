@@ -1,6 +1,6 @@
 {
   "runtime": "Net70",
-  "defaultVariables": null,
+  "defaultVariables": "Configuration=Debug,OutDir=bin/Debug/net7.0/",
   "documentGenerator": {
     "aspNetCoreToOpenApi": {
       "project": "",
@@ -55,7 +55,7 @@
       "outputType": "Swagger2",
       "newLineBehavior": "Auto",
       "assemblyPaths": [
-        "bin/Debug/net7.0/EShop.Catalog.Api.dll"
+        "$(OutDir)/EShop.Catalog.Api.dll"
       ],
       "assemblyConfig": null,
       "referencePaths": [],

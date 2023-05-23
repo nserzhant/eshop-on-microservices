@@ -26,7 +26,7 @@ public class EmployeeDBContextFactory : IDesignTimeDbContextFactory<EmployeeDbCo
 {
     public EmployeeDbContext CreateDbContext(string[] args)
     {
-        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.migrations.json").Build();
         var connectionString = configuration.GetConnectionString("employeeDbConnectionString");
         var optionsBuilder = new DbContextOptionsBuilder<EmployeeDbContext>();
 

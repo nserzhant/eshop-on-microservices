@@ -39,7 +39,7 @@
   </ItemGroup>
   
   <Target Name="NSwag" AfterTargets="Build">
-  	<Exec ConsoleToMSBuild="true" ContinueOnError="true" Command="$(NSwagExe_Net70) run employee.api.nswag.json /variables:Configuration=$(Configuration)">
+  	<Exec ConsoleToMSBuild="true" ContinueOnError="true" Command="$(NSwagExe_Net70) run employee.api.nswag.json /variables:Configuration=$(Configuration),OutDir=$(OutDir)">
   		<Output TaskParameter="ExitCode" PropertyName="NSwagExitCode" />
   		<Output TaskParameter="ConsoleOutput" PropertyName="NSwagOutput" />
   	</Exec>

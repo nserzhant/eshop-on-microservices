@@ -29,7 +29,7 @@ public class CatalogDbContextFactory : IDesignTimeDbContextFactory<CatalogDbCont
 {
     public CatalogDbContext CreateDbContext(string[] args)
     {
-        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.migrations.json").Build();
         var connectionString = configuration.GetConnectionString(DbConsts.CATALOG_DB_CONNECTION_STRING_NAME);
         var optionsBuilder = new DbContextOptionsBuilder<CatalogDbContext>();
 
