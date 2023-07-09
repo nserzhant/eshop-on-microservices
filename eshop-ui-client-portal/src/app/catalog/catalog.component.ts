@@ -115,6 +115,7 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onFilterChange() {
+    this.paginator.pageIndex = 0;
     this.filterChangedSubject$.next();
   }
 }
