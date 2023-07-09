@@ -6,6 +6,9 @@ using EShop.EmployeeManagement.Api.Filters;
 using EShop.EmployeeManagement.Api.Settings;
 using EShop.EmployeeManagement.Core;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using EShop.EmployeeManagement.Core.Entities;
+using EShop.EmployeeManagement.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,9 @@ jwtSettingsSection.Bind(jwtSettings);
 
 // Configure settings for Client app
 var clientIp = builder.Configuration[Consts.SPA_CLIENT_IP_CONFIG_NAME];
+
+// Setting to init Db with test data on startup
+var initDbOnStartup = builder.Configuration.GetValue<bool>(Consts.INIT_DB_ON_STARTUP_CONFIG_NAME, false);
 
 // Add services to the container.
 
@@ -77,6 +83,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+if (initDbOnStartup)
+{
+    using var scope = app.Services.CreateScope();
+    var scopedProvider = scope.ServiceProvider;
+    var dbContext = scopedProvider.GetRequiredService<EmployeeDbContext>();
+    var userManager = scopedProvider.GetRequiredService<UserManager<Employee>>();
+    await DbInitializer.InitializeDbWIthTestData(userManager, dbContext);
+}
 
 app.Run();
 public partial class Program { }

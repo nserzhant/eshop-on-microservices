@@ -27,9 +27,6 @@ public class CatalogItemServiceUnitTests
             _catalogTypeRepository,
             _catalogItemRepository);
         _catalogItem = new CatalogItem("test", 
-            //"test", 
-            //null, 
-            //null, 
             Guid.NewGuid(), 
             Guid.NewGuid());
     }

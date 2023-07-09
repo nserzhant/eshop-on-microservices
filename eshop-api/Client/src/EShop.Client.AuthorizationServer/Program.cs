@@ -20,6 +20,10 @@ var clientConfigurations = builder.Configuration.GetSection(Consts.CLIENT_CONFIG
 builder.Services.Configure<List<ClientConfiguration>>(clientConfigurations);
 var clients = clientConfigurations.Get<List<ClientConfiguration>>();
 
+//Get settings for Db Initializing
+
+var initializeDbOnStartup = configuration.GetValue<bool>(Consts.INIT_DB_ON_STARTUP_CONFIG_NAME, false);
+
 // Add services to the container.
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -151,5 +155,13 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+if(initializeDbOnStartup)
+{
+    using var scope = app.Services.CreateScope();
+    var scopedProvider = scope.ServiceProvider;
+    var dbContext = scopedProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.Run();

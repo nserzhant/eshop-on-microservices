@@ -8,8 +8,8 @@ public class CatalogItem : BaseEntity
     public string? Description { get; set; }
     public decimal? Price { get; private set; }
     public string? PictureUri { get; set; }
-    public Guid CatalogTypeId { get; set; }
-    public Guid CatalogBrandId { get; set; }
+    public Guid CatalogTypeId { get; private set; }
+    public Guid CatalogBrandId { get; private set; }
     public int AvailableQty { get; private set; } = 0;
 
     public CatalogItem(string? name, Guid catalogTypeId, Guid catalogBrandId)
@@ -17,6 +17,17 @@ public class CatalogItem : BaseEntity
         UpdateName(name);
         UpdateBrand(catalogBrandId);
         UpdateType(catalogTypeId);
+    }
+
+    public CatalogItem(string? name, Guid catalogTypeId, Guid catalogBrandId, string description, decimal price, int availableQty, string pictureUri)
+    {
+        UpdateName(name);
+        UpdateBrand(catalogBrandId);
+        UpdateType(catalogTypeId);
+        Description = description;
+        UpdateAvailableQty(availableQty);
+        UpdatePrice(price);
+        PictureUri = pictureUri;
     }
 
     public void UpdateName(string? name)

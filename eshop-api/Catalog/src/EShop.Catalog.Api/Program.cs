@@ -1,11 +1,13 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
-using NSwag.Generation.Processors.Security;
 using EShop.Catalog.Api.Constants;
+using EShop.Catalog.Api.Data;
 using EShop.Catalog.Api.Filters;
 using EShop.Catalog.Api.Settings;
 using EShop.Catalog.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using NSwag.Generation.Processors.Security;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +24,11 @@ clientJwtSettingsSection.Bind(clientJwtSettings);
 
 // Configure settings for Client app
 var allowedClients = builder.Configuration[ConfigurationKeys.SPA_CLIENT_IP_CONFIG_NAME];
+
+// Setting to init Db with test data on startup
+
+var initDbOnStartup = builder.Configuration.GetValue<bool>(ConfigurationKeys.INIT_DB_ON_STARTUP_CONFIG_NAME, false);
+var generatedItemPictureUriHost = builder.Configuration.GetValue(ConfigurationKeys.GENERATED_ITEMS_PICTURE_URI_HOST_CONFIG_NAME, "");
 
 // Add services to the container.
 builder.Services.AddCatalogServices(builder.Configuration);
@@ -99,6 +106,21 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "Images")),
+    RequestPath = "/images"
+});
+
+if (initDbOnStartup)
+{
+    using var scope = app.Services.CreateScope();
+    var scopedProvider = scope.ServiceProvider;
+    var dbContext = scopedProvider.GetRequiredService<CatalogDbContext>();
+    var pictureUriPrefix = @$"{generatedItemPictureUriHost}/images";
+    await DbInitializer.InitializeDbWIthTestData(dbContext, pictureUriPrefix);
+}
 
 app.Run();
 public partial class Program { }

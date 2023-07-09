@@ -14,12 +14,21 @@ public class CatalogItemUnitTests
         string name = "name";
         Guid catalogTypeId = Guid.NewGuid();
         Guid catalogBrandId= Guid.NewGuid();
+        var description = "testDescription";
+        var price = 212.4m;
+        var availableQty = 23;
+        var pictureUri = @"http://example.com/image.jpg";
 
-        var catalogItem = new CatalogItem(name, catalogTypeId, catalogBrandId);  
+        var catalogItem = new CatalogItem(name, catalogTypeId, catalogBrandId, description,
+            price, availableQty, pictureUri);  
 
         Assert.That(catalogItem.Name, Is.EqualTo(name));
         Assert.That(catalogItem.CatalogTypeId, Is.EqualTo(catalogTypeId));
         Assert.That(catalogItem.CatalogBrandId, Is.EqualTo(catalogBrandId));
+        Assert.That(catalogItem.Description, Is.EqualTo(description));
+        Assert.That(catalogItem.Price, Is.EqualTo(price));
+        Assert.That(catalogItem.AvailableQty, Is.EqualTo(availableQty));
+        Assert.That(catalogItem.PictureUri, Is.EqualTo(pictureUri));
     }
 
     [Test]
@@ -65,6 +74,8 @@ public class CatalogItemUnitTests
         var newCatalogTypeId = Guid.NewGuid();
         var newCatalogBrandId = Guid.NewGuid();
         var newCatalogItemQty = 23;
+        var newCatalogItemUri = @"http://example.com/image.jpg";
+        var newCatalogItemDescription = "Updated Description";
 
         catalogItem.UpdateName(newItemName);
         catalogItem.UpdateTs(newItemTs);
@@ -72,6 +83,8 @@ public class CatalogItemUnitTests
         catalogItem.UpdateBrand(newCatalogBrandId);
         catalogItem.UpdateType(newCatalogTypeId);
         catalogItem.UpdateAvailableQty(newCatalogItemQty);
+        catalogItem.PictureUri = newCatalogItemUri;
+        catalogItem.Description = newCatalogItemDescription;
 
         Assert.That(catalogItem.Name, Is.EqualTo(newItemName));
         Assert.That(catalogItem.Ts, Is.EqualTo(newItemTs));
@@ -79,6 +92,8 @@ public class CatalogItemUnitTests
         Assert.That(catalogItem.CatalogBrandId, Is.EqualTo(newCatalogBrandId));
         Assert.That(catalogItem.CatalogTypeId, Is.EqualTo(newCatalogTypeId));
         Assert.That(catalogItem.AvailableQty, Is.EqualTo(newCatalogItemQty));
+        Assert.That(catalogItem.PictureUri, Is.EqualTo(newCatalogItemUri));
+        Assert.That(catalogItem.Description, Is.EqualTo(newCatalogItemDescription));
     }
 
     [Test]
