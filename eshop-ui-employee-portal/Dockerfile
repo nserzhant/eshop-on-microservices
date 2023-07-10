@@ -5,10 +5,12 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 EXPOSE 4200 49153
-CMD ["ng", "serve", "--host", "0.0.0.0", "--poll", "500","--configuration=docker"]
+ENTRYPOINT ["ng","serve","--host","0.0.0.0","--poll","500"]
+CMD ["--configuration","docker"]
 
 FROM development AS build
-RUN npm run build --prod
+ARG CONFIGURATION="production"
+RUN ng build --configuration=$CONFIGURATION
 
 FROM nginx:alpine3.17 as release
 COPY --from=build /app/.nginx/nginx.conf /etc/nginx/conf.d/default.conf
@@ -21,11 +23,20 @@ COPY --from=build /app/dist/eshop-ui-employee-portal .
 EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
-# For development use:
+# For development runtime environment use:
+# Build (--no-cache parameter is optional - it could help in some issues)
 # docker build -t employee-portal-development --target development --no-cache .
-# docker run -p 4202:4200 -p 49153:49153 -d --rm -v D:\VSProjects\eshop-on-microservices\eshop-ui-employee-portal\src:/app/src --name employee-portal-dev  employee-portal-development
-# docker run -d --rm employee-portal-dev
+# Run with browser debugging
+# docker run -p 4202:4200 -p 49153:49153 -d --rm -v D:\VSProjects\eshop-on-microservices\eshop-ui-client-portal\src:/app/src --name employee-portal-dev  employee-portal-development
+# Run without browser debugging
+# docker run -p 4202:4200 -d --rm employee-portal-development
+# Run with other configuration (docker in the example)
+# docker run -p 4202:4200 -d --rm employee-portal-development --configuration=docker
 
-# For production use:
+# For production runtime environment use:
+# Build
 # docker build --target release --no-cache  -t employee-portal-release .
+# Build with other configuration (docker in the example)
+# docker build --target release --no-cache  -t employee-portal-release --build-arg="CONFIGURATION=docker" .
+# Run
 # docker run -d --rm -p 4202:80 employee-portal-release

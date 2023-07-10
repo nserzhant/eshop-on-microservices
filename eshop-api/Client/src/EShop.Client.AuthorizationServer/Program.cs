@@ -161,7 +161,8 @@ if(initializeDbOnStartup)
     using var scope = app.Services.CreateScope();
     var scopedProvider = scope.ServiceProvider;
     var dbContext = scopedProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
+    var userManager = scopedProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    await DbInitializer.InitializeDbWIthTestData(userManager, dbContext);
 }
 
 app.Run();
