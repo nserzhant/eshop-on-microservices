@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    environment:
+      - MSSQL_SA_PASSWORD=E*AmPleP@ssw0rd
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express  
+    ports:
+      - "1454:1433"
+    volumes:
+      - client-api-data:/var/opt/mssql
+ 
+  eshop.client.authorizationserver:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ConnectionStrings__clientDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+    ports:
+      - "5058:80"
+      - "7086:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+volumes:
+  client-api-data:
+    external: false

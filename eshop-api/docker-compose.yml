@@ -1,0 +1,39 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+  eshop.catalog.api:
+    image: ${DOCKER_REGISTRY-}eshopcatalogapi
+    build:
+      context: .
+      dockerfile: Catalog/src/EShop.Catalog.Api/Dockerfile
+    depends_on:
+      - sqlserver
+
+  eshop.client.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshopclientauthorizationserver
+    build:
+      context: .
+      dockerfile: Client/src/EShop.Client.AuthorizationServer/Dockerfile
+    depends_on:
+      - sqlserver
+
+  eshop.employeemanagement.api:
+    image: ${DOCKER_REGISTRY-}eshopemployeemanagementapi
+    build:
+      context: .
+      dockerfile: EmployeeManagement/src/EShop.EmployeeManagement.Api/Dockerfile
+    depends_on:
+      - sqlserver
+      
+  eshop.employeemanagement.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshopemployeemanagementauthorizationserver
+    build:
+      context: .
+      dockerfile: EmployeeManagement/src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile    
+    depends_on:
+      - sqlserver
+      - eshop.employeemanagement.api
+

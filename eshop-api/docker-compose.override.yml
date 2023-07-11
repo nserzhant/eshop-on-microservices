@@ -1,0 +1,70 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    environment:
+      - MSSQL_SA_PASSWORD=E*AmPleP@ssw0rd
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express  
+    ports:
+      - "2433:1433"
+    volumes:
+      - eshop-api-data:/var/opt/mssql
+
+  eshop.catalog.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ConnectionStrings__catalogDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+      - generatedItemPictureUriHost=https://localhost:7208
+    ports:
+      - "5035:80"
+      - "7208:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+ 
+  eshop.client.authorizationserver:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ConnectionStrings__clientDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+    ports:
+      - "5058:80"
+      - "7086:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  eshop.employeemanagement.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+    ports:
+      - "5158:80"
+      - "7158:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      
+  eshop.employeemanagement.authorizationserver:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+    ports:
+      - "5218:80"
+      - "7272:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+volumes:
+  eshop-api-data:
+    external: false
+
+

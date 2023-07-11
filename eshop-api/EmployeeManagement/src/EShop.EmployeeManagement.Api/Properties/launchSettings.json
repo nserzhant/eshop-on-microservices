@@ -25,7 +25,10 @@
       "publishAllPorts": true,
       "useSSL": true,
       "httpPort": 5158,
-      "sslPort": 7158
+      "sslPort": 7158,
+      "environmentVariables": {
+        "ConnectionStrings:employeeDbConnectionString": "Server=host.docker.internal,1455;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true"
+      }
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json",

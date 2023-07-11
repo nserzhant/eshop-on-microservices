@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "eshop.catalog.api": "StartDebugging",
+        "eshop.client.authorizationserver": "StartDebugging",
+        "eshop.employeemanagement.api": "StartDebugging",
+        "eshop.employeemanagement.authorizationserver": "StartDebugging"
+      }
+    }
+  }
+}

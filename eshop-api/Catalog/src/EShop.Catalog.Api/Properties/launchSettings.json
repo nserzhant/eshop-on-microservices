@@ -39,7 +39,12 @@
       "publishAllPorts": true,
       "useSSL": true,
       "httpPort": 5035,
-      "sslPort": 7208
+      "sslPort": 7208,
+      "environmentVariables": {
+        "ConnectionStrings__catalogDbConnectionString": "Server=host.docker.internal,1453;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true",
+        "initDbOnStartup": "true",
+        "generatedItemPictureUriHost": "https://localhost:7208"
+      }
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json",

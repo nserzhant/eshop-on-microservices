@@ -32,7 +32,10 @@
       "publishAllPorts": true,
       "useSSL": true,
       "httpPort": 5218,
-      "sslPort": 7272
+      "sslPort": 7272,
+      "environmentVariables": {
+        "ConnectionStrings:employeeDbConnectionString": "Server=host.docker.internal,1455;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true"
+      }
     }
   },
   "iisSettings": {

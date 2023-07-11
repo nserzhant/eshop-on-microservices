@@ -32,7 +32,10 @@
       "publishAllPorts": true,
       "useSSL": true,
       "httpPort": 5058,
-      "sslPort": 7086
+      "sslPort": 7086,
+      "environmentVariables": {
+        "ConnectionStrings:clientDbConnectionString": "Server=host.docker.internal,1454;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true"
+      }
     }
   },
   "iisSettings": {
