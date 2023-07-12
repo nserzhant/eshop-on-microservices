@@ -4,10 +4,22 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "eshop.catalog.api": "StartDebugging",
-        "eshop.client.authorizationserver": "StartDebugging",
-        "eshop.employeemanagement.api": "StartDebugging",
-        "eshop.employeemanagement.authorizationserver": "StartDebugging"
+        "catalog.api": "StartDebugging",
+        "client.authorizationserver": "StartDebugging",
+        "employeemanagement.api": "StartDebugging",
+        "employeemanagement.authorizationserver": "StartDebugging",
+        "sqlserver": "StartWithoutDebugging"
+      }
+    },
+    "SQL Server": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "catalog.api": "DoNotStart",
+        "client.authorizationserver": "DoNotStart",
+        "employeemanagement.api": "DoNotStart",
+        "employeemanagement.authorizationserver": "DoNotStart",
+        "sqlserver": "StartWithoutDebugging"
       }
     }
   }

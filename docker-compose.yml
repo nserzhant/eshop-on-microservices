@@ -1,20 +1,21 @@
-version: '3.4'
-
+version: '3.8'
 services:
   sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       - MSSQL_SA_PASSWORD=E*AmPleP@ssw0rd
       - ACCEPT_EULA=Y
       - MSSQL_PID=Express  
     ports:
       - "2433:1433"
-      - "1453:1433"
-      - "1454:1433"
-      - "1455:1433"
     volumes:
       - eshop-api-data:/var/opt/mssql
 
   catalog.api:
+    image: ${DOCKER_REGISTRY-}eshop.catalog.api
+    build:
+      context: eshop-api/Catalog/
+      dockerfile: src/EShop.Catalog.Api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
@@ -27,8 +28,14 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
- 
+    depends_on:
+      - sqlserver
+
   client.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver
+    build:
+      context: eshop-api/Client/
+      dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
@@ -40,8 +47,14 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    depends_on:
+      - sqlserver
 
   employeemanagement.api:
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api
+    build:
+      context: eshop-api/EmployeeManagement/
+      dockerfile: src/EShop.EmployeeManagement.Api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
@@ -53,8 +66,14 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    depends_on:
+      - sqlserver
       
   employeemanagement.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.authorizationserver
+    build:
+      context: eshop-api/EmployeeManagement/
+      dockerfile: src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
@@ -64,10 +83,34 @@ services:
       - "7272:443"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro    
+    depends_on:
+      - sqlserver
+      - employeemanagement.api
+
+  employee-portal:
+    image: ${DOCKER_REGISTRY-}eshop.ui.employeeportal
+    build: 
+      context: eshop-ui-employee-portal
+      dockerfile: Dockerfile
+    ports:
+      - '4202:80'
+    depends_on:
+      - employeemanagement.api
+      - employeemanagement.authorizationserver
+      - catalog.api
+
+  client-portal:
+    image: ${DOCKER_REGISTRY-}eshop.ui.clientportal
+    build: 
+      context: eshop-ui-client-portal
+      dockerfile: Dockerfile
+    ports:
+      - '4201:80'    
+    depends_on:
+      - client.authorizationserver
+      - catalog.api
 
 volumes:
   eshop-api-data:
     external: false
-
-

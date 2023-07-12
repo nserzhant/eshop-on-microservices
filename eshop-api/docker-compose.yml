@@ -4,36 +4,36 @@ services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
-  eshop.catalog.api:
-    image: ${DOCKER_REGISTRY-}eshopcatalogapi
+  catalog.api:
+    image: ${DOCKER_REGISTRY-}eshop.catalog.api
     build:
-      context: .
-      dockerfile: Catalog/src/EShop.Catalog.Api/Dockerfile
+      context: Catalog/
+      dockerfile: src/EShop.Catalog.Api/Dockerfile
     depends_on:
       - sqlserver
 
-  eshop.client.authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshopclientauthorizationserver
+  client.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver
     build:
-      context: .
-      dockerfile: Client/src/EShop.Client.AuthorizationServer/Dockerfile
+      context: Client/
+      dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
     depends_on:
       - sqlserver
 
-  eshop.employeemanagement.api:
-    image: ${DOCKER_REGISTRY-}eshopemployeemanagementapi
+  employeemanagement.api:
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api
     build:
-      context: .
-      dockerfile: EmployeeManagement/src/EShop.EmployeeManagement.Api/Dockerfile
+      context: EmployeeManagement/
+      dockerfile: src/EShop.EmployeeManagement.Api/Dockerfile
     depends_on:
       - sqlserver
       
-  eshop.employeemanagement.authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshopemployeemanagementauthorizationserver
+  employeemanagement.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.authorizationserver
     build:
-      context: .
-      dockerfile: EmployeeManagement/src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile    
+      context: EmployeeManagement/
+      dockerfile: src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile    
     depends_on:
       - sqlserver
-      - eshop.employeemanagement.api
+      - employeemanagement.api
 
