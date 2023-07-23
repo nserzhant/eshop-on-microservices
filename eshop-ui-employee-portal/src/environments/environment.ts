@@ -1,8 +1,7 @@
 export const environment = {
   production: true,
-  stsAuthority: 'https://localhost:7272/',
-  clientId: 'employee-portal-docker',
-  clientRoot: 'http://localhost:4202/',
-  apiRoot: "https://localhost:7158",
-  catalogApi: "https://localhost:7208"
+  stsAuthority: '/authorize',
+  clientId: 'employee-portal',
+  apiRoot: '/employee-management',
+  catalogApi: '/catalog'
 };

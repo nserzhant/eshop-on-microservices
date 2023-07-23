@@ -13,8 +13,8 @@ export class AuthenticationService {
     const userManagerSettings : UserManagerSettings = {
       authority : environment.stsAuthority,
       client_id : environment.clientId,
-      redirect_uri : `${environment.clientRoot}login-callback`,
-      post_logout_redirect_uri: `${environment.clientRoot}`,
+      redirect_uri : `${location.origin}/login-callback`,
+      post_logout_redirect_uri: `${location.origin}/`,
       response_type : 'code',
       scope : 'openid api roles offline_access'
     };

@@ -6,7 +6,7 @@ RUN npm ci
 COPY . .
 EXPOSE 4200 49153
 ENTRYPOINT ["ng","serve","--host","0.0.0.0","--poll","500"]
-CMD ["--configuration","docker"]
+CMD ["--configuration","development"]
 
 FROM development AS build
 ARG CONFIGURATION="production"
@@ -24,19 +24,19 @@ EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 # For development runtime environment use:
-# Build (--no-cache parameter is optional - it could help in some issues)
-# docker build -t employee-portal-development --target development --no-cache .
+# Build
+# docker build -t employee-portal-development --target development.
 # Run with browser debugging
-# docker run -p 4202:4200 -p 49153:49153 -d --rm -v D:\VSProjects\eshop-on-microservices\eshop-ui-client-portal\src:/app/src --name employee-portal-dev  employee-portal-development
+# docker run -p 4202:4200 -p 49153:49153 -d --rm -v .\src:/app/src --name employee-portal-dev  employee-portal-development
 # Run without browser debugging
 # docker run -p 4202:4200 -d --rm employee-portal-development
-# Run with other configuration (docker in the example)
-# docker run -p 4202:4200 -d --rm employee-portal-development --configuration=docker
+# Run with other configuration (production in the example)
+# docker run -p 4202:4200 -d --rm employee-portal-development --configuration=production
 
 # For production runtime environment use:
 # Build
 # docker build --target release --no-cache  -t employee-portal-release .
-# Build with other configuration (docker in the example)
-# docker build --target release --no-cache  -t employee-portal-release --build-arg="CONFIGURATION=docker" .
+# Build with other configuration (development in the example)
+# docker build --target release --no-cache  -t employee-portal-release --build-arg="CONFIGURATION=development" .
 # Run
 # docker run -d --rm -p 4202:80 employee-portal-release
