@@ -5,7 +5,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
   eshop.client.authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshopclientauthorizationserver
+    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver:${TAG:-latest}
     build:
       context: .
       dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile

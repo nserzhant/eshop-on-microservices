@@ -34,8 +34,8 @@ public class Worker : IHostedService
                     ClientId = clientConfiguration.clientId,
                     Type = ClientTypes.Public,
                     DisplayName = clientConfiguration.displayName,
-                    RedirectUris = { new Uri($"{clientConfiguration.clientIP}/login-callback") },
-                    PostLogoutRedirectUris = { new Uri($"{clientConfiguration.clientIP}/") },
+                    RedirectUris = { new Uri($"{clientConfiguration.clientOrigin}/login-callback") },
+                    PostLogoutRedirectUris = { new Uri($"{clientConfiguration.clientOrigin}/") },
                     Permissions =
                     {
                         Permissions.Endpoints.Authorization,

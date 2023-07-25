@@ -13,7 +13,8 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_APPL_PATH": "app"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7086;http://localhost:5058"
@@ -34,7 +35,7 @@
       "httpPort": 5058,
       "sslPort": 7086,
       "environmentVariables": {
-        "ConnectionStrings:clientDbConnectionString": "Server=host.docker.internal,1454;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true"
+        "ConnectionStrings:clientDbConnectionString": "Server=host.docker.internal,2433;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true"
       }
     }
   },

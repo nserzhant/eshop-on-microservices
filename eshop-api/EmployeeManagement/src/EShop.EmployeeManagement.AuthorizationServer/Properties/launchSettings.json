@@ -34,7 +34,7 @@
       "httpPort": 5218,
       "sslPort": 7272,
       "environmentVariables": {
-        "ConnectionStrings:employeeDbConnectionString": "Server=host.docker.internal,1455;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true"
+        "ConnectionStrings:employeeDbConnectionString": "Server=host.docker.internal,2433;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true"
       }
     }
   },

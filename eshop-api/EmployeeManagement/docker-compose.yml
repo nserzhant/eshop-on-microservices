@@ -5,7 +5,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
   eshop.employeemanagement.api:
-    image: ${DOCKER_REGISTRY-}eshopemployeemanagementapi
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api:${TAG:-latest}
     build:
       context: .
       dockerfile: src/EShop.EmployeeManagement.Api/Dockerfile
@@ -13,7 +13,7 @@ services:
       - sqlserver
 
   eshop.employeemanagement.authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshopemployeemanagementauthorizationserver
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.authorizationserver:${TAG:-latest}
     build:
       context: .
       dockerfile: src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile

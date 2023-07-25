@@ -5,7 +5,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
   catalog.api:
-    image: ${DOCKER_REGISTRY-}eshop.catalog.api
+    image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
     build:
       context: Catalog/
       dockerfile: src/EShop.Catalog.Api/Dockerfile
@@ -13,7 +13,7 @@ services:
       - sqlserver
 
   client.authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver
+    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver:${TAG:-latest}
     build:
       context: Client/
       dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
@@ -21,7 +21,7 @@ services:
       - sqlserver
 
   employeemanagement.api:
-    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api:${TAG:-latest}
     build:
       context: EmployeeManagement/
       dockerfile: src/EShop.EmployeeManagement.Api/Dockerfile
@@ -29,7 +29,7 @@ services:
       - sqlserver
       
   employeemanagement.authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.authorizationserver
+    image: ${DOCKER_REGISTRY-}eshop.employeemanagement.authorizationserver:${TAG:-latest}
     build:
       context: EmployeeManagement/
       dockerfile: src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile    

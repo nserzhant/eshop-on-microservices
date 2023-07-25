@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   stsAuthority: 'https://localhost:7272/',
-  clientId: 'employee-portal',
+  clientId: 'employee-portal-dev',
   apiRoot: "https://localhost:7158",
   catalogApi: "https://localhost:7208"
 };

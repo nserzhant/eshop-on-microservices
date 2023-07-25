@@ -9,7 +9,7 @@ services:
     ports:
       - "2433:1433"
     volumes:
-      - eshop-api-data:/var/opt/mssql
+      - eshop-api-data-wproxy:/var/opt/mssql
 
   catalog-api:
     image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
@@ -18,21 +18,16 @@ services:
       dockerfile: src/EShop.Catalog.Api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443
+      - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__catalogDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
-      - generatedItemPictureUriHost=https://localhost:7208
-      - EmployeeJWTSettings__Issuer=https://localhost:7272/
-      - ClientJWTSettings__Issuer=https://localhost:7086/
-      - clients=http://localhost:4201,http://localhost:4202
-    ports:
-      - "7208:443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - generatedItemPictureUriHost=/catalog
+      - clients='https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT},https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}'
+      - EmployeeJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}/authorize
+      - ClientJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT}/authorize
     depends_on:
       - sqlserver
-
+  
   client-authorizationserver:
     image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver:${TAG:-latest}
     build:
@@ -40,17 +35,36 @@ services:
       dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443
+      - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__clientDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
-      - clients__0__clientOrigin=http://localhost:4201
-    ports:
-      - "7086:443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - clients__0__clientOrigin=https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT}
+      - clients__0__clientId=client-portal
+      - clients__0__displayName="public spa"
+      - ASPNETCORE_APPL_PATH=authorize
     depends_on:
       - sqlserver
+
+  client-portal:
+    image: ${DOCKER_REGISTRY-}eshop.ui.clientportal:${TAG:-latest}
+    build: 
+      context: eshop-ui-client-portal
+      dockerfile: Dockerfile
+    depends_on:
+      - catalog-api
+      - client-authorizationserver
+  
+  nginx-client-portal-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-client-portal-proxy
+    ports:
+      - "${CLIENT_PORTAL_PORT}:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ${CERTIFICATES_PATH}:/etc/nginx/certs
+      - ./nginx-proxy/nginx-client-portal.conf:/etc/nginx/nginx.conf
+    depends_on:
+     - client-authorizationserver
 
   employeemanagement-api:
     image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api:${TAG:-latest}
@@ -59,19 +73,14 @@ services:
       dockerfile: src/EShop.EmployeeManagement.Api/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443
+      - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
-      - clientOrigin=http://localhost:4202
-      - JWTSettings__Issuer=https://localhost:7272/
-    ports:
-      - "7158:443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - clientOrigin=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}
+      - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}/authorize
     depends_on:
       - sqlserver
-      
+
   employeemanagement-authorizationserver:
     image: ${DOCKER_REGISTRY-}eshop.employeemanagement.authorizationserver:${TAG:-latest}
     build:
@@ -79,14 +88,12 @@ services:
       dockerfile: src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443
-      - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true      
-      - clients__0__clientOrigin=http://localhost:4202
-    ports:
-      - "7272:443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro    
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - clients__0__clientOrigin=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}
+      - clients__0__clientId=employee-portal
+      - clients__0__displayName="public spa"
+      - ASPNETCORE_APPL_PATH=authorize
     depends_on:
       - sqlserver
       - employeemanagement-api
@@ -96,28 +103,23 @@ services:
     build: 
       context: eshop-ui-employee-portal
       dockerfile: Dockerfile
-      args:
-        - CONFIGURATION=development
-    ports:
-      - '4202:80'
     depends_on:
       - employeemanagement-api
       - employeemanagement-authorizationserver
-      - catalog-api
-
-  client-portal:
-    image: ${DOCKER_REGISTRY-}eshop.ui.clientportal:${TAG:-latest}
-    build: 
-      context: eshop-ui-client-portal
-      dockerfile: Dockerfile
-      args:
-        - CONFIGURATION=development
+      - catalog-api 
+  
+  nginx-employee-portal-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-employee-portal-proxy
     ports:
-      - '4201:80'    
+      - "${EMPLOYEE_PORTAL_PORT}:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ${CERTIFICATES_PATH}:/etc/nginx/certs
+      - ./nginx-proxy/nginx-employee-portal.conf:/etc/nginx/nginx.conf
     depends_on:
-      - client-authorizationserver
-      - catalog-api
+     - client-authorizationserver
 
 volumes:
-  eshop-api-data:
+  eshop-api-data-wproxy:
     external: false

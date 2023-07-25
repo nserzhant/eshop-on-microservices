@@ -8,9 +8,6 @@ services:
       - MSSQL_PID=Express  
     ports:
       - "2433:1433"
-      - "1453:1433"
-      - "1454:1433"
-      - "1455:1433"
     volumes:
       - eshop-api-data:/var/opt/mssql
 
@@ -21,6 +18,8 @@ services:
       - ConnectionStrings__catalogDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
       - generatedItemPictureUriHost=https://localhost:7208
+      - EmployeeJWTSettings__Issuer=https://localhost:7272/
+      - ClientJWTSettings__Issuer=https://localhost:7086/
     ports:
       - "5035:80"
       - "7208:443"
@@ -47,6 +46,7 @@ services:
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
+      - JWTSettings__Issuer=https://localhost:7272/
     ports:
       - "5158:80"
       - "7158:443"

@@ -7,7 +7,16 @@
       "composeLaunchServiceName": "eshop.client.authorizationserver",
       "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}",
       "serviceActions": {
-        "eshop.client.authorizationserver": "StartDebugging"
+        "eshop.client.authorizationserver": "StartDebugging",
+        "sqlserver": "StartWithoutDebugging"
+      }
+    },
+    "SQL Server": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "eshop.client.authorizationserver": "DoNotStart",
+        "sqlserver": "StartWithoutDebugging"
       }
     }
   }

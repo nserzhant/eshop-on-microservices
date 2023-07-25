@@ -5,7 +5,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
   eshop.catalog.api:
-    image: ${DOCKER_REGISTRY-}eshopcatalogapi
+    image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
     build:
       context: .
       dockerfile: src/EShop.Catalog.Api/Dockerfile

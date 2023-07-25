@@ -4,7 +4,7 @@ RUN npm install -g @angular/cli
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-EXPOSE 4200 49153
+EXPOSE 4201 49153
 ENTRYPOINT ["ng","serve","--host","0.0.0.0","--poll","500"]
 CMD ["--configuration","development"]
 
@@ -25,13 +25,13 @@ ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 # For development runtime environment use:
 # Build
-# docker build -t client-portal-development --target development.
+# docker build -t client-portal-development --target development .
 # Run with browser debugging
-# docker run -p 4201:4200 -p 49153:49153 -d --rm -v .\src:/app/src --name client-portal-dev  client-portal-development
+# docker run -p 4201:4201 -p 49153:49153 -d --rm -v .\src:/app/src --name client-portal-dev  client-portal-development
 # Run without browser debugging
-# docker run -p 4201:4200 -d --rm client-portal-development
+# docker run -p 4201:4201 -d --rm client-portal-development
 # Run with other configuration (production in the example)
-# docker run -p 4201:4200 -d --rm client-portal-development --configuration=production
+# docker run -p 4201:4201 -d --rm client-portal-development --configuration=production
 
 # For production runtime environment use:
 # Build

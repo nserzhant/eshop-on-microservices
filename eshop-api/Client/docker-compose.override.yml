@@ -7,9 +7,9 @@ services:
       - ACCEPT_EULA=Y
       - MSSQL_PID=Express  
     ports:
-      - "1454:1433"
+      - "2433:1433"
     volumes:
-      - client-api-data:/var/opt/mssql
+      - eshop-api-data:/var/opt/mssql
  
   eshop.client.authorizationserver:
     environment:
@@ -23,7 +23,7 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
-
+      
 volumes:
-  client-api-data:
+  eshop-api-data:
     external: false

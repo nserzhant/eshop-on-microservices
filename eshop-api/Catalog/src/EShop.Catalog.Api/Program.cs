@@ -23,7 +23,7 @@ var clientJwtSettings = new JWTSettings();
 clientJwtSettingsSection.Bind(clientJwtSettings);
 
 // Configure settings for Client app
-var allowedClients = builder.Configuration[ConfigurationKeys.SPA_CLIENT_IP_CONFIG_NAME];
+var clientOrigins = builder.Configuration[ConfigurationKeys.SPA_CLIENT_ORIGINS_CONFIG_NAME];
 
 // Setting to init Db with test data on startup
 
@@ -87,8 +87,8 @@ builder.Services.AddOpenApiDocument(document =>
 });
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
-    if (allowedClients != null)
-        builder.WithOrigins(allowedClients.Split(',')).AllowAnyMethod().AllowAnyHeader();
+    if (clientOrigins != null)
+        builder.WithOrigins(clientOrigins.Split(',')).AllowAnyMethod().AllowAnyHeader();
 }));
 
 var app = builder.Build();
