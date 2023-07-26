@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name:  employeemanagment-authserver
+spec:
+  selector:
+    app:  employeemanagment-authserver
+  type:  LoadBalancer
+  ports:
+  - protocol: 'TCP'
+    port:  5218
+    targetPort:  80

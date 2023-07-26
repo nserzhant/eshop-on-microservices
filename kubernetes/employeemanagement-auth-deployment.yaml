@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employeemanagment-authserver
+spec:
+  selector:
+    matchLabels:
+      app: employeemanagment-authserver
+  template:
+    metadata:
+      labels:
+        app: employeemanagment-authserver
+    spec:
+      containers:
+      - name: employeemanagment-authserver
+        image: eshop.employeemanagement.authorizationserver:latest
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: "Development"
+          - name: ASPNETCORE_URLS
+            value: http://+:80
+          - name: ConnectionStrings__employeeDbConnectionString
+            value: Server=tcp:api-db.default;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+          - name: clients__0__clientOrigin
+            value: https://employee-portal.example.com
+          - name: clients__0__clientId
+            value: employee-portal
+          - name: clients__0__displayName
+            value: public spa
+          - name: ASPNETCORE_APPL_PATH
+            value: authorize
+        resources:    
+          limits:
+            memory: "200Mi"
+            cpu: "200m"
+        ports:
+          - containerPort: 80

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-api
+spec:
+  selector:
+    matchLabels:
+      app: catalog-api
+  template:
+    metadata:
+      labels:
+        app: catalog-api
+    spec:
+      containers:
+      - name: catalog-api
+        image: eshop.catalog.api:latest      
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: "Development"
+          - name: ASPNETCORE_URLS
+            value: http://+:80
+          - name: ConnectionStrings__catalogDbConnectionString
+            value: Server=tcp:api-db.default;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+          - name: initDbOnStartup
+            value: "true"
+          - name: generatedItemPictureUriHost
+            value: /catalog
+          - name: clients
+            value: 'https://employee-portal.example.com/'
+          - name: EmployeeJWTSettings__Issuer
+            value: https://employee-portal.example.com/authorize
+          - name: ClientJWTSettings__Issuer
+            value: https://client-portal.example.com/authorize
+        resources:
+          limits:
+            memory: "200Mi"
+            cpu: "200m"
+        ports:
+          - containerPort: 80

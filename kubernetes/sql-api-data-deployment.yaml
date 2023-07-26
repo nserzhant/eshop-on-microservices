@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-db
+spec:
+  selector:
+    matchLabels:
+      app: api-db
+  template:
+    metadata:
+      labels:
+        app: api-db
+    spec:
+      containers:
+        - name: api-db
+          image: mcr.microsoft.com/mssql/server:2022-latest   
+          env:
+            - name: MSSQL_SA_PASSWORD
+              value: E*AmPleP@ssw0rd
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_PID
+              value: Express
+          ports:
+            - containerPort: 1433
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "500m"

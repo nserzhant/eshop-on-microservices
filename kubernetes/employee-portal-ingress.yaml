@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2$3
+  name: employee-portal-ingress
+  labels:
+    name: employee-portal-ingress
+spec:
+  tls:
+  - hosts:
+    - localhost
+    secretName: tls-local
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/()()(.*)"
+        backend:
+          service:
+            name: employee-portal
+            port: 
+              number: 80
+      - pathType: Prefix
+        path: "/catalog(/|$)(.*)"
+        backend:
+          service:
+            name: catalog-api
+            port: 
+              number: 80
+      - pathType: Prefix
+        path: /()(authorize)(.*)
+        backend:
+          service:
+            name: employeemanagment-authserver
+            port: 
+              number: 80
+      - pathType: Prefix
+        path: "/(employee-management/)(api)(.*)"
+        backend:
+          service:
+            name: employeemanagement-api
+            port: 
+              number: 80
+
