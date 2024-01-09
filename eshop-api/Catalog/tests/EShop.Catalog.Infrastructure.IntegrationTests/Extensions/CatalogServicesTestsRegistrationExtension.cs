@@ -8,7 +8,10 @@ public static class CatalogServicesTestsRegistrationExtension
 {
     public static IServiceCollection AddTestCatalogServices(this IServiceCollection services)
     {
-        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddEnvironmentVariables()
+            .Build();
 
         services.AddCatalogServices(configuration);
         services.AddLogging(logging => logging.AddConsole());

@@ -101,6 +101,7 @@ if (app.Environment.IsDevelopment())
     app.UseCors("corsapp");
 }
 
+app.UseHttpLogging();
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

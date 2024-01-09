@@ -29,6 +29,7 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
             builder.ConfigureAppConfiguration((context, conf) =>
             {
                 conf.AddJsonFile(configPath);
+                conf.AddEnvironmentVariables();
             });
             builder.ConfigureTestServices(services =>
             {

@@ -1,0 +1,84 @@
+#CATALOG API BUILD PIPELINE
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+      # - master
+
+variables:
+  buildConfiguration: 'Release'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api/Catalog'
+  migrationsFileName: 'migrations.sql'
+
+pool:
+  vmImage: windows-latest          
+steps:
+- task: DotNetCoreCLI@2
+  name: Restore
+  inputs:
+    command: 'restore'
+    projects: '$(workingDirectory)/*.sln'
+    
+- task: DotNetCoreCLI@2          
+  displayName: Build
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+    projects: '$(workingDirectory)/*.sln'
+
+- task: DotNetCoreCLI@2
+  displayName: Unit Test
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+    projects: '$(workingDirectory)/tests/EShop.Catalog.Core.UnitTests/EShop.Catalog.Core.UnitTests.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: SQL Integration Test
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+    projects: '$(workingDirectory)/tests/EShop.Catalog.Infrastructure.IntegrationTests/EShop.Catalog.Infrastructure.IntegrationTests.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: API Integration Test
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+    projects: '$(workingDirectory)/tests/EShop.Catalog.Api.IntegrationTests/EShop.Catalog.Api.IntegrationTests.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: Install EF
+  inputs:
+    command: 'custom'
+    custom: 'tool'
+    arguments: 'install --global dotnet-ef'
+
+- task: DotNetCoreCLI@2
+  displayName: Generate EF Migrations Script
+  inputs:
+    command: 'custom'
+    custom: 'ef'
+    arguments: 'migrations script  --project $(workingDirectory)/src/EShop.Catalog.Infrastructure/EShop.Catalog.Infrastructure.csproj --idempotent --context EShop.Catalog.Infrastructure.CatalogDbContext --output $(Build.ArtifactStagingDirectory)/migrations/$(migrationsFileName)'
+
+- task: DotNetCoreCLI@2
+  displayName: Dotnet Publish
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/bin'
+    projects: '$(workingDirectory)/src/EShop.Catalog.Api/EShop.Catalog.Api.csproj'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Api
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/bin'
+    artifact: 'Catalog Api'
+    publishLocation: 'pipeline'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  DB Migrations
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/migrations'
+    artifact: 'Catalog DB Migrations'
+    publishLocation: 'pipeline'
