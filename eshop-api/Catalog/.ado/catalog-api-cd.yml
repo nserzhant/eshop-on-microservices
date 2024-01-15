@@ -1,0 +1,77 @@
+#CATALOG API RELEASE PIPELINE
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+ pipelines:
+   - pipeline: catalog-api-ci
+     source: catalog-api-ci    
+     trigger: none
+
+variables:
+  suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+  azureserviceconnection: 'azure-spn'
+  webappname: 'catalog-api-web-app-$(suffix)'
+  sqlServerName: 'catalog-sqlserver-$(suffix)'
+  sqlDbName: 'eshop.catalog.Db'
+  administratorLogin: 'catalogapilogin'
+  administratorLoginPassword: $(sqlPasswordSecret) #create secret using Variables section
+  templateFileName: 'webapp-with-sql.bicep'
+  migrationsFileName: 'migrations.sql' 
+  subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
+  resourceGroupName: 'eshop-on-microservices-rg'
+  location: 'westeurope'
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- download: catalog-api-ci
+
+# Deploy Web App Infrastructure Using Bicep
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Web App Bicep
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/catalog-api-ci/Bicep/$(templateFileName)'
+    overrideParameters: '-webAppName $(webappname) -sqlServerName $(sqlServerName) -dbName $(sqlDbName) -administratorLogin $(administratorLogin) -administratorLoginPassword $(administratorLoginPassword)'
+    deploymentMode: 'Incremental'
+
+- task: SqlAzureDacpacDeployment@1
+  displayName: Update DB
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'server'
+    ServerName: '$(sqlServerName).database.windows.net'
+    DatabaseName: '$(sqlDbName)'
+    SqlUsername: '$(administratorLogin)'
+    SqlPassword: '$(administratorLoginPassword)'
+    deployType: 'SqlTask'
+    SqlFile: '$(Pipeline.Workspace)/catalog-api-ci/Catalog DB Migrations/$(migrationsFileName)'
+    IpDetectionMethod: 'AutoDetect'
+
+- powershell: az cache purge
+  displayName: Clear Azure Cache
+  
+- task: AzureRmWebAppDeployment@4
+  displayName: Deploy Web App
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: '$(azureserviceconnection)'
+    appType: 'webApp'
+    WebAppName: '$(webappname)'
+    deployToSlotOrASE: false
+    ResourceGroupName: '$(resourceGroupName)'
+    packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+    enableCustomDeployment: true
+    DeploymentType: 'runFromZip'
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net/swagger/index.html -TimeoutSec 300
+  displayName: Init And Check Web App

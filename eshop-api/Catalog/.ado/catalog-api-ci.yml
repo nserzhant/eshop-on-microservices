@@ -52,7 +52,7 @@ steps:
   inputs:
     command: 'custom'
     custom: 'tool'
-    arguments: 'install --global dotnet-ef'
+    arguments: 'install --global dotnet-ef --version 7.0.0'
 
 - task: DotNetCoreCLI@2
   displayName: Generate EF Migrations Script
@@ -81,4 +81,11 @@ steps:
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)/migrations'
     artifact: 'Catalog DB Migrations'
+    publishLocation: 'pipeline'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Bicep
+  inputs:
+    targetPath: '$(workingDirectory)/.azure/'
+    artifact: 'Bicep'
     publishLocation: 'pipeline'
