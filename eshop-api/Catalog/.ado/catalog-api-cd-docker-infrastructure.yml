@@ -1,0 +1,77 @@
+#CATALOG API RELEASE PIPELINE (Azure Infrastructure Deployment)
+resources:
+ repositories:
+   - repository: self
+     trigger: none
+ pipelines:
+   - pipeline: catalog-api-ci-docker
+     source: catalog-api-ci-docker
+
+variables:
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-owner-role-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: webAppName
+  value: 'catalog-api-web-app-$(suffix)'
+- name: sqlServerName
+  value: 'catalog-sqlserver-$(suffix)'
+- name: sqlDbName
+  value: 'eshop.catalog.api'
+- name: templateFileName
+  value: 'main-docker.bicep'
+- name: subscriptionid
+  value: $(subscription-id) # From variable group
+- name: sqlEntraIdAdminLogin
+  value: $(ado-service-principal-id) # azureserviceconnection  service principal login (will be assigned as administrator)
+- name: sqlEntraIdAdminObjectId
+  value: $(ado-service-principal-object-id) # azureserviceconnection service principal Object Id (will be assigned as administrator)
+- name: sqlUserAssignedIdentity
+  value: $(sql-umi-id) # Identity with directory reader role
+- name: resourceGroupName
+  value: 'eshop-on-microservices-rg'
+- name: location
+  value: 'westeurope'
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- download: catalog-api-ci-docker
+ # Deploy Web App Infrastructure Using Bicep
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy WebApp Bicep
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/catalog-api-ci-docker/Bicep/$(templateFileName)'
+    overrideParameters: '-webAppName $(webAppName) -sqlServerName $(sqlServerName) -dbName $(sqlDbName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity)'
+    deploymentMode: 'Incremental'
+
+# Add SQL Server User For WebApp Service Principal
+- task: SqlAzureDacpacDeployment@1
+  displayName: Add WebApp user to SQL Server
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(sqlServerName).database.windows.net'
+    DatabaseName: '$(sqlDbName)'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(webappname)') IS NULL
+      BEGIN
+        CREATE USER [$(webAppName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(webAppName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(webAppName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(webAppName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'

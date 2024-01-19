@@ -1,0 +1,47 @@
+#CATALOG API RELEASE PIPELINE (Update Docker Image Reference)
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+ pipelines:
+   - pipeline: catalog-api-ci-docker
+     source: catalog-api-ci-docker
+     trigger: none
+
+variables:
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Random string based on project Id
+- name: webappname
+  value: catalog-api-web-app-$(suffix)
+- name: repositoryName
+  value: 'eshop.catalog.api'
+- name: dockerregistryurl
+  value: 'https://index.docker.io/v1/'
+- name: userName
+  value: $(docker-registry-username) # From variable group
+- name: dockerRegistryPassword
+  value: $(docker-registry-read-token) # From variable group
+  
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+
+- task: AzureWebAppContainer@1
+  displayName: Deploy Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    appName: '$(webappname)'
+    containers: '$(userName)/$(repositoryName):$(resources.pipeline.catalog-api-ci-docker.runID)'
+    appSettings: |
+      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
+      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
+      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net/swagger/index.html -TimeoutSec 300
+  displayName: Init And Check Web App
