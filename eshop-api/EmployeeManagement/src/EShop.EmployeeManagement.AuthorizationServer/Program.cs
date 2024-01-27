@@ -7,17 +7,22 @@ using EShop.EmployeeManagement.Core;
 using System.Text;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 using Microsoft.AspNetCore.HttpOverrides;
+using EShop.Client.AuthorizationServer.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 //Get settings to configure JWT tokens
 
 var configuration = builder.Configuration;
-var jwtSecretKey = configuration[Consts.JWT_SECRET_KEY_CONFIG_NAME];
+var jwtSecretKey = configuration[Consts.JWT_SECRET_KEY_CONFIG_NAME] ?? throw new ArgumentNullException(Consts.JWT_SECRET_KEY_CONFIG_NAME);
 builder.Services.AddEmployeeServices(builder.Configuration);
-var accessTokenLifetime = configuration.GetValue<int>(Consts.ACCESS_TOKEN_LIFETIME_CONFIG_NAME); 
+var accessTokenLifetime = configuration.GetValue<int>(Consts.ACCESS_TOKEN_LIFETIME_CONFIG_NAME);
+
+//Configure OpenIdDict
+var signingCertificateThumbprint = configuration[Consts.SIGNING_CERTIFICATE_THUMBPRINT_CONFIG_NAME];
+var encryptionCertificateThumbprint = configuration[Consts.ENCRYPTION_CERTIFICATE_THUMBPRINT_CONFIG_NAME];
+var useEphemeralKeys = configuration.GetValue(Consts.USE_EPHEMERAL_KEYS, false);
 
 //Configure settings for Client apps
-
 var clientConfigurations = builder.Configuration.GetSection(Consts.CLIENT_CONFIGURATION_CONFIG_NAME);
 builder.Services.Configure<List<ClientConfiguration>>(clientConfigurations);
 var clients = clientConfigurations.Get<List<ClientConfiguration>>();
@@ -81,9 +86,33 @@ builder.Services.AddOpenIddict()
             options
                 .AddSigningKey(new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(jwtSecretKey)))
-                .AddDevelopmentEncryptionCertificate()
-                .AddDevelopmentSigningCertificate()
                 .DisableAccessTokenEncryption();
+
+            if (signingCertificateThumbprint != null)
+            {
+                options.AddSigningCertificate(CertificatesHelper.FindCertificate(signingCertificateThumbprint));
+            }
+            else if (builder.Environment.IsDevelopment())
+            {
+                if (useEphemeralKeys)
+                {
+                    options.AddEphemeralSigningKey();
+                }
+                else { options.AddDevelopmentSigningCertificate(); }
+            }
+
+            if (encryptionCertificateThumbprint != null)
+            {
+                options.AddEncryptionCertificate(CertificatesHelper.FindCertificate(encryptionCertificateThumbprint));
+            }
+            else if (builder.Environment.IsDevelopment())
+            {
+                if (useEphemeralKeys)
+                {
+                    options.AddEphemeralEncryptionKey();
+                }
+                else { options.AddDevelopmentEncryptionCertificate(); }
+            }
 
             // Register scopes (permissions)
             options.RegisterScopes("api", Scopes.Roles);
@@ -112,7 +141,7 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });

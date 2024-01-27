@@ -1,0 +1,64 @@
+#CLIENT AUTHORIZATION SERVER RELEASE PIPELINE (Azure Infrastructure Deployment)
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+ pipelines:
+   - pipeline: employee-management-ci-docker
+     source: employee-management-ci-docker
+     trigger: none
+
+variables:
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: apiWebAppName
+  value: 'employee-api-web-app-$(suffix)'
+- name: authServerWebAppName
+  value: 'employee-authserver-web-app-$(suffix)'
+- name: apiRepositoryName
+  value: 'eshop.employeemanagement.api'
+- name: authServerRepositoryName
+  value: 'eshop.employeemanagement.authorizationserver'
+- name: dockerregistryurl
+  value: 'https://index.docker.io/v1/'
+- name: userName
+  value: $(docker-registry-username) # From variable group
+- name: dockerRegistryPassword
+  value: $(docker-registry-read-token) # From variable group
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- task: AzureWebAppContainer@1
+  displayName: Deploy Api Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    appName: '$(apiWebAppName)'
+    containers: '$(userName)/$(apiRepositoryName):$(resources.pipeline.employee-management-ci-docker.runID)'
+    appSettings: |
+      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
+      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
+      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
+
+- task: AzureWebAppContainer@1
+  displayName: Deploy Authorization Server Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    appName: '$(authServerWebAppName)'
+    containers: '$(userName)/$(authServerRepositoryName):$(resources.pipeline.employee-management-ci-docker.runID)'
+    appSettings: |
+      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
+      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
+      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(apiWebAppName).azurewebsites.net/swagger/index.html -TimeoutSec 300
+  displayName: Init And Check Api Web App
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(authServerWebAppName).azurewebsites.net/ -TimeoutSec 300
+  displayName: Init And Check Authorization Server Web App

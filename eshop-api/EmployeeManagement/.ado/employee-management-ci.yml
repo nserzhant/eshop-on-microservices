@@ -1,0 +1,78 @@
+#EMPLOYEE MANAGEMENT SERVICES BUILD PIPELINE
+
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+      # - master
+
+variables:
+  buildConfiguration: 'Release'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api/EmployeeManagement'
+
+pool:
+  vmImage: windows-latest          
+steps:
+- task: DotNetCoreCLI@2
+  name: Restore
+  inputs:
+    command: 'restore'
+    projects: '$(workingDirectory)/*.sln'
+    
+- task: DotNetCoreCLI@2          
+  displayName: Build
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+    projects: '$(workingDirectory)/*.sln'
+    
+- task: DotNetCoreCLI@2
+  displayName: Integration Tests
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+    projects: '$(workingDirectory)/tests/Eshop.EmployeeManagement.IntegrationTests/Eshop.EmployeeManagement.Core.IntegrationTests.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: Api Integration Tests
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+    projects: '$(workingDirectory)/tests/EShop.EmployeeManagement.Api.IntegrationTests/EShop.EmployeeManagement.Api.IntegrationTests.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: Publish Api
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Api'
+    projects: '$(workingDirectory)/src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj'
+            
+- task: DotNetCoreCLI@2
+  displayName: Publish Auth Server
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/AuthorizationServer'
+    projects: '$(workingDirectory)/src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj'
+    
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Api
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/Api'
+    artifact: 'EmployeeManagement Api'
+    publishLocation: 'pipeline'
+    
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Auth Server
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/AuthorizationServer'
+    artifact: 'Authorization Server'
+    publishLocation: 'pipeline'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact - Bicep
+  inputs:
+    targetPath: '$(workingDirectory)/.azure/'
+    artifact: 'Bicep'
+    publishLocation: 'pipeline'

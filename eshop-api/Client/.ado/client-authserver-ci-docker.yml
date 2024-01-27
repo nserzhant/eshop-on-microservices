@@ -1,0 +1,52 @@
+#CLIENT AUTHORIZATION SERVER BUILD PIPELINE (USES CONTAINER JOBS)
+
+resources:   
+ repositories:
+    - repository: self
+      trigger: none
+      # - master 
+      
+variables:
+- group: microservices-variable-group
+
+- name: workingDirectory
+  value: '$(Build.SourcesDirectory)/eshop-api/Client'
+- name: userName
+  value: $(docker-registry-username) # From variable group
+- name: imageName
+  value: '$(userName)/eshop.client.authorizationserver'
+- name: dockerRegistryConnection
+  value: 'docker-connection'
+
+pool: 
+  vmImage: ubuntu-latest
+
+steps:
+- task: Docker@2
+  displayName: 'Build The Docker Image'
+  inputs:
+    containerRegistry: '$(dockerRegistryConnection)'
+    repository: '$(imageName)'
+    command: 'build'
+    Dockerfile: '$(workingDirectory)/src/EShop.Client.AuthorizationServer/Dockerfile'
+    buildContext: '$(workingDirectory)'
+    tags: |
+      $(Build.BuildId)
+      latest
+
+- task: Docker@2
+  displayName: 'Push The Docker Image'
+  inputs:
+    containerRegistry: '$(dockerRegistryConnection)'
+    repository: '$(imageName)'
+    command: 'push'
+    tags: |
+      $(Build.BuildId)
+      latest
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Bicep
+  inputs:
+    targetPath: '$(workingDirectory)/.azure'
+    artifact: 'Bicep'
+    publishLocation: 'pipeline'

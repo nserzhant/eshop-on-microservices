@@ -1,5 +1,6 @@
 using EShop.Client.AuthorizationServer;
 using EShop.Client.AuthorizationServer.Data;
+using EShop.Client.AuthorizationServer.Helpers;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 var jwtSecretKey = configuration[Consts.JWT_SECRET_KEY_CONFIG_NAME] ?? throw new ArgumentNullException(Consts.JWT_SECRET_KEY_CONFIG_NAME);
 var accessTokenLifetime = configuration.GetValue<int>(Consts.ACCESS_TOKEN_LIFETIME_CONFIG_NAME);
+
+//Configure OpenIdDict
+var signingCertificateThumbprint = configuration[Consts.SIGNING_CERTIFICATE_THUMBPRINT_CONFIG_NAME];
+var encryptionCertificateThumbprint = configuration[Consts.ENCRYPTION_CERTIFICATE_THUMBPRINT_CONFIG_NAME];
+var useEphemeralKeys = configuration.GetValue(Consts.USE_EPHEMERAL_KEYS, false);
 
 //Configure settings for Client apps
 
@@ -99,9 +105,33 @@ builder.Services.AddOpenIddict()
             options
                 .AddSigningKey(new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(jwtSecretKey)))
-                .AddDevelopmentEncryptionCertificate()
-                .AddDevelopmentSigningCertificate()
                 .DisableAccessTokenEncryption();
+
+            if (signingCertificateThumbprint != null)
+            {
+                options.AddSigningCertificate(CertificatesHelper.FindCertificate(signingCertificateThumbprint));
+            }
+            else if (builder.Environment.IsDevelopment())
+            {
+                if (useEphemeralKeys) 
+                { 
+                    options.AddEphemeralSigningKey();
+                }
+                else { options.AddDevelopmentSigningCertificate(); }
+            }
+
+            if (encryptionCertificateThumbprint != null)
+            {
+                options.AddEncryptionCertificate(CertificatesHelper.FindCertificate(encryptionCertificateThumbprint));
+            }
+            else if (builder.Environment.IsDevelopment())
+            {
+                if (useEphemeralKeys)
+                {
+                    options.AddEphemeralEncryptionKey();
+                }
+                else { options.AddDevelopmentEncryptionCertificate(); }
+            }
 
             // Register scopes (permissions)
             options.RegisterScopes("api");
@@ -139,7 +169,7 @@ builder.Services.AddAuthentication().AddGoogle(googleOptions =>
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
@@ -175,7 +205,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-if(initializeDbOnStartup)
+if (initializeDbOnStartup)
 {
     using var scope = app.Services.CreateScope();
     var scopedProvider = scope.ServiceProvider;

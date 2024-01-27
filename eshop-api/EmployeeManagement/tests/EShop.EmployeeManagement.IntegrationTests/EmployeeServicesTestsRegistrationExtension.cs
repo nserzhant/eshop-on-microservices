@@ -8,7 +8,10 @@ public static class EmployeeServicesTestsRegistrationExtension
 {
     public static IServiceCollection AddTestEmployeeServices(this IServiceCollection services)
     {
-        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .AddEnvironmentVariables()
+            .Build();
 
         services.AddEmployeeServices(configuration);
         services.AddLogging(logging => logging.AddConsole());

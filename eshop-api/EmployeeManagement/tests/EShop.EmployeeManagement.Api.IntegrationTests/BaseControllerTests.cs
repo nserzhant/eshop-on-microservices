@@ -36,6 +36,7 @@ public class BaseControllerTests : BaseEmployeeIntegrationTests
             builder.ConfigureAppConfiguration((context, conf) =>
             {
                 conf.AddJsonFile(configPath);
+                conf.AddEnvironmentVariables();
             });
             builder.ConfigureTestServices(services =>
             {

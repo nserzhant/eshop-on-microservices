@@ -1,0 +1,134 @@
+#EMPLOYEE AUTHORIZATION SERVER AND API DOCKER IMAGES BUILD PIPELINE (USES CONTAINER JOBS)
+
+resources:   
+ repositories:
+    - repository: self
+      trigger: none
+      # - master 
+ containers:
+  - container: dotnetsdk
+    image: mcr.microsoft.com/dotnet/sdk:7.0
+    env:
+      ConnectionStrings__employeeDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+  - container: mssql
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    env:
+      MSSQL_SA_PASSWORD: $(sqlPassword)
+      ACCEPT_EULA: Y
+    ports:
+      - 1433
+
+variables:
+- group: microservices-variable-group
+
+- name: buildConfiguration
+  value: 'Release'
+- name: workingDirectory
+  value: '$(System.DefaultWorkingDirectory)/eshop-api/EmployeeManagement'
+- name: sqlPassword
+  value: 'sqlP@ssw0rd'
+- name: userName
+  value: $(docker-registry-username) # From variable group
+- name: apiImageName
+  value: '$(username)/eshop.employeemanagement.api'
+- name: authServerImageName
+  value: '$(username)/eshop.employeemanagement.authorizationserver'
+- name: dockerRegistryConnection
+  value: 'docker-connection'
+
+jobs:
+  - job: build_and_test
+    displayName: Build And Test
+    pool:
+      vmImage: ubuntu-latest
+    services:
+      mssql: mssql
+    container: dotnetsdk
+
+    steps:
+      - task: DotNetCoreCLI@2
+        name: Restore
+        inputs:
+          command: 'restore'
+          projects: '$(workingDirectory)/*.sln'
+
+      - task: DotNetCoreCLI@2          
+        displayName: Build
+        inputs:
+          command: 'build'
+          arguments: '--configuration $(buildConfiguration)'
+          projects: '$(workingDirectory)/*.sln'
+
+      - task: DotNetCoreCLI@2
+        displayName: Integration Tests
+        inputs:
+          command: 'test'
+          arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+          projects: '$(workingDirectory)/tests/Eshop.EmployeeManagement.IntegrationTests/Eshop.EmployeeManagement.Core.IntegrationTests.csproj'
+
+      - task: DotNetCoreCLI@2
+        displayName: Api Integration Tests
+        inputs:
+          command: 'test'
+          arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+          projects: '$(workingDirectory)/tests/EShop.EmployeeManagement.Api.IntegrationTests/EShop.EmployeeManagement.Api.IntegrationTests.csproj'
+
+
+  - job: build_and_push_docker_images
+    displayName: Build And Push Docker Images
+    dependsOn: build_and_test
+    condition: succeeded()
+    pool: 
+      vmImage: ubuntu-latest
+
+    steps:
+      - task: Docker@2
+        displayName: 'Build The Api Docker Image'
+        inputs:
+          containerRegistry: '$(dockerRegistryConnection)'
+          repository: '$(apiImageName)'
+          command: 'build'
+          Dockerfile: '$(workingDirectory)/src/EShop.EmployeeManagement.Api/Dockerfile'
+          buildContext: '$(workingDirectory)'
+          tags: |
+            $(Build.BuildId)
+            latest
+
+      - task: Docker@2
+        displayName: 'Build The Authorization Server Docker Image'
+        inputs:
+          containerRegistry: '$(dockerRegistryConnection)'
+          repository: '$(authServerImageName)'
+          command: 'build'
+          Dockerfile: '$(workingDirectory)/src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile'
+          buildContext: '$(workingDirectory)'
+          tags: |
+            $(Build.BuildId)
+            latest
+
+      - task: Docker@2
+        displayName: 'Push The Api Docker Image'
+        inputs:
+          containerRegistry: '$(dockerRegistryConnection)'
+          repository: '$(apiImageName)'
+          command: 'push'
+          tags: |
+            $(Build.BuildId)
+            latest
+
+      - task: Docker@2
+        displayName: 'Push The Authorization Server Docker Image'
+        inputs:
+          containerRegistry: '$(dockerRegistryConnection)'
+          repository: '$(authServerImageName)'
+          command: 'push'
+          tags: |
+            $(Build.BuildId)
+            latest
+            
+      - task: PublishPipelineArtifact@1
+        displayName: Publish Pipepile Artifact - Bicep
+        inputs:
+          targetPath: '$(workingDirectory)/.azure/'
+          artifact: 'Bicep'
+          publishLocation: 'pipeline'
