@@ -1,0 +1,75 @@
+# EMPLOYEE PORTAL RELEASE PIPELINE USING DOCKER IMAGES HOSTED ON APP SERVICE
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+ pipelines:
+   - pipeline: employee-portal-ci-docker
+     source: employee-portal-ci-docker
+     trigger: none
+
+variables:
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: webappname
+  value: 'employee-portal-web-app-$(suffix)'
+- name: templateFileName
+  value: 'employee-portal-webapp.bicep'
+- name: repositoryName
+  value: 'eshop.ui.employeeportal'
+- name: dockerregistryurl
+  value: 'https://index.docker.io/v1/'
+- name: subscriptionid
+  value: $(subscription-id) # From variable group
+- name: userName
+  value: $(docker-registry-username) # From variable group
+- name: dockerRegistryPassword
+  value: $(docker-registry-read-token) # From variable group
+- name: resourceGroupName
+  value: 'eshop-on-microservices-rg'
+- name: location
+  value: 'westeurope'
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- download: employee-portal-ci-docker
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Web App Infrastructure
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/employee-portal-ci-docker/Bicep/$(templateFileName)'
+    overrideParameters: '-webappname $(webappname)'
+    deploymentMode: 'Incremental'
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net -TimeoutSec 300
+  displayName: Warmup Web App
+
+- task: AzureWebAppContainer@1
+  displayName: Deploy Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    appName: '$(webappname)'
+    resourceGroupName: '$(resourceGroupName)'
+    slotName: 'production'
+    containers: '$(userName)/$(repositoryName):$(resources.pipeline.employee-portal-ci-docker.runID)'
+    appSettings: |
+      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
+      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
+      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)" 
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net -TimeoutSec 300
+  displayName: Check Web App

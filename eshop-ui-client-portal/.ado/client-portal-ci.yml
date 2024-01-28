@@ -1,0 +1,51 @@
+#CLIENT PORTAL BUILD PIPELINE
+
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+      # - master
+
+variables:
+  buildConfiguration: 'production'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-ui-client-portal'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  displayName: 'Install Node.js'
+  inputs:
+    versionSpec: '16.x'
+
+- task: Npm@1
+  displayName: 'Install Angular CLI'
+  inputs:
+    command: 'custom'
+    customCommand: 'install -g @angular/cli@15.2.0'
+
+- task: Npm@1
+  displayName: 'NPM ci'
+  inputs:
+    command: 'ci'
+    workingDir: '$(workingDirectory)'
+
+- script: |
+    cd $(workingDirectory)
+    ng build  --configuration $(buildConfiguration)
+  displayName: 'Build Angular App'
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Angular Artifacts'
+  inputs:
+    targetPath: '$(workingDirectory)/dist/eshop-ui-client-portal'
+    artifact: 'ClientPortal'
+    publishLocation: 'pipeline'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Bicep
+  inputs:
+    targetPath: '$(workingDirectory)/.azure/'
+    artifact: 'Bicep'
+    publishLocation: 'pipeline'

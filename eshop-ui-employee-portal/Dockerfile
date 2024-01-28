@@ -1,6 +1,6 @@
 FROM node:16.20-alpine3.17  as development
 WORKDIR /app
-RUN npm install -g @angular/cli
+RUN npm install -g @angular/cli@15.0.5
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

@@ -1,0 +1,72 @@
+# EMPLOYEE PORTAL STATIC APP RELEASE PIPELINE
+
+resources:
+ repositories:
+    - repository: self
+      trigger: none
+ pipelines:
+   - pipeline: employee-portal-ci
+     source: employee-portal-ci
+     trigger: none
+
+variables:
+  suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+  azureserviceconnection: 'azure-spn'
+  staticWebAppName: 'employee-portal-$(suffix)'
+  templateFileName: 'employee-portal-static.bicep'
+  subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
+  resourceGroupName: 'eshop-on-microservices-rg'
+  location: 'westeurope'
+  staticAppSkuName: 'Free'
+  staticAppTier: 'Free'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: none
+- download: employee-portal-ci
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Create Static Web App If Not Exists
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/employee-portal-ci/Bicep/$(templateFileName)'
+    overrideParameters: ' -staticAppSkuName $(staticAppSkuName) -staticAppTier $(staticAppTier) -staticWebAppName $(staticWebAppName)'
+    deploymentMode: 'Incremental'
+    deploymentOutputs: 'deploymentOutputs'
+
+- powershell: az cache purge
+  displayName: Clear Azure Cache
+
+- powershell: |
+    $var=ConvertFrom-Json '$(deploymentOutputs)'
+    $employeePortalDNSValue=$var.staticAppDNSName.value
+    Write-Host "##vso[task.setvariable variable=employeeAppDomainName;]$employeePortalDNSValue"
+  displayName: Get Static App Domain Name
+
+- task: AzureCLI@2
+  displayName: Get Static App Deployment Key
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      APIKEY=$(az staticwebapp secrets list --n $(staticWebAppName)  --resource-group $(resourceGroupName) --subscription $(subscriptionid) | jq -r '.properties.apiKey')
+      echo "##vso[task.setvariable variable=deploymentToken;issecret=true]$APIKEY"
+
+- task: AzureStaticWebApp@0
+  displayName: Deploy Static Web App
+  inputs:
+    workingDirectory: '$(Pipeline.Workspace)/employee-portal-ci'
+    app_location: 'EmployeePortal'
+    azure_static_web_apps_api_token:  $(deploymentToken)
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(employeeAppDomainName) -TimeoutSec 300
+  displayName: Init And Check Employee Portal
