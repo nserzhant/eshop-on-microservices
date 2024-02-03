@@ -33,7 +33,6 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- checkout: none
 - download: eshop-on-microservices-ci
 
 - task: AzureResourceManagerTemplateDeployment@3

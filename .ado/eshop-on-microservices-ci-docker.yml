@@ -25,7 +25,7 @@ variables:
   sqlPassword: 'sqlP@ssw0rd'
   publishFolder: 'publish'
   dockerRegistryConnection: 'docker-connection'
-  username: $(docker-registry-username)  # Create the "docker-registry-usernamed" pipeline variable in Variables section or replace the expression by the value
+  username: $(docker-registry-username)  # Create the "docker-registry-username" pipeline variable in Variables section or replace the expression by the value
 
 jobs:
   - job: test_api
