@@ -1,0 +1,110 @@
+#BUILD PIPELINE 
+
+resources:
+ repositories:
+   - repository: self
+     trigger: none
+
+jobs:
+  - job: Api
+    pool:
+      vmImage: windows-latest   
+    variables:
+      buildConfiguration: 'Release'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api'
+    steps:
+    - task: DotNetCoreCLI@2
+      name: Restore
+      inputs:
+        command: 'restore'
+        projects: '$(workingDirectory)/*.sln'
+        
+    - task: DotNetCoreCLI@2          
+      displayName: Build
+      inputs:
+        command: 'build'
+        arguments: '--configuration $(buildConfiguration)'
+        projects: '$(workingDirectory)/*.sln'
+    
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs:
+        command: 'test'
+        arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+        projects: '$(workingDirectory)/*.sln'
+    
+    - task: DotNetCoreCLI@2
+      displayName: Publish Catalog Api
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Catalog'
+        projects: '$(workingDirectory)/Catalog/src/EShop.Catalog.Api/EShop.Catalog.Api.csproj'
+    
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Pipepile Artifact - Catalog Api
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/Catalog'
+        artifact: 'Catalog Api'
+        publishLocation: 'pipeline'
+    
+    - task: DotNetCoreCLI@2
+      displayName: Publish EmployeeManagement Api
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/EmployeeManagementApi'
+        projects: '$(workingDirectory)/EmployeeManagement/src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj'
+    
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Pipepile Artifact - EmployeeManagement Api
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/EmployeeManagementApi'
+        artifact: 'EmployeeManagement Api'
+        publishLocation: 'pipeline'
+    
+    - task: DotNetCoreCLI@2
+      displayName: Publish EmployeeManagement Authorization Server
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/EmployeeManagement.AuthorizationServer'
+        projects: '$(workingDirectory)/EmployeeManagement/src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj'
+    
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Pipepile Artifact - EmployeeManagement Authorization Server
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/EmployeeManagement.AuthorizationServer'
+        artifact: 'Employee Authorization Server'
+        publishLocation: 'pipeline'
+    
+    - task: DotNetCoreCLI@2
+      displayName: Publish Client Authorization Server
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Client'
+        projects: '$(workingDirectory)/Client/src/EShop.Client.AuthorizationServer/EShop.Client.AuthorizationServer.csproj'
+        
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Pipepile Artifact - Client Authorization Server
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/Client'
+        artifact: 'Client Authorization Server'
+        publishLocation: 'pipeline'
+
+  - template: 'templates/angular-ci-template.yml'   # Template reference
+    parameters:
+      jobName: 'ClientPortal'
+      projectFolder: 'eshop-ui-client-portal'
+      vmImage: 'ubuntu-latest'
+      nodeVersion: '16.x'
+      angularCliVersion: '15.2.0'
+
+  - template: 'templates/angular-ci-template.yml'   # Template reference
+    parameters:
+      jobName: 'EmployeePortal'
+      projectFolder: 'eshop-ui-employee-portal'
+      vmImage: 'ubuntu-latest'
+      nodeVersion: '16.x'
+      angularCliVersion: '15.2.0'

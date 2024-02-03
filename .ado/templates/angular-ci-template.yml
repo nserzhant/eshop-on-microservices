@@ -1,0 +1,55 @@
+parameters:
+- name: jobName
+  default: ''
+- name: projectFolder
+  default: ''
+- name: vmImage
+  default: ''
+- name: nodeVersion
+  default: '16.x'
+- name: angularCliVersion
+  default: '15.2.0'
+
+jobs:
+- job: ${{ parameters.jobName }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  variables:
+    buildConfiguration: 'production' 
+    workingDirectory: '$(System.DefaultWorkingDirectory)/${{ parameters.projectFolder }}'
+  steps:     
+  - task: NodeTool@0
+    displayName: 'Install Node.js'
+    inputs:
+      versionSpec: ${{ parameters.nodeVersion }}
+
+  - task: Npm@1
+    displayName: 'Install Angular CLI'
+    inputs:
+      command: 'custom'
+      customCommand: 'install -g @angular/cli@${{ parameters.angularCliVersion }}'
+
+  - task: Npm@1
+    displayName: 'NPM ci'
+    inputs:
+      command: 'ci'
+      workingDir: '$(workingDirectory)'
+
+  - script: |
+      cd $(workingDirectory)
+      ng build  --configuration $(buildConfiguration)
+    displayName: 'Build Angular App'
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Angular Artifacts - ${{ parameters.projectFolder }}'
+    inputs:
+      targetPath: '$(workingDirectory)/dist/${{ parameters.projectFolder }}'
+      artifact: '${{ parameters.jobName }}'
+      publishLocation: 'pipeline'
+      
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Bicep - ${{ parameters.projectFolder }}
+    inputs:
+      targetPath: '$(workingDirectory)/.azure/'
+      artifact: ${{ parameters.jobName }}Bicep
+      publishLocation: 'pipeline'

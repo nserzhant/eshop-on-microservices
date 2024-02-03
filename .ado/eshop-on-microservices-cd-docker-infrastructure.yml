@@ -1,0 +1,154 @@
+resources:
+ repositories:
+   - repository: self
+     trigger: none
+ pipelines:
+  - pipeline: eshop-on-microservices-ci-docker
+    source: eshop-on-microservices-ci-docker
+
+variables:
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-owner-role-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: subscriptionid
+  value: $(subscription-id) # From variable group
+- name: sqlEntraIdAdminLogin
+  value: $(ado-service-principal-id) # azureserviceconnection  service principal login (will be assigned as administrator)
+- name: sqlEntraIdAdminObjectId
+  value: $(ado-service-principal-object-id) # azureserviceconnection service principal Object Id (will be assigned as administrator)
+- name: sqlUserAssignedIdentity
+  value: $(sql-umi-id) # Identity with directory reader role
+- name: storageAccountName
+  value: 'storageacc$(suffix)'
+- name: resourceGroupName
+  value: 'eshop-on-microservices-rg'
+- name: clientGatewayAppName
+  value: 'client-portal-gateway-$(suffix)'
+- name: employeeGatewayAppName
+  value: 'employee-portal-gateway-$(suffix)'
+- name: clientPortalWebAppName
+  value: 'client-portal-$(suffix)'
+- name: employeePortalWebAppName
+  value: 'employee-portal-$(suffix)'
+- name: catalogApiWebAppName
+  value: 'catalog-api-web-app-$(suffix)'
+- name: clientAuthServerWebAppName
+  value: 'client-auth-web-app-$(suffix)'
+- name: employeeApiWebAppName
+  value: 'employee-api-web-app-$(suffix)'
+- name: employeeAuthServerWebAppName
+  value: 'employee-authserver-web-app-$(suffix)'
+- name: employeesSqlServerName
+  value: 'employee-sqlserver-$(suffix)'
+- name: clientsSqlServerName
+  value: 'client-sqlserver-$(suffix)'
+- name: catalogSqlServerName
+  value: 'catalog-sqlserver-$(suffix)'
+- name: sqlDbName
+  value: 'eshop-on-microservices.Db'
+- name: location
+  value: 'westeurope'
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- download: eshop-on-microservices-ci-docker
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Bicep
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/eshop-on-microservices-ci-docker/Bicep/main-docker.bicep'
+    overrideParameters: '-dbName $(sqlDbName) -catalogSqlServerName $(catalogSqlServerName) -clientsSqlServerName $(clientsSqlServerName) -employeesSqlServerName $(employeesSqlServerName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity) -employeeGatewayAppName $(employeeGatewayAppName) -clientGatewayAppName $(clientGatewayAppName) -clientAuthServerWebAppName $(clientAuthServerWebAppName) -catalogApiWebAppName $(catalogApiWebAppName) -employeeApiWebAppName $(employeeApiWebAppName) -employeeAuthServerWebAppName $(employeeAuthServerWebAppName) -clientPortalWebAppName $(clientPortalWebAppName) -employeePortalWebAppName $(employeePortalWebAppName) -storageAccountName $(storageAccountName)'
+    deploymentMode: 'Incremental'
+
+# Add SQL Server User For API WebApp Service Principal
+- task: SqlAzureDacpacDeployment@1
+  displayName: Set DB Permission For Catalog Api Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(catalogSqlServerName).database.windows.net'
+    DatabaseName: '$(sqlDbName)'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(catalogApiWebAppName)') IS NULL
+      BEGIN
+        CREATE USER [$(catalogApiWebAppName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(catalogApiWebAppName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(catalogApiWebAppName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(catalogApiWebAppName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'
+
+# Add SQL Server User For Authorization Server WebApp Service Principal
+- task: SqlAzureDacpacDeployment@1
+  displayName: Set DB Permission For Client Authorization Server Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(clientsSqlServerName).database.windows.net'
+    DatabaseName: '$(sqlDbName)'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(clientAuthServerWebAppName)') IS NULL
+      BEGIN
+        CREATE USER [$(clientAuthServerWebAppName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(clientAuthServerWebAppName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(clientAuthServerWebAppName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(clientAuthServerWebAppName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'
+
+# Add SQL Server User For API WebApp Service Principal
+- task: SqlAzureDacpacDeployment@1
+  displayName: Set DB Permission For Employee Api Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(employeesSqlServerName).database.windows.net'
+    DatabaseName: '$(sqlDbName)'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(employeeApiWebAppName)') IS NULL
+      BEGIN
+        CREATE USER [$(employeeApiWebAppName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(employeeApiWebAppName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(employeeApiWebAppName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(employeeApiWebAppName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'
+
+# Add SQL Server User For Authorization Server WebApp Service Principal
+- task: SqlAzureDacpacDeployment@1
+  displayName: Set DB Permission For Employee Authorization Server Web App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(employeesSqlServerName).database.windows.net'
+    DatabaseName: '$(sqlDbName)'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(employeeAuthServerWebAppName)') IS NULL
+      BEGIN
+        CREATE USER [$(employeeAuthServerWebAppName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(employeeAuthServerWebAppName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(employeeAuthServerWebAppName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(employeeAuthServerWebAppName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'
