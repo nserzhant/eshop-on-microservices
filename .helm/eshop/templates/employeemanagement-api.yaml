@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  {{ if .Values.useAks -}}annotations:
+    azure.workload.identity/client-id: "{{ .Values.azure.employeeManagementUmiClientId }}"
+  labels:
+    azure.workload.identity/use:  "true"
+{{- end }}        
+  name: {{ .Values.employeemanagement_api.serviceAccountName }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.employeemanagement_api.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.employeemanagement_api.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.employeemanagement_api.appName }}
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Values.employeemanagement_api.serviceAccountName }}
+      containers:
+      - name: {{ .Values.employeemanagement_api.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.employeemanagement_api.image.repository }}:{{ .Values.imagesTag }}" 
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: {{ .Values.employeemanagement_api.env.ASPNETCORE_ENVIRONMENT }}
+          - name: ASPNETCORE_URLS
+            value: http://+:80
+          - name: ConnectionStrings__employeeDbConnectionString      
+            value: {{ template "employee-management.connectionString" . }}
+          - name: initDbOnStartup
+            value: "{{ .Values.employeemanagement_api.env.initDbOnStartup }}"
+          - name: clientOrigin
+            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}"
+          - name: JWTSettings__Issuer
+            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}/authorize"
+          {{ if .Values.useAks -}}- name: JWTSettings__JWTSecretKey
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.azure.akvEmployeeSigningSecretName }}
+                key: jwt
+          {{- end }}   
+        resources:
+          limits:
+            memory:  {{ .Values.employeemanagement_api.resources.memory }}
+            cpu:  {{ .Values.employeemanagement_api.resources.cpu }}
+        ports:
+          - containerPort: 80 
+ 
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName }}
+      {{- end }}   
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.employeemanagement_api.appName }}
+spec:
+  selector:
+    app:  {{ .Values.employeemanagement_api.appName }}
+  type:  ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port:  {{ .Values.employeemanagement_api.servicePort }}
+    targetPort:  80

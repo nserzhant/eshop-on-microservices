@@ -1,0 +1,68 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2$3
+  name:  {{ .Values.eshop_ingress.appName }}    
+  labels:
+    name:  {{ .Values.eshop_ingress.appName }}    
+spec:
+  ingressClassName: {{ .Values.eshop_ingress.ingressClassName }} 
+  rules:
+  - host: {{ .Values.eshop_ingress.clientPortalDnsName }}
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/()()(.*)"
+        backend:
+          service:
+            name: {{ .Values.client_portal.appName }}    
+            port: 
+              number: {{ .Values.client_portal.servicePort }}
+      - pathType: Prefix
+        path: "/catalog(/|$)(.*)"
+        backend:
+          service:
+            name: {{ .Values.catalog_api.appName }}  
+            port: 
+              number: {{ .Values.catalog_api.servicePort }}
+      - pathType: Prefix
+        path: /()(authorize)(.*)
+        backend:
+          service:
+            name: {{ .Values.client_authserver.appName }}
+            port: 
+              number: {{ .Values.client_authserver.servicePort }}
+  - host: {{ .Values.eshop_ingress.empoyeePortalDnsName }}
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/()()(.*)"
+        backend:
+          service:
+            name: {{ .Values.employee_portal.appName }}
+            port: 
+              number: {{ .Values.employee_portal.servicePort }}
+      - pathType: Prefix
+        path: "/catalog(/|$)(.*)"
+        backend:
+          service:
+            name: {{ .Values.catalog_api.appName }}
+            port: 
+              number: {{ .Values.catalog_api.servicePort }}
+      - pathType: Prefix
+        path: /()(authorize)(.*)
+        backend:
+          service:
+            name: {{ .Values.employeemanagement_authserver.appName }}
+            port: 
+              number: {{ .Values.employeemanagement_authserver.servicePort }}
+      - pathType: Prefix
+        path: "/(employee-management/)(api)(.*)"
+        backend:
+          service:
+            name: {{ .Values.employeemanagement_api.appName }}
+            port: 
+              number: {{ .Values.employeemanagement_api.servicePort }}
+  

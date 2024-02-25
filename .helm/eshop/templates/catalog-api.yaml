@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  {{ if .Values.useAks -}}annotations:
+    azure.workload.identity/client-id: "{{ .Values.azure.catalogApiUmiClientId }}"
+  labels:
+    azure.workload.identity/use:  "true"
+{{- end }}        
+  name: {{ .Values.catalog_api.serviceAccountName }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.catalog_api.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.catalog_api.appName }}
+  replicas: {{ .Values.catalog_api.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.catalog_api.appName }}
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Values.catalog_api.serviceAccountName }}
+      containers:
+      - name: {{ .Values.catalog_api.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.catalog_api.image.repository }}:{{ .Values.imagesTag }}" 
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: {{ .Values.catalog_api.env.ASPNETCORE_ENVIRONMENT }}
+          - name: ASPNETCORE_URLS
+            value: http://+:80
+          - name: ConnectionStrings__catalogDbConnectionString            
+            value: {{ template "catalog-api.connectionString" . }}
+          - name: initDbOnStartup
+            value: "{{ .Values.catalog_api.env.initDbOnStartup }}"
+          - name: generatedItemPictureUriHost
+            value: /catalog
+          - name: clients
+            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }},https://{{ .Values.eshop_ingress.clientPortalDnsName }}"
+          - name: EmployeeJWTSettings__Issuer
+            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}/authorize"
+          - name: ClientJWTSettings__Issuer
+            value: "https://{{ .Values.eshop_ingress.clientPortalDnsName }}/authorize"
+          {{ if .Values.useAks -}}- name: EmployeeJWTSettings__JWTSecretKey
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.azure.akvEmployeeSigningSecretName }}
+                key: jwt
+          - name: ClientJWTSettings__JWTSecretKey
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.azure.akvClientSigningSecretName }}
+                key: jwt
+          {{- end }}        
+        resources:
+          limits:
+            memory:  {{ .Values.catalog_api.resources.memory }}
+            cpu:  {{ .Values.catalog_api.resources.cpu }}
+        ports:
+          - containerPort: 80       
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName }}
+      {{- end }}             
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.catalog_api.appName }}
+spec:
+  selector:
+    app:  {{ .Values.catalog_api.appName }}
+  type:  ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port:  {{ .Values.catalog_api.servicePort }}
+    targetPort:  80

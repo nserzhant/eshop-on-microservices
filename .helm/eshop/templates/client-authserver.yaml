@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  {{ if .Values.useAks -}}annotations:
+    azure.workload.identity/client-id: "{{ .Values.azure.clientAuthserverUmiClientId }}"
+  labels:
+    azure.workload.identity/use:  "true"
+{{- end }}        
+  name: {{ .Values.client_authserver.serviceAccountName }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.client_authserver.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.client_authserver.appName }}
+  replicas: {{ .Values.client_authserver.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.client_authserver.appName }}  
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Values.client_authserver.serviceAccountName }}
+      containers:
+      - name: {{ .Values.client_authserver.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.client_authserver.image.repository }}:{{ .Values.imagesTag }}" 
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: {{ .Values.client_authserver.env.ASPNETCORE_ENVIRONMENT }}
+          - name: ASPNETCORE_URLS
+            value: http://+:80
+          - name: ConnectionStrings__clientDbConnectionString      
+            value: {{ template "client-authserver.connectionString" . }}
+          - name: initDbOnStartup
+            value: "{{ .Values.client_authserver.env.initDbOnStartup }}"
+          - name: clients__0__clientOrigin
+            value: "https://{{ .Values.eshop_ingress.clientPortalDnsName }}"
+          - name: clients__0__clientId
+            value: "{{ .Values.client_authserver.env.clientId }}"
+          - name: clients__0__displayName
+            value: "{{ .Values.client_authserver.env.displayName }}"
+          - name: ASPNETCORE_APPL_PATH
+            value: authorize
+          {{ if .Values.useAks -}}- name: clientSTSJWTSecretKey
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.azure.akvClientSigningSecretName }}
+                key: jwt
+          {{- end }}   
+        resources:
+          limits:
+            memory:  {{ .Values.client_authserver.resources.memory }}
+            cpu:  {{ .Values.client_authserver.resources.cpu }}
+        ports:
+          - containerPort: 80 
+ 
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName }}
+      {{- end }}    
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.client_authserver.appName }}
+spec:
+  selector:
+    app:  {{ .Values.client_authserver.appName }}
+  type:  ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port:  {{ .Values.client_authserver.servicePort }}
+    targetPort:  80 

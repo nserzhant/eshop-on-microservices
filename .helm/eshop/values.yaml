@@ -1,0 +1,123 @@
+useAks: false 
+dockerRegistry: "" 
+imagesTag: ""
+imagePullSecretName: ""
+ingressControllerNamespaceName: "ingress-nginx"
+ 
+
+azure: 
+  tenantId: ""
+  aksUmiClientId: ""
+  akvName: ""
+  akvClientSigningSecretName: "client-auth-signing-key"
+  akvEmployeeSigningSecretName: "employee-auth-signing-key"
+  catalogApiUmiClientId: ""
+  employeeManagementUmiClientId: ""
+  clientAuthserverUmiClientId: ""
+  catalogApiSqlServerName: ""
+  employeeManagementSqlServerName: ""
+  clientAuthserverSqlServerName: ""
+
+eshop_ingress:
+  appName: eshop-ingress
+  ingressClassName: nginx
+  clientPortalDnsName:  client-portal-gateway.example.com 
+  empoyeePortalDnsName: employee-portal-gateway.example.com 
+
+catalog_api:
+  appName: catalog-api
+  replicaCount: 1
+  serviceAccountName: catalog-api-sa
+  image:
+    repository: eshop.catalog.api  
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    initDbOnStartup: "true"  
+  resources:
+    memory: "200Mi"
+    cpu: "200m"
+  servicePort: 5035
+
+client_authserver:
+  appName: client-authserver
+  replicaCount: 1
+  serviceAccountName: client-authserver-sa
+  image:
+    repository: eshop.client.authorizationserver
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    initDbOnStartup: "true"
+    clientId: "client-portal"
+    displayName: "public spa"  
+  resources:
+    memory: "200Mi"
+    cpu: "200m"
+  servicePort: 5058
+
+client_portal:
+  appName: client-portal
+  replicaCount: 1
+  image:
+    repository: eshop.ui.clientportal    
+  resources:
+    memory: "100Mi"
+    cpu: "100m"
+  servicePort: 4201
+
+employee_portal:
+  appName: employee-portal
+  replicaCount: 1
+  image:
+    repository: eshop.ui.employeeportal    
+  resources:
+    memory: "100Mi"
+    cpu: "100m"
+  servicePort: 4202
+
+employeemanagement_api:
+  appName: employeemanagement-api
+  replicaCount: 1
+  serviceAccountName: employeemanagement-api-sa
+  image:
+    repository: eshop.employeemanagement.api
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    initDbOnStartup: "true"  
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
+  servicePort: 5158
+
+employeemanagement_authserver:
+  appName: employeemanagement-authserver
+  replicaCount: 1
+  serviceAccountName: employeemanagement-authserver-sa
+  image:
+    repository:  eshop.employeemanagement.authorizationserver
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    clientId: "employee-portal"
+    displayName: "public spa"  
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
+  servicePort: 5218
+
+
+sql_db:
+  appName: sql-db
+  image:
+    repository: mcr.microsoft.com/mssql/server:2022-CU4-ubuntu-20.04
+    pullPolicy: IfNotPresent  
+  env:
+    mssqlPassword: "E*AmPleP@ssw0rd"
+  storage:
+    pvcName: sql-api-pvc
+    pvcStorage: 1Gi
+  resources:
+    memory: "2000Mi"
+    cpu: "2000m"
+  servicePort: 1433
+  
+secrets_provider:
+  appName: akv-secrets-provider

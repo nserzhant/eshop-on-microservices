@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.client_portal.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.client_portal.appName }}
+  replicas: {{ .Values.client_portal.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.client_portal.appName }}    
+    spec:
+      containers:
+      - name: {{ .Values.client_portal.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.client_portal.image.repository }}:{{ .Values.imagesTag }}" 
+        imagePullPolicy: IfNotPresent          
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          periodSeconds: 10
+          initialDelaySeconds: 5   
+        resources:
+          limits:
+            memory:  {{ .Values.client_portal.resources.memory }}
+            cpu:  {{ .Values.client_portal.resources.cpu }}
+        ports:
+          - containerPort: 80 
+ 
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName }}
+      {{- end }}  
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.client_portal.appName }}
+spec:
+  selector:
+    app:  {{ .Values.client_portal.appName }}
+  type:  ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port:  {{ .Values.client_portal.servicePort }}
+    targetPort:  80
+  
+  
