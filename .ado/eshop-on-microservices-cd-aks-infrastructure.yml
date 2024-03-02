@@ -1,0 +1,138 @@
+resources:
+ repositories:
+   - repository: self
+     trigger: none
+ pipelines:
+  - pipeline: eshop-on-microservices-ci-aks
+    source: eshop-on-microservices-ci-aks
+
+variables:
+- group: microservices-aks-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-owner-role-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: subscriptionid
+  value: $(subscription-id) # From variable group
+- name: sqlEntraIdAdminLogin
+  value: $(ado-service-principal-id) # azureserviceconnection  service principal login (will be assigned as administrator)
+- name: sqlEntraIdAdminObjectId
+  value: $(ado-service-principal-object-id) # azureserviceconnection service principal Object Id (will be assigned as administrator)
+- name: sqlUserAssignedIdentity
+  value: $(sql-umi-id) # Identity with directory reader role
+- name: clientAuthSigningKey 
+  value: $(client-auth-signing-key) # From variable group
+- name: employeeAuthSigningKey
+  value: $(employee-auth-signing-key) # From variable group
+- name: acrName
+  value: $(acr-name)  # From variable group
+- name: resourceGroupName
+  value: 'eshop-on-microservices-rg'
+- name: location
+  value: 'eastus' 
+- name: employeeSqlServerName
+  value: 'employee-sqlserver-$(suffix)'
+- name: clientSqlServerName
+  value: 'client-sqlserver-$(suffix)'
+- name: catalogSqlServerName
+  value: 'catalog-sqlserver-$(suffix)'
+- name: dnsLabel
+  value: 'eshop-client-portal-$(suffix)'
+- name: clusterName
+  value: 'aks-eshop-$(suffix)'
+- name: agentCount
+  value: 2
+- name: agentVMSize
+  value: 'Standard_B2s'
+- name: aksNamespace
+  value: 'eshop'
+- name: akvName
+  value: 'akv-eshop-$(suffix)'
+- name: catalogApiUMIName
+  value: 'catalog-api-identity'
+- name: employeeManagementUMIName
+  value: 'employee-management-identity'
+- name: clientAuthServerUMIName 
+  value: 'client-authserver-identity'
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- download: eshop-on-microservices-ci-aks
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Bicep
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/eshop-on-microservices-ci-aks/Bicep/main-aks.bicep'
+    overrideParameters: ' -catalogSqlServerName $(catalogSqlServerName) -clientSqlServerName $(clientSqlServerName) -employeeSqlServerName $(employeeSqlServerName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity) -acrName $(acrName) -dnsLabel $(dnsLabel) -clusterName $(clusterName) -agentCount $(agentCount) -agentVMSize $(agentVMSize) -akvName $(akvName) -aksNamespace $(aksNamespace) -clientAuthSigningKey $(clientAuthSigningKey) -employeeAuthSigningKey $(employeeAuthSigningKey) -catalogApiUMIName $(catalogApiUMIName) -employeeManagementUMIName $(employeeManagementUMIName) -clientAuthServerUMIName $(clientAuthServerUMIName)'
+    deploymentMode: 'Incremental'
+
+# Add SQL Server User For Catalog Api AKS Pod Access
+- task: SqlAzureDacpacDeployment@1
+  displayName: Set DB Permission For Catalog Api Db
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(catalogSqlServerName).database.windows.net'
+    DatabaseName: 'eshop.catalog.Db'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(catalogApiUMIName)') IS NULL
+      BEGIN
+        CREATE USER [$(catalogApiUMIName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(catalogApiUMIName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(catalogApiUMIName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(catalogApiUMIName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'
+
+# Add SQL Server User For Client Authorization Server AKS Pod Access
+- task: SqlAzureDacpacDeployment@1
+  displayName: Set DB Permission For Client Authorization Server Api Db
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(clientSqlServerName).database.windows.net'
+    DatabaseName: 'eshop.client.Db'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(clientAuthServerUMIName)') IS NULL
+      BEGIN
+        CREATE USER [$(clientAuthServerUMIName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(clientAuthServerUMIName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(clientAuthServerUMIName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(clientAuthServerUMIName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'
+
+# Add SQL Server User For API Employee Management Services AKS Pod Access 
+- task: SqlAzureDacpacDeployment@1
+  displayName: Set DB Permission For Employee Management Api Db
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(employeeSqlServerName).database.windows.net'
+    DatabaseName: 'eshop.employee.Db'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(employeeManagementUMIName)') IS NULL
+      BEGIN
+        CREATE USER [$(employeeManagementUMIName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(employeeManagementUMIName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(employeeManagementUMIName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(employeeManagementUMIName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'

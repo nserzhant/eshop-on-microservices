@@ -97,7 +97,7 @@ services:
       context: eshop-ui-employee-portal
       dockerfile: Dockerfile
       args:
-        - CONFIGURATION=development
+        - CONFIGURATION=${ANGULAR_CONFIGURATION:-development}
     ports:
       - '4202:80'
     depends_on:
@@ -111,7 +111,7 @@ services:
       context: eshop-ui-client-portal
       dockerfile: Dockerfile
       args:
-        - CONFIGURATION=development
+        - CONFIGURATION=${ANGULAR_CONFIGURATION:-development}
     ports:
       - '4201:80'    
     depends_on:

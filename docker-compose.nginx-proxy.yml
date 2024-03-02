@@ -55,12 +55,11 @@ services:
       - client-authorizationserver
   
   nginx-client-portal-proxy:
-    image: jwilder/nginx-proxy
+    image: nginx:1.25.3
     container_name: nginx-client-portal-proxy
     ports:
       - "${CLIENT_PORTAL_PORT}:443"
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
       - ${CERTIFICATES_PATH}:/etc/nginx/certs
       - ./nginx-proxy/nginx-client-portal.conf:/etc/nginx/nginx.conf
     depends_on:
@@ -109,12 +108,11 @@ services:
       - catalog-api 
   
   nginx-employee-portal-proxy:
-    image: jwilder/nginx-proxy
+    image: nginx:1.25.3
     container_name: nginx-employee-portal-proxy
     ports:
       - "${EMPLOYEE_PORTAL_PORT}:443"
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
       - ${CERTIFICATES_PATH}:/etc/nginx/certs
       - ./nginx-proxy/nginx-employee-portal.conf:/etc/nginx/nginx.conf
     depends_on:
