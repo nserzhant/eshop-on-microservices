@@ -54,14 +54,14 @@ services:
       - catalog-api
       - client-authorizationserver
   
-  nginx-client-portal-proxy:
+  client-portal-nginx-ingress:
     image: nginx:1.25.3
-    container_name: nginx-client-portal-proxy
+    container_name: client-portal-nginx-ingress
     ports:
       - "${CLIENT_PORTAL_PORT}:443"
     volumes:
       - ${CERTIFICATES_PATH}:/etc/nginx/certs
-      - ./nginx-proxy/nginx-client-portal.conf:/etc/nginx/nginx.conf
+      - ./.ingress/nginx-client-portal.conf:/etc/nginx/nginx.conf
     depends_on:
      - client-authorizationserver
 
@@ -107,14 +107,14 @@ services:
       - employeemanagement-authorizationserver
       - catalog-api 
   
-  nginx-employee-portal-proxy:
+  employee-portal-nginx-ingress:
     image: nginx:1.25.3
-    container_name: nginx-employee-portal-proxy
+    container_name: employee-portal-nginx-ingress
     ports:
       - "${EMPLOYEE_PORTAL_PORT}:443"
     volumes:
       - ${CERTIFICATES_PATH}:/etc/nginx/certs
-      - ./nginx-proxy/nginx-employee-portal.conf:/etc/nginx/nginx.conf
+      - ./.ingress/nginx-employee-portal.conf:/etc/nginx/nginx.conf
     depends_on:
      - client-authorizationserver
 

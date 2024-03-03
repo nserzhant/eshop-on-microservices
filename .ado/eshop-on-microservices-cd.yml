@@ -14,8 +14,8 @@ variables:
   storageAccountName: 'storageacc$(suffix)'
   clientGatewayConfigContainerName: 'clientgateway'
   employeeGatewayConfigContainerName: 'employeegateway'
-  clientProxyConfigurationFile: 'nginx-proxy/nginx-client-azure.conf'
-  employeeProxyConfigurationFile: 'nginx-proxy/nginx-employee-azure.conf'
+  clientProxyConfigurationFile: '.ingress/nginx-client-azure.conf'
+  employeeProxyConfigurationFile: '.ingress/nginx-employee-azure.conf'
   resourceGroupName: 'eshop-on-microservices-rg'
 
   clientGatewayAppName: 'client-portal-gateway-$(suffix)'

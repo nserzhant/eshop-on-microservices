@@ -105,6 +105,6 @@ jobs:
       - task: PublishPipelineArtifact@1
         displayName: Publish Pipepile Artifact -  NGINX configuration
         inputs:
-          targetPath: '$(System.DefaultWorkingDirectory)/nginx-proxy/'
+          targetPath: '$(System.DefaultWorkingDirectory)/.ingress/'
           artifact: 'NGINX'
           publishLocation: 'pipeline'
