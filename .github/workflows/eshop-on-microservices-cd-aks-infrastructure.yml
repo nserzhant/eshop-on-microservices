@@ -1,0 +1,73 @@
+name:  Eshop CD AKS Infrastructure
+
+on:
+  workflow_dispatch:
+  
+env:
+  dnsLabel: eshop-client-portal-${{ vars.SUFFIX }}
+  clusterName: aks-eshop-${{ vars.SUFFIX }}
+  agentCount: 2
+  agentVMSize: Standard_B2s
+  aksNamespace: eshop
+  akvName: akv-eshop-${{ vars.SUFFIX }}
+  catalogApiUMIName: catalog-api-identity
+  employeeManagementUMIName: employee-management-identity
+  clientAuthServerUMIName: client-authserver-identity
+  catalogSqlServerName: catalog-sqlserver-${{ vars.SUFFIX }}
+  employeeSqlServerName: employee-sqlserver-${{ vars.SUFFIX }}
+  clientSqlServerName: client-sqlserver-${{ vars.SUFFIX }}   
+  templateFileName: main-aks.bicep
+  resourceGroupName: eshop-aks
+  location: eastus
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:    
+    - uses: actions/checkout@v4
+      
+    - name: Download workflow artifact
+      uses: dawidd6/action-download-artifact@v3.1.2
+      with:
+        workflow: eshop-on-microservices-ci-aks.yml 
+        path: ./artifacts
+        
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_RG_OWNER_CREDENTIALS }}          
+        
+    - name: Deploy Bicep Template
+      uses: Azure/arm-deploy@v2
+      id: deployBicep
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ./artifacts/Bicep/${{ env.templateFileName }}
+        parameters:  catalogSqlServerName=${{ env.catalogSqlServerName }} clientSqlServerName=${{ env.clientSqlServerName }} employeeSqlServerName=${{ env.employeeSqlServerName }} sqlEntraIdAdminLogin=${{ secrets.AZURE_SP_APP_ID }} sqlEntraIdAdminObjectId=${{ secrets.AZURE_SP_OBJECT_ID }} sqlUserAssignedIdentity=${{ secrets.SQL_DIRECTORY_READER_UMI }} acrName=${{ vars.ACR_NAME }} dnsLabel=${{ env.dnsLabel }} clusterName=${{ env.clusterName }} agentCount=${{ env.agentCount }} agentVMSize=${{ env.agentVMSize }} akvName=${{ env.akvName }} aksNamespace=${{ env.aksNamespace }} clientAuthSigningKey=${{ secrets.CLIENT_AUTH_SIGNING_KEY }} employeeAuthSigningKey=${{ secrets.EMPLOYEE_AUTH_SIGNING_KEY }} catalogApiUMIName=${{ env.catalogApiUMIName }} employeeManagementUMIName=${{ env.employeeManagementUMIName }} clientAuthServerUMIName=${{ env.clientAuthServerUMIName }} location=${{ env.location }}  suffix=${{ vars.SUFFIX }}
+    
+    - name: Clear Azure Cache
+      run: az cache purge        
+   
+    - name: Add Catalog Service Account SQL User
+      uses: ./.github/workflows/actions/create-sql-user
+      with:
+        userName: ${{ env.catalogApiUMIName }}
+        appName: Catalog Service Account
+        connectionString: 'Server=tcp:${{ env.catalogSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.catalog.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+   
+    - name:  Add Employee Management Service Account SQL User
+      uses: ./.github/workflows/actions/create-sql-user
+      with:
+        userName: ${{ env.employeeManagementUMIName }}
+        appName: Employee Management Service Account
+        connectionString: 'Server=tcp:${{ env.employeeSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.employee.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+
+    - name:  Add Client Authorization Server Service Account SQL User
+      uses: ./.github/workflows/actions/create-sql-user
+      with:
+        userName: ${{ env.clientAuthServerUMIName }}
+        appName: Client Authorization Server Service Account
+        connectionString: 'Server=tcp:${{ env.clientSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.client.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+    

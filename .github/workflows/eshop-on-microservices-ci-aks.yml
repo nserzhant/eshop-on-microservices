@@ -1,0 +1,92 @@
+name: Eshop CI AKS
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  apiWorkingDirectory: ./eshop-api
+  sqlPassword: sqlP@ssw0rd
+  
+jobs:
+  test_api:
+    runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:7.0
+      env:
+        ConnectionStrings__catalogDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+        ConnectionStrings__employeeDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+        
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          MSSQL_SA_PASSWORD: ${{ env.sqlPassword }}
+          ACCEPT_EULA: Y
+        ports:
+          - 1433
+          
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4 
+      
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 7.0.x
+          
+    - name: Restore
+      run: dotnet restore ${{ env.apiWorkingDirectory }}/eshop-api.sln
+      
+    - name: Build
+      run: dotnet build ${{ env.apiWorkingDirectory }}/eshop-api.sln -c ${{ env.buildConfiguration }} --no-restore
+      
+    - name: Run Tests
+      run: dotnet test ${{ env.apiWorkingDirectory }}/eshop-api.sln --verbosity normal
+    
+  build:
+    needs: test_api
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }} 
+
+    - name: Login to ACR
+      run: az acr login --name ${{ vars.ACR_NAME }}
+        
+    - name: Build And Push Docker Images
+      env:
+        TAG: kube-${{github.run_id}}
+        DOCKER_REGISTRY: ${{ vars.ACR_NAME }}.azurecr.io/
+        ANGULAR_CONFIGURATION: production
+        APPDATA: ''
+      run: |
+        docker compose build    
+        docker compose push
+
+    - name: Helm tool installer
+      uses: Azure/setup-helm@v3.5       
+
+    - name: Helm Pack
+      run: helm package --version ${{github.run_id}} --destination ./artifacts .helm/eshop
+
+    - name: Upload Artifact - Helm
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: Helm
+        path: ./artifacts/eshop-${{github.run_id}}.tgz
+        
+    - name: Upload Artifact - Bicep
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: Bicep
+        path: .azure
+     

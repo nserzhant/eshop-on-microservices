@@ -1,0 +1,31 @@
+name: "Create SQL User"
+
+inputs:
+  userName:
+    required: true
+  appName:
+    required: true
+  connectionString:
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:                
+  - name: Prepare SQL For Adding ${{ inputs.appName }} Web App User to SQL Server
+    shell: bash
+    run: |
+      sql="IF DATABASE_PRINCIPAL_ID('${{ inputs.userName }}') IS NULL  
+        BEGIN   
+          CREATE USER [${{ inputs.userName }}] FROM EXTERNAL PROVIDER;  
+          ALTER ROLE db_datareader ADD MEMBER [${{ inputs.userName }}];  
+          ALTER ROLE db_datawriter ADD MEMBER [${{ inputs.userName }}];  
+          ALTER ROLE db_ddladmin ADD MEMBER [${{ inputs.userName }}]; 
+        END"
+      echo $sql >> "./artifacts/addUser${{ inputs.appName }}.sql"   
+
+  - name: Add Catalog API Web App User to SQL Server
+    uses: Azure/sql-action@v2.2.1
+    with:
+      connection-string: '${{ inputs.connectionString }}'
+      path: ./artifacts/addUser${{ inputs.appName }}.sql

@@ -1,0 +1,65 @@
+name: Deploy Web App
+
+on:
+  workflow_call:
+    inputs:
+      serviceName:
+        required: true
+        type: string
+      webAppName:
+        required: true
+        type: string
+      resourceGroupName:
+        required: true
+        type: string
+      artifactFolderPath:
+        required: true
+        type: string
+      healthCheckUri:
+        required: true
+        type: string
+        
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+      AZURE_SUBSCRIPTION:
+        required: true        
+  
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Download workflow artifact
+      uses: dawidd6/action-download-artifact@v3.1.2
+      with:
+        workflow: eshop-on-microservices-ci.yml
+        path: ./artifacts
+         
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}   
+       
+    - name: Get ${{ inputs.serviceName }} Publish Profile
+      id: webAppPubProfile
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          publishprofile=$(az webapp deployment list-publishing-profiles --name "${{ inputs.webAppName }}" --resource-group "${{ inputs.resourceGroupName }}"  --subscription "${{ secrets.AZURE_SUBSCRIPTION }}" --xml)
+          echo "publishProfile=$publishprofile" >> $GITHUB_OUTPUT
+                  
+    - name: Deploy ${{ inputs.serviceName }}
+      uses: Azure/webapps-deploy@v3.0.0
+      with:
+        app-name: ${{ inputs.webAppName }}
+        package: ./artifacts/${{ inputs.artifactFolderPath }}
+        resource-group-name: ${{ inputs.resourceGroupName }}
+        publish-profile: ${{ steps.webAppPubProfile.outputs.publishProfile}}
+        restart: true 
+
+    - name: Init And Check ${{ inputs.serviceName }} App
+      run: Invoke-WebRequest -UseBasicParsing ${{ inputs.healthCheckUri }} -TimeoutSec 300
+      shell: pwsh
+      

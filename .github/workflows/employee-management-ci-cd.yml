@@ -1,0 +1,164 @@
+name: Employee Management CI CD
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/EmployeeManagement
+  apiWebAppName: employee-api-web-app-${{ vars.SUFFIX }}
+  authServerWebAppName: employee-authserver-web-app-${{ vars.SUFFIX }}
+  templateFileName: webapps-with-sql.bicep
+  resourceGroupName: eshop-zip-deployment
+  sqlPassword: sqlP@ssw0rd
+  
+  location: westeurope
+  
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:7.0
+      env:
+        ConnectionStrings__employeeDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          MSSQL_SA_PASSWORD: ${{  env.sqlPassword }}
+          ACCEPT_EULA: Y
+        ports:
+          - 1433
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 7.0.x
+          
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 7.0.x
+          
+    - name: Restore
+      run: dotnet restore ${{ env.workingDirectory }}/*.sln
+      
+    - name: Build
+      run: dotnet build ${{ env.workingDirectory }}/*.sln -c ${{ env.buildConfiguration }} --no-restore
+      
+    - name: Run SQL Integration Test
+      run: dotnet test ${{ env.workingDirectory }}/tests/EShop.EmployeeManagement.IntegrationTests/EShop.EmployeeManagement.Core.IntegrationTests.csproj --verbosity normal
+      
+    - name: Run API Integration Test
+      run: dotnet test ${{ env.workingDirectory }}/tests/EShop.EmployeeManagement.Api.IntegrationTests/EShop.EmployeeManagement.Api.IntegrationTests.csproj --verbosity normal
+
+    - name: Dotnet Publish Api
+      run: dotnet publish ${{ env.workingDirectory }}/src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/api
+      
+    - name: Dotnet Publish Auth Server
+      run: dotnet publish ${{ env.workingDirectory }}/src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/auth
+      
+    - name: Upload Artifact -  Api
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: 'EmployeeManagement Api'
+        path: ./artifacts/api
+        
+    - name: Upload Artifact -  Authorization Server
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: 'Authorization Server'
+        path: ./artifacts/auth
+      
+    - name: Upload Artifact - Bicep
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: 'Bicep'
+        path: '${{ env.workingDirectory }}/.azure/'
+
+  deploy:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download Artifact -  Api
+      uses: actions/download-artifact@v4
+      with:
+        name: 'EmployeeManagement Api'
+        path: ./artifacts/api
+
+    - name: Download Artifact -  Authorization Server
+      uses: actions/download-artifact@v4
+      with:
+        name: 'Authorization Server'
+        path: ./artifacts/auth
+
+    - name: Download Artifact - Bicep
+      uses: actions/download-artifact@v4
+      with:
+        name: 'Bicep'
+        path: ${{ env.workingDirectory }}/.azure/
+
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}    
+        
+    - name: Deploy Bicep Template
+      uses: Azure/arm-deploy@v2
+      id: deployBicep
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: apiWebAppName="${{ env.apiWebAppName }}" authServerWebAppName="${{ env.authServerWebAppName }}" administratorLoginPassword="${{ secrets.SQL_DB_PASSWORD }}" location=${{ env.location }} suffix="${{ vars.SUFFIX }}"
+
+    - name: Clear Azure Cache
+      run: az cache purge
+        
+    - name: Get Api WebApp Publish Profile
+      id: apiPublishProfile
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.apiWebAppName }}" --resource-group "${{ env.resourceGroupName }}"  --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --xml)
+          echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT
+                    
+    - name: Get Auth Server WebApp Publish Profile
+      id: authServerPublishProfile
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.authServerWebAppName }}" --resource-group "${{ env.resourceGroupName }}" --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --xml)
+          echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT
+            
+    - name: Deploy Api
+      uses: Azure/webapps-deploy@v3.0.0
+      with:
+        app-name: ${{ env.apiWebAppName }}
+        package: ./artifacts/api
+        resource-group-name: ${{ env.resourceGroupName }}
+        publish-profile: ${{ steps.apiPublishProfile.outputs.publishProfile}}
+        restart: true
+
+    - name: Deploy Authorization Server
+      uses: Azure/webapps-deploy@v3.0.0
+      with:
+        app-name: ${{ env.authServerWebAppName }}
+        package: ./artifacts/auth
+        resource-group-name: ${{ env.resourceGroupName }}
+        publish-profile: ${{ steps.authServerPublishProfile.outputs.publishProfile}}
+        restart: true
+          
+    - name: Init And Check Api Web App
+      run: Invoke-WebRequest -UseBasicParsing https://${{ env.apiWebAppName }}.azurewebsites.net/swagger/index.html -TimeoutSec 300
+      shell: pwsh
+        
+    - name: Init And Check Authorization Server Web App
+      run: Invoke-WebRequest -UseBasicParsing https://${{ env.authServerWebAppName }}.azurewebsites.net/ -TimeoutSec 300
+      shell: pwsh

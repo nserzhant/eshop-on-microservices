@@ -1,0 +1,68 @@
+name: Client Authorization Server CI CD
+
+on:
+  workflow_dispatch:
+
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/Client
+  webappname: client-auth-web-app-${{ vars.SUFFIX }}
+  templateFileName: webapp-with-sql.bicep
+  resourceGroupName: eshop-zip-deployment
+  location: westeurope
+
+jobs:
+  build_deploy:
+    runs-on: ubuntu-latest
+
+    steps:    
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 7.0.x
+          
+    - name: Restore
+      run: dotnet restore ${{ env.workingDirectory }}/*.sln
+      
+    - name: Build
+      run: dotnet build ${{ env.workingDirectory }}/*.sln -c ${{ env.buildConfiguration }} --no-restore
+
+    - name: Dotnet Publish
+      run: dotnet publish ${{ env.workingDirectory }}/src/EShop.Client.AuthorizationServer/EShop.Client.AuthorizationServer.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/bin
+
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}          
+    
+    - name: Deploy Bicep Template
+      uses: Azure/arm-deploy@v2
+      id: deployBicep
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: webAppName="${{ env.webappname }}" administratorLoginPassword="${{ secrets.SQL_DB_PASSWORD }}" location="${{ env.location }}" suffix="${{ vars.SUFFIX }}"
+  
+    - name: Get Web App Publish Profile
+      id: webAppPublishpPofile
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.webappname }}" --resource-group "${{ env.resourceGroupName }}"  --subscription "${{ secrets.AZURE_SUBSCRIPTION }}" --xml)
+          echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT    
+          
+    - name: Deploy Azure WebApp
+      uses: Azure/webapps-deploy@v3.0.0
+      with:
+        app-name: ${{ env.webappname }}
+        package: ./artifacts/bin         
+        publish-profile: ${{ steps.webAppPublishpPofile.outputs.publishProfile }}
+        resource-group-name: ${{ env.resourceGroupName }}
+        restart: true
+
+    - name: Init And Check Web App
+      run: Invoke-WebRequest -UseBasicParsing https://${{ env.webappname }}.azurewebsites.net -TimeoutSec 300
+      shell: pwsh

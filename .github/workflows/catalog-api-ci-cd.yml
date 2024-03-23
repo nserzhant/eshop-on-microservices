@@ -1,0 +1,93 @@
+name: Catalog Api CI CD
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/Catalog
+  migrationsFileName: migrations.sql  
+  webappname: catalog-api-web-app-${{ vars.SUFFIX }}
+  sqlServerName: catalog-sqlserver-${{ vars.SUFFIX }}
+  sqlDbName: eshop.catalog.Db
+  administratorLogin: catalogapilogin
+  templateFileName: webapp-with-sql.bicep
+  resourceGroupName: eshop-zip-deployment
+  location: westeurope
+  
+jobs:
+  build_test_deploy:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 7.0.x
+          
+    - name: Restore
+      run: dotnet restore "${{ env.workingDirectory }}/Catalog.sln"
+      
+    - name: Build
+      run: dotnet build "${{ env.workingDirectory }}/Catalog.sln" -c "${{ env.buildConfiguration }}" --no-restore
+      
+    - name: Run Unit Tests
+      run: dotnet test "${{ env.workingDirectory }}/tests/EShop.Catalog.Core.UnitTests/EShop.Catalog.Core.UnitTests.csproj" --verbosity normal --logger "trx;LogFileName=EShop.Catalog.Core.UnitTestsResults.trx"    
+      
+    - name: Run SQL Integration Test
+      run: dotnet test "${{ env.workingDirectory }}//tests/EShop.Catalog.Infrastructure.IntegrationTests/EShop.Catalog.Infrastructure.IntegrationTests.csproj" --verbosity normal --logger "trx;LogFileName=EShop.Catalog.Infrastructure.IntegrationTestsResults.trx"  
+      
+    - name: Run API Integration Test
+      run: dotnet test "${{ env.workingDirectory }}/tests/EShop.Catalog.Api.IntegrationTests/EShop.Catalog.Api.IntegrationTests.csproj" --verbosity normal --logger "trx;LogFileName=EShop.Catalog.Api.IntegrationTestsResults.trx"
+
+    - name: Install EF
+      run: dotnet tool install --global dotnet-ef --version 7.0.0
+
+    - name: Generate EF Migrations Script
+      run: dotnet ef migrations script  --project "${{ env.workingDirectory }}/src/EShop.Catalog.Infrastructure/EShop.Catalog.Infrastructure.csproj" --idempotent --context EShop.Catalog.Infrastructure.CatalogDbContext --output "./artifacts/migrations/${{ env.migrationsFileName }}"
+      
+    - name: Dotnet Publish
+      run: dotnet publish "${{ env.workingDirectory }}/src/EShop.Catalog.Api/EShop.Catalog.Api.csproj" -c ${{ env.buildConfiguration }} -o ./artifacts/bin
+              
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}          
+    
+    - name: Deploy Bicep Template
+      uses: Azure/arm-deploy@v2
+      id: deployBicep
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: webAppName="${{ env.webappname }}" sqlServerName="${{ env.sqlServerName }}" dbName="${{ env.sqlDbName }}" administratorLogin="${{ env.administratorLogin }}" administratorLoginPassword="${{ secrets.SQL_DB_PASSWORD}}" location="${{ env.location }}"  suffix="${{ vars.SUFFIX }}"
+     
+    - name: Clear Azure Cache
+      run: az cache purge
+      
+    - name: Update DB
+      uses: Azure/sql-action@v2.2.1
+      with:
+        connection-string: Server=tcp:${{ env.sqlServerName }}.database.windows.net,1433;Initial Catalog=${{ env.sqlDbName }};User Id=${{ env.administratorLogin }};Password=${{ secrets.SQL_DB_PASSWORD}};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+        path: ./artifacts/migrations/${{ env.migrationsFileName }}
+    
+    - name: Get WebApp Publish Profile
+      id: webAppPublishpPofile
+      run: |
+          publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.webappname }}" --resource-group "${{ env.resourceGroupName }}"  --subscription "${{ secrets.AZURE_SUBSCRIPTION }}" --xml)
+          echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT
+      shell: bash
+                    
+    - name: Deploy Azure WebApp
+      uses: Azure/webapps-deploy@v3.0.0
+      with:
+        app-name: ${{ env.webappname }}
+        package: ./artifacts/bin
+        resource-group-name: ${{ env.resourceGroupName }}
+        publish-profile: ${{ steps.webAppPublishpPofile.outputs.publishProfile}}
+        restart: true
+    

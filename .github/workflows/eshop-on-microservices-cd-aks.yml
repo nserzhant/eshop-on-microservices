@@ -1,0 +1,109 @@
+name: Eshop CD AKS
+
+on:
+  workflow_dispatch:
+
+env:
+  clusterName: aks-eshop-${{ vars.SUFFIX }}
+  dnsLabel: eshop-client-portal-${{ vars.SUFFIX }}
+  akvName: akv-eshop-${{ vars.SUFFIX }}
+  catalogApiSqlServerName: catalog-sqlserver-${{ vars.SUFFIX }}
+  employeeManagementSqlServerName: employee-sqlserver-${{ vars.SUFFIX }}
+  clientAuthserverSqlServerName: client-sqlserver-${{ vars.SUFFIX }}
+  catalogApiUMIName: catalog-api-identity
+  employeeManagementUMIName: employee-management-identity
+  clientAuthServerUMIName: client-authserver-identity
+  resourceGroupName: eshop-aks
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download workflow artifact
+      uses: dawidd6/action-download-artifact@v3.1.2
+      id: downloadArtifacts
+      with:
+        workflow: eshop-on-microservices-ci-aks.yml 
+        path: ./artifacts
+        
+    - name: Retrieve Web App Docker Tag
+      run: |
+        artifacts='${{ steps.downloadArtifacts.outputs.artifacts }}'          
+        echo "BUILD_PIPELINE_ID="$(echo $artifacts | jq -r '.[0].workflow_run.id')>> $GITHUB_ENV
+    
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_RG_OWNER_CREDENTIALS }}  
+    
+    - name:  Get The Tenant Id (save result to tenantId variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          TENNANT_ID=$(az account show --query tenantId -o tsv)
+          echo "::add-mask::$TENNANT_ID"
+          echo "tenantId="$TENNANT_ID >> $GITHUB_ENV
+    
+    - name: Get The ClientId Of The UMI That Have Access To Key Vault (save result to aks_umi_client_id variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az aks show --name "${{ env.clusterName }}" --resource-group "${{ env.resourceGroupName }}" --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "aks_umi_client_id="$CLIENT_ID >> $GITHUB_ENV
+          
+    - name: Get The ClientId Of The UMI That Have Access To The Catalog Api Db (save result to catalog_api_umi_client_id variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.catalogApiUMIName }}" --query "clientId" -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "catalog_api_umi_client_id="$CLIENT_ID >> $GITHUB_ENV
+          
+    - name: Get The ClientId Of The UMI That Have Access To The Employee Management Db (save result to employee_management_umi_client_id variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.employeeManagementUMIName }}" --query "clientId" -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "employee_management_umi_client_id="$CLIENT_ID >> $GITHUB_ENV
+          
+    - name: Get The ClientId Of The UMI That Have Access To The Client Authorization Server Db (save result to client_authserver_umi_client_id variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.clientAuthServerUMIName }}" --query "clientId" -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "client_authserver_umi_client_id="$CLIENT_ID >> $GITHUB_ENV    
+          
+    - name: Get The Client Portal Gateway DNS Name (save result to client_portal_dns_name variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          DNS_NAME=$(az network public-ip list --query "[?dnsSettings.domainNameLabel=='${{ env.dnsLabel }}'].dnsSettings.fqdn" -otsv)
+          echo "client_portal_dns_name="$DNS_NAME >> $GITHUB_ENV
+                
+    - name: Get The Employee Portal Gateway DNS Name (save result to empoyee_portal_dns_name variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          DNS_NAME=$(az network public-ip list --query "[?dnsSettings.domainNameLabel=='${{ env.dnsLabel }}'].ipAddress" -otsv).nip.io
+          echo "empoyee_portal_dns_name="$DNS_NAME >> $GITHUB_ENV
+    
+    - name: Helm tool installer
+      uses: Azure/setup-helm@v3.5
+      
+    - name: Set AKS Context
+      uses: azure/aks-set-context@v3
+      with:
+         resource-group: ${{ env.resourceGroupName }}
+         cluster-name:  ${{ env.clusterName }}
+       
+    - name: Helm Upgrade Or Install
+      run: |
+        helm upgrade --namespace eshop --install \
+        --set useAks=true,imagesTag=kube-${{ env.BUILD_PIPELINE_ID }},dockerRegistry=${{ vars.ACR_NAME }}.azurecr.io,azure.tenantId=${{ env.tenantId }},azure.aksUmiClientId=${{ env.aks_umi_client_id }},azure.akvName=${{ env.akvName }},azure.catalogApiUmiClientId=${{ env.catalog_api_umi_client_id }},azure.employeeManagementUmiClientId=${{ env.employee_management_umi_client_id }},azure.clientAuthserverUmiClientId=${{ env.client_authserver_umi_client_id }},azure.catalogApiSqlServerName=${{ env.catalogApiSqlServerName }},azure.employeeManagementSqlServerName=${{ env.employeeManagementSqlServerName }},azure.clientAuthserverSqlServerName=${{ env.clientAuthserverSqlServerName }},eshop_ingress.clientPortalDnsName=${{ env.client_portal_dns_name }},eshop_ingress.empoyeePortalDnsName=${{ env.empoyee_portal_dns_name }} \
+        --wait --timeout 2m --debug --create-namespace eshop  ./artifacts/Helm/eshop-${{ env.BUILD_PIPELINE_ID }}.tgz
+    
+      

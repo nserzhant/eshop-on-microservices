@@ -1,0 +1,83 @@
+name: Eshop CI Docker
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  apiWorkingDirectory: ./eshop-api
+  sqlPassword: sqlP@ssw0rd
+  
+jobs:
+  test_api:
+    runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/dotnet/sdk:7.0
+      env:
+        ConnectionStrings__catalogDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+        ConnectionStrings__employeeDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+        
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          MSSQL_SA_PASSWORD: ${{ env.sqlPassword }}
+          ACCEPT_EULA: Y
+        ports:
+          - 1433
+          
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 7.0.x
+          
+    - name: Restore
+      run: dotnet restore ${{ env.apiWorkingDirectory }}/eshop-api.sln
+      
+    - name: Build
+      run: dotnet build ${{ env.apiWorkingDirectory }}/eshop-api.sln -c ${{ env.buildConfiguration }} --no-restore
+      
+    - name: Run Unit Tests
+      run: dotnet test ${{ env.apiWorkingDirectory }}/eshop-api.sln --verbosity normal 
+    
+  build:
+    needs: test_api
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Build And Push Docker Images
+      env:
+        TAG: run_id-${{github.run_id}}
+        DOCKER_REGISTRY: ${{ vars.DOCKERHUB_USERNAME }}/
+        ANGULAR_CONFIGURATION: production
+        APPDATA: ''
+      run: |
+        docker compose build    
+        docker compose push
+        
+    - name: Upload Artifact - Bicep
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: Bicep
+        path: .azure
+
+    - name: Upload Artifact - Ingress Templates
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: Ingress
+        path: .ingress

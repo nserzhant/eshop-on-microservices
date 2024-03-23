@@ -1,0 +1,232 @@
+# ESHOP RELEASE PIPELINE (Update Docker Image Reference)
+
+name: Eshop CD Docker
+
+on:
+  workflow_dispatch:
+  
+env:
+  storageAccountName: storageacc${{ vars.SUFFIX }}
+  clientGatewayConfigContainerName: clientgateway
+  employeeGatewayConfigContainerName: employeegateway
+  clientProxyConfigurationFile: nginx-client-azure-docker.conf
+  employeeProxyConfigurationFile: nginx-employee-azure-docker.conf
+  clientGatewayAppName: client-portal-gateway-${{ vars.SUFFIX }}
+  employeeGatewayAppName: employee-portal-gateway-${{ vars.SUFFIX }}
+  clientPortalWebAppName: client-portal-${{ vars.SUFFIX }}
+  employeePortalWebAppName: employee-portal-${{ vars.SUFFIX }}
+  catalogApiWebAppName: catalog-api-web-app-${{ vars.SUFFIX }}
+  clientAuthServerWebAppName: client-auth-web-app-${{ vars.SUFFIX }}
+  employeeApiWebAppName: employee-api-web-app-${{ vars.SUFFIX }}
+  employeeAuthServerWebAppName: employee-authserver-web-app-${{ vars.SUFFIX }}
+  
+  catalogApiRepositoryName: eshop.catalog.api
+  employeeApiRepositoryName: eshop.employeemanagement.api
+  employeeAuthServerRepositoryName: eshop.employeemanagement.authorizationserver
+  clientAuthServerRepositoryName: eshop.client.authorizationserver
+  employeePortalRepositoryName: eshop.ui.employeeportal
+  clientPortalRepositoryName: eshop.ui.clientportal
+  
+  templateFileName: main-docker.bicep
+  resourceGroupName: eshop-docker-deployment
+  location: westeurope
+
+jobs:
+  deploy_infrastructure:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      clientPortalWebAppName:  ${{ env.clientPortalWebAppName }}
+      employeePortalWebAppName:  ${{ env.employeePortalWebAppName }}
+      catalogApiWebAppName:  ${{ env.catalogApiWebAppName }}
+      clientAuthServerWebAppName:  ${{ env.clientAuthServerWebAppName }}
+      employeeApiWebAppName:  ${{ env.employeeApiWebAppName }}
+      employeeAuthServerWebAppName:  ${{ env.employeeAuthServerWebAppName }}
+      catalogApiRepositoryName:  ${{ env.catalogApiRepositoryName }}
+      employeeApiRepositoryName:  ${{ env.employeeApiRepositoryName }}
+      employeeAuthServerRepositoryName:  ${{ env.employeeAuthServerRepositoryName }}
+      clientAuthServerRepositoryName:  ${{ env.clientAuthServerRepositoryName }}
+      employeePortalRepositoryName:  ${{ env.employeePortalRepositoryName }}
+      clientPortalRepositoryName:  ${{ env.clientPortalRepositoryName }}
+      resourceGroupName:  ${{ env.resourceGroupName }}
+      dockerImageTag: ${{ steps.imageTag.outputs.dockerImageTag }}
+  
+    steps:
+    - name: Download workflow artifact
+      uses: dawidd6/action-download-artifact@v3.1.2
+      id: downloadArtifacts
+      with:
+        workflow: eshop-on-microservices-ci-docker.yml 
+        path: ./artifacts
+        
+    - name: Retrieve Web App Docker Tag
+      id: imageTag
+      run: |
+        artifacts='${{ steps.downloadArtifacts.outputs.artifacts }}'
+        echo "dockerImageTag="run_id-$(echo $artifacts | jq -r '.[0].workflow_run.id')>> $GITHUB_OUTPUT
+    
+    - name: Replace Client Gateway Tokens
+      run: (Get-Content './artifacts/Ingress/${{ env.clientProxyConfigurationFile }}' -Encoding utf8) `
+          -replace '__clientPortalWebAppName__', '${{ env.clientPortalWebAppName }}' `
+          -replace '__catalogApiWebAppName__', '${{ env.catalogApiWebAppName }}' `
+          -replace '__clientAuthServerWebAppName__', '${{ env.clientAuthServerWebAppName }}' `
+        | Set-Content '${{ env.clientProxyConfigurationFile }}'
+      shell: pwsh
+      
+    - name: Client Gateway Config Display
+      run: cat '${{ env.clientProxyConfigurationFile }}'
+    
+    - name: Replace Employee Gateway Tokens
+      run: (Get-Content './artifacts/Ingress/${{ env.employeeProxyConfigurationFile }}' -Encoding utf8) `
+          -replace '__employeePortalWebAppName__', '${{ env.employeePortalWebAppName }}' `
+          -replace '__catalogApiWebAppName__', '${{ env.catalogApiWebAppName }}' `
+          -replace '__employeeApiWebAppName__', '${{ env.employeeApiWebAppName }}' `
+          -replace '__employeeAuthServerWebAppName__', '${{ env.employeeAuthServerWebAppName }}' `
+        | Set-Content '${{ env.employeeProxyConfigurationFile }}'
+      shell: pwsh
+      
+    - name: Employee Gateway Config Display
+      run: cat '${{ env.employeeProxyConfigurationFile }}'        
+         
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}    
+        
+    - name: Clear Azure Cache
+      run: az cache purge
+      
+    - name: Get Storage Account Key
+      uses: Azure/cli@v1.0.9
+      id: accountKey
+      with:
+        inlineScript: |
+          val=$(az storage account keys list --account-name ${{ env.storageAccountName }} --query '[0].value')
+          echo "::add-mask::$val"
+          echo "storageAccountKey="$val >> $GITHUB_ENV
+    
+    - name: Upload Client Portal Gateway Configuration To Storage Account
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.clientGatewayConfigContainerName }} --name nginx.conf --file '${{ env.clientProxyConfigurationFile }}' --overwrite
+      
+    - name: Upload Employee Portal Gateway Configuration To Storage Account
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.employeeGatewayConfigContainerName }} --name nginx.conf --file '${{ env.employeeProxyConfigurationFile }}' --overwrite
+
+  deploy_catalog_api:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-docker-template.yml
+    with:
+      serviceName: Catalog Api
+      webAppName: ${{ needs.deploy_infrastructure.outputs.catalogApiWebAppName }}
+      dockerHubUserName: "${{ vars.DOCKERHUB_USERNAME  }}" 
+      dockerImageTag: ${{ needs.deploy_infrastructure.outputs.dockerImageTag }} 
+      repositoryName: ${{ needs.deploy_infrastructure.outputs.catalogApiRepositoryName }} 
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      DOCKER_REGISTRY_SERVER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+  deploy_employeemanagement_api:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-docker-template.yml
+    with:
+      serviceName: EmployeeManagement Api
+      webAppName: ${{ needs.deploy_infrastructure.outputs.employeeApiWebAppName  }}
+      dockerHubUserName: "${{ vars.DOCKERHUB_USERNAME  }}" 
+      dockerImageTag: ${{ needs.deploy_infrastructure.outputs.dockerImageTag }} 
+      repositoryName: ${{ needs.deploy_infrastructure.outputs.employeeApiRepositoryName }} 
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      DOCKER_REGISTRY_SERVER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+         
+  deploy_employeemanagement_authserver:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-docker-template.yml
+    with:
+      serviceName: EmployeeManagement Authorization Server
+      webAppName: ${{ needs.deploy_infrastructure.outputs.employeeAuthServerWebAppName  }}
+      dockerHubUserName: "${{ vars.DOCKERHUB_USERNAME  }}" 
+      dockerImageTag: ${{ needs.deploy_infrastructure.outputs.dockerImageTag }} 
+      repositoryName: ${{ needs.deploy_infrastructure.outputs.employeeAuthServerRepositoryName }} 
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      DOCKER_REGISTRY_SERVER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}         
+       
+  deploy_client_authserver:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-docker-template.yml
+    with:
+      serviceName: Client Authorization Server
+      webAppName: ${{ needs.deploy_infrastructure.outputs.clientAuthServerWebAppName  }}
+      dockerHubUserName: "${{ vars.DOCKERHUB_USERNAME  }}" 
+      dockerImageTag: ${{ needs.deploy_infrastructure.outputs.dockerImageTag }} 
+      repositoryName: ${{ needs.deploy_infrastructure.outputs.clientAuthServerRepositoryName }} 
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      DOCKER_REGISTRY_SERVER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}   
+ 
+  deploy_employee_portal:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-docker-template.yml
+    with:
+      serviceName: Employee Portal
+      webAppName: ${{ needs.deploy_infrastructure.outputs.employeePortalWebAppName  }}
+      dockerHubUserName: "${{ vars.DOCKERHUB_USERNAME  }}" 
+      dockerImageTag: ${{ needs.deploy_infrastructure.outputs.dockerImageTag }} 
+      repositoryName: ${{ needs.deploy_infrastructure.outputs.employeePortalRepositoryName }} 
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      DOCKER_REGISTRY_SERVER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}   
+      
+  deploy_client_portal:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-docker-template.yml
+    with:
+      serviceName: Client Portal
+      webAppName: ${{ needs.deploy_infrastructure.outputs.clientPortalWebAppName  }}
+      dockerHubUserName: "${{ vars.DOCKERHUB_USERNAME  }}" 
+      dockerImageTag: ${{ needs.deploy_infrastructure.outputs.dockerImageTag }} 
+      repositoryName: ${{ needs.deploy_infrastructure.outputs.clientPortalRepositoryName }} 
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      DOCKER_REGISTRY_SERVER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}    
+  
+  ingress_apps_restart:
+    needs: [deploy_catalog_api,deploy_employeemanagement_api,deploy_employeemanagement_authserver,deploy_client_authserver,deploy_employee_portal,deploy_client_portal]
+    runs-on: ubuntu-latest
+
+    steps:    
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}    
+        
+    - name: Restrart Client Gateway
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: az webapp restart --name ${{ env.clientGatewayAppName }} --resource-group ${{ env.resourceGroupName }}          
+    
+    - name: Restrart Employee Gateway
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: az webapp restart --name ${{ env.employeeGatewayAppName }} --resource-group ${{ env.resourceGroupName }}
+
+  health_check_employee_gateway:
+    needs: ingress_apps_restart
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Init And Check Employee Gateway App
+      run: Invoke-WebRequest -UseBasicParsing https://${{ env.employeeGatewayAppName }}.azurewebsites.net -TimeoutSec 300        
+      shell: pwsh
+    
+  health_check_client_gateway:
+    needs: ingress_apps_restart
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Init And Check Client Gateway App     
+      run: Invoke-WebRequest -UseBasicParsing https://${{ env.clientGatewayAppName }}.azurewebsites.net -TimeoutSec 300        
+      shell: pwsh

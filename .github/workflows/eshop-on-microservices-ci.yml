@@ -1,0 +1,97 @@
+name: Eshop CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  api:
+    runs-on: windows-latest
+
+    env:
+      workingDirectory: ./eshop-api
+      buildConfiguration: Release
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 7.0.x
+          
+    - name: Restore
+      run: dotnet restore ${{ env.workingDirectory }}/eshop-api.sln
+      
+    - name: Build
+      run: dotnet build ${{ env.workingDirectory }}/eshop-api.sln -c ${{ env.buildConfiguration }} --no-restore
+      
+    - name: Run Tests
+      run: dotnet test ${{ env.workingDirectory }}/eshop-api.sln --verbosity normal
+      
+    - name: Publish Catalog Api
+      run: dotnet publish ${{ env.workingDirectory }}/Catalog/src/EShop.Catalog.Api/EShop.Catalog.Api.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/catalog
+      
+    - name: Upload Artifact  - Catalog Api
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: CatalogApi
+        path: ./artifacts/catalog
+        
+    - name: Publish EmployeeManagement Api
+      run: dotnet publish ${{ env.workingDirectory }}/EmployeeManagement/src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/employeeManagementApi
+      
+    - name: Upload Artifact  - EmployeeManagement Api
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: EmployeeManagementApi
+        path: ./artifacts/employeeManagementApi
+        
+    - name: Publish EmployeeManagement Authorization Server
+      run: dotnet publish ${{ env.workingDirectory }}/EmployeeManagement/src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/employeeAuthorizationServer
+      
+    - name: Upload Artifact  - EmployeeManagement Authorization Server
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: EmployeeManagementAuthorizationServer
+        path: ./artifacts/employeeAuthorizationServer
+        
+    - name: Publish Client Authorization Server
+      run: dotnet publish ${{ env.workingDirectory }}/Client/src/EShop.Client.AuthorizationServer/EShop.Client.AuthorizationServer.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/clientAuthorizationServer
+      
+    - name: Upload Artifact  - Client Authorization Server
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: ClientAuthorizationServer
+        path: ./artifacts/clientAuthorizationServer        
+            
+    - name: Upload Artifact - Bicep
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: Bicep
+        path: .azure
+            
+    - name: Upload Artifact - Ingress Templates
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: Ingress
+        path: .ingress
+
+  client-portal:
+    uses: ./.github/workflows/angular-ci-template.yml
+    with:
+      appFolder: eshop-ui-client-portal
+      buildConfiguration: production
+      vmImage: ubuntu-latest
+      nodeVersion: 16.x
+      angularCliVersion: 15.2.0
+      artifactsPackageName: ClientPortal  
+
+  emoployee-portal:
+    uses: ./.github/workflows/angular-ci-template.yml
+    with:
+      appFolder: eshop-ui-employee-portal
+      buildConfiguration: production
+      vmImage: ubuntu-latest
+      nodeVersion: 16.x
+      angularCliVersion: 15.2.0
+      artifactsPackageName: EmployeePortal

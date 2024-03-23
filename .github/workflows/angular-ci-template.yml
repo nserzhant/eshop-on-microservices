@@ -1,0 +1,52 @@
+name: Build Angular App
+
+on:
+  workflow_call:
+    inputs:
+      appFolder:
+        required: true
+        type: string
+      buildConfiguration:
+        required: true
+        type: string
+      vmImage:
+        required: true
+        type: string
+      nodeVersion:
+        required: true
+        type: string
+      angularCliVersion:
+        required: true
+        type: string
+      artifactsPackageName:
+        required: true
+        type: string
+  
+jobs:
+  build:
+
+    runs-on: ${{ inputs.vmImage }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Node.js ${{ inputs.nodeVersion }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.nodeVersion }}
+        
+    - name: Install Angular CLI
+      run: npm install -g @angular/cli@${{ inputs.angularCliVersion }}
+      
+    - name: NPM ci
+      working-directory: ${{ inputs.appFolder }}
+      run: npm ci
+      
+    - name: Build Angular App
+      working-directory: ${{ inputs.appFolder }}
+      run: ng build  --configuration ${{ inputs.buildConfiguration }}
+      
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: ${{ inputs.artifactsPackageName }}
+        path: ${{ inputs.appFolder }}/dist/${{ inputs.appFolder }}
