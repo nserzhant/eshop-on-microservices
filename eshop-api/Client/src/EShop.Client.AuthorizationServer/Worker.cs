@@ -32,7 +32,7 @@ public class Worker : IHostedService
                 await manager.CreateAsync(new OpenIddictApplicationDescriptor
                 {
                     ClientId = clientConfiguration.clientId,
-                    Type = ClientTypes.Public,
+                    ClientType = ClientTypes.Public,
                     DisplayName = clientConfiguration.displayName,
                     RedirectUris = { new Uri($"{clientConfiguration.clientOrigin}/login-callback") },
                     PostLogoutRedirectUris = { new Uri($"{clientConfiguration.clientOrigin}/") },

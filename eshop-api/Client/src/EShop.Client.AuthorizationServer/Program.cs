@@ -1,6 +1,7 @@
 using EShop.Client.AuthorizationServer;
 using EShop.Client.AuthorizationServer.Data;
 using EShop.Client.AuthorizationServer.Helpers;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -173,6 +174,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
+
+builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
 
 var app = builder.Build();
 

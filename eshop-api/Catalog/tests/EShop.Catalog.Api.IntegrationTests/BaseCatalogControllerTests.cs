@@ -40,6 +40,12 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
 
     }
 
+    public override void TearDown()
+    {
+        webApplicationFactory.Dispose();
+        base.TearDown();
+    }
+
 
     protected async Task<T?> fromHttpResponseMessage<T>(HttpResponseMessage? response)
     {

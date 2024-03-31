@@ -1,11 +1,11 @@
 #See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0.3 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0.203 AS build
 WORKDIR /src
 COPY ["src/EShop.Catalog.Api/EShop.Catalog.Api.csproj", "src/EShop.Catalog.Api/"]
 COPY ["src/EShop.Catalog.Core/EShop.Catalog.Core.csproj", "src/EShop.Catalog.Core/"]
@@ -13,6 +13,7 @@ COPY ["src/EShop.Catalog.Infrastructure/EShop.Catalog.Infrastructure.csproj", "s
 RUN dotnet restore "src/EShop.Catalog.Api/EShop.Catalog.Api.csproj"
 COPY . .
 WORKDIR "/src/src/EShop.Catalog.Api"
+# CMD ["-f","/dev/null"]
 RUN dotnet build "EShop.Catalog.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish

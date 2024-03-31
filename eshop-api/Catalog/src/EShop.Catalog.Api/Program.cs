@@ -5,6 +5,7 @@ using EShop.Catalog.Api.Settings;
 using EShop.Catalog.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using NSwag.Generation.Processors.Security;
@@ -91,13 +92,15 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
         builder.WithOrigins(clientOrigins.Split(',')).AllowAnyMethod().AllowAnyHeader();
 }));
 
+builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseOpenApi();
-    app.UseSwaggerUi3();
+    app.UseSwaggerUI();
     app.UseCors("corsapp");
 }
 

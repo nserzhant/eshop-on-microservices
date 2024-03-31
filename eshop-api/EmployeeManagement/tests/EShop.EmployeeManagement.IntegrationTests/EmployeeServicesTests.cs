@@ -27,6 +27,12 @@ public class EmployeeServicesTests : BaseEmployeeIntegrationTests
         employeeQueryService = serviceProvier.GetRequiredService<IEmployeeQueryService>();
     }
 
+    public override void TearDown()
+    {
+        base.TearDown();
+        readDbContext.Dispose();
+    }
+
     [Test]
     [Category("Employee Service")]
     [Category("Register")]

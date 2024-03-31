@@ -40,7 +40,7 @@ param webAppSkuName string = 'B1'
 param webAppName string
 
 @description('The Linux Version Of The Web App')
-param webappLinuxVersion string = 'DOTNETCORE|7.0'
+param webappLinuxVersion string = 'DOTNETCORE|8.0'
 
 /*----------------------- RESOURCES  --------------------------- */
 /*----------------------- SQL Server --------------------------- */

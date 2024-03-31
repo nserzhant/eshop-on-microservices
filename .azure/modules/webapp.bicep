@@ -25,7 +25,7 @@ param webAppServicePlanId string
 param webAppName string
 
 @description('The Linux Version Of The Web App')
-param webappLinuxVersion string = 'DOTNETCORE|7.0'
+param webappLinuxVersion string = 'DOTNETCORE|8.0'
 
 @description('The Name Of The Connection String')
 param connectionStringName string

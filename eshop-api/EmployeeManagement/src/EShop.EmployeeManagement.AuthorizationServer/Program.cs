@@ -8,6 +8,7 @@ using System.Text;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 using Microsoft.AspNetCore.HttpOverrides;
 using EShop.Client.AuthorizationServer.Helpers;
+using Microsoft.AspNetCore.HttpLogging;
 
 var builder = WebApplication.CreateBuilder(args);
 //Get settings to configure JWT tokens
@@ -145,6 +146,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
+
+builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
 
 var app = builder.Build();
 
