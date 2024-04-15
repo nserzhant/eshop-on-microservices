@@ -24,6 +24,9 @@ variables:
   sqlPassword: 'sqlP@ssw0rd'
   publishFolder: 'publish'
   dockerRegistryConnection:  'acr-docker-connection'
+  employeeOAuthAuthorizationEndpoint: '/authorize'
+  employeeOAuthClientId: 'employee-portal'
+  employeeOAuthScope: 'openid roles api offline_access'
 
 jobs:
   - job: test_api
@@ -70,6 +73,9 @@ jobs:
             TAG=kube-$(Build.BuildId)
             ANGULAR_CONFIGURATION=production
             APPDATA=
+            OAUTH_AUTH_EMPOYEE_ENDPOINT_PATH=$(employeeOAuthAuthorizationEndpoint)
+            OAUTH_EMPOYEE_APP_CLIENT_ID=$(employeeOAuthClientId)
+            OAUTH_EMPOYEE_SCOPE=$(employeeOAuthScope)
           action: 'Build services'
           includeSourceTags: true
           includeLatestTag: true

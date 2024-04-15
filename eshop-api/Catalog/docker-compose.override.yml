@@ -16,6 +16,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__catalogDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - EmployeeJWTSettings__MetadataAddress=http://host.docker.internal:5218/.well-known/openid-configuration
+      - ClientJWTSettings__MetadataAddress=http://host.docker.internal:5058/.well-known/openid-configuration
       - initDbOnStartup=true
       - generatedItemPictureUriHost=https://localhost:7208
     ports:

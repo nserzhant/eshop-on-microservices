@@ -44,20 +44,15 @@ spec:
           - name: clients
             value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }},https://{{ .Values.eshop_ingress.clientPortalDnsName }}"
           - name: EmployeeJWTSettings__Issuer
-            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}/authorize"
+            value: {{ template "employee-authorization-server.OAuthIssuer" . }}
+          - name: EmployeeJWTSettings__MetadataAddress
+            value: {{ template "employee-authorization-server.OAuthMetadataAddress" . }}
+          - name: EmployeeJWTSettings__Audience
+            value: {{ template "employee-authorization-server.OAuthAudience" . }}
           - name: ClientJWTSettings__Issuer
             value: "https://{{ .Values.eshop_ingress.clientPortalDnsName }}/authorize"
-          {{ if .Values.useAks -}}- name: EmployeeJWTSettings__JWTSecretKey
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.azure.akvEmployeeSigningSecretName }}
-                key: jwt
-          - name: ClientJWTSettings__JWTSecretKey
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.azure.akvClientSigningSecretName }}
-                key: jwt
-          {{- end }}        
+          - name: ClientJWTSettings__MetadataAddress
+            value: "https://{{ .Values.eshop_ingress.clientPortalDnsName }}/authorize/.well-known/openid-configuration"      
         resources:
           limits:
             memory:  {{ .Values.catalog_api.resources.memory }}

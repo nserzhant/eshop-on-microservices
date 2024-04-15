@@ -42,6 +42,8 @@
       "sslPort": 7208,
       "environmentVariables": {
         "ConnectionStrings__catalogDbConnectionString": "Server=host.docker.internal,2433;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true",
+        "EmployeeJWTSettings__MetadataAddress": "http://host.docker.internal:5218/.well-known/openid-configuration",
+        "ClientJWTSettings__MetadataAddress": "http://host.docker.internal:5058/.well-known/openid-configuration",
         "initDbOnStartup": "true",
         "generatedItemPictureUriHost": "https://localhost:7208"
       }

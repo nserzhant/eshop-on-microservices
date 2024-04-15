@@ -49,6 +49,12 @@ variables:
   value: 'catalog-sqlserver-$(suffix)'
 - name: sqlDbName
   value: 'eshop-on-microservices.Db'
+- name: employeeOAuthIssuer
+  value: 'https://$(employeeGatewayAppName).azurewebsites.net/authorize'
+- name: employeeOAuthMetadataEndpoint
+  value: 'https://$(employeeGatewayAppName).azurewebsites.net/authorize/.well-known/openid-configuration'
+- name: employeeOAuthAudience
+  value: ''
 - name: location
   value: 'westeurope'
 
@@ -70,7 +76,7 @@ steps:
     location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: '$(Pipeline.Workspace)/eshop-on-microservices-ci-docker/Bicep/main-docker.bicep'
-    overrideParameters: '-dbName $(sqlDbName) -catalogSqlServerName $(catalogSqlServerName) -clientsSqlServerName $(clientsSqlServerName) -employeesSqlServerName $(employeesSqlServerName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity) -employeeGatewayAppName $(employeeGatewayAppName) -clientGatewayAppName $(clientGatewayAppName) -clientAuthServerWebAppName $(clientAuthServerWebAppName) -catalogApiWebAppName $(catalogApiWebAppName) -employeeApiWebAppName $(employeeApiWebAppName) -employeeAuthServerWebAppName $(employeeAuthServerWebAppName) -clientPortalWebAppName $(clientPortalWebAppName) -employeePortalWebAppName $(employeePortalWebAppName) -storageAccountName $(storageAccountName)'
+    overrideParameters: '-dbName $(sqlDbName) -catalogSqlServerName $(catalogSqlServerName) -clientsSqlServerName $(clientsSqlServerName) -employeesSqlServerName $(employeesSqlServerName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity) -employeeGatewayAppName $(employeeGatewayAppName) -clientGatewayAppName $(clientGatewayAppName) -clientAuthServerWebAppName $(clientAuthServerWebAppName) -catalogApiWebAppName $(catalogApiWebAppName) -employeeApiWebAppName $(employeeApiWebAppName) -employeeAuthServerWebAppName $(employeeAuthServerWebAppName) -clientPortalWebAppName $(clientPortalWebAppName) -employeePortalWebAppName $(employeePortalWebAppName) -storageAccountName $(storageAccountName)  -employeeOAuthIssuer $(employeeOAuthIssuer) -employeeOAuthMetadataEndpoint $(employeeOAuthMetadataEndpoint) -employeeOAuthAudience $(employeeOAuthAudience) -suffix $(suffix)'
     deploymentMode: 'Incremental'
 
 # Add SQL Server User For API WebApp Service Principal

@@ -24,7 +24,9 @@ services:
       - generatedItemPictureUriHost=/catalog
       - clients='https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT},https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}'
       - EmployeeJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}/authorize
+      - EmployeeJWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
       - ClientJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT}/authorize
+      - ClientJWTSettings__MetadataAddress=http://client-authorizationserver/.well-known/openid-configuration
     depends_on:
       - sqlserver
   
@@ -77,6 +79,7 @@ services:
       - initDbOnStartup=true
       - clientOrigin=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}
       - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}/authorize
+      - JWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
     depends_on:
       - sqlserver
 
@@ -102,6 +105,10 @@ services:
     build: 
       context: eshop-ui-employee-portal
       dockerfile: Dockerfile
+      args:
+        - OAUTH_AUTHORIZATION_ENDPOINT_PATH=${OAUTH_AUTH_EMPOYEE_ENDPOINT_PATH}
+        - OAUTH_CLIENT_ID=${OAUTH_EMPOYEE_APP_CLIENT_ID}
+        - OAUTH_SCOPE=${OAUTH_EMPOYEE_SCOPE}
     depends_on:
       - employeemanagement-api
       - employeemanagement-authorizationserver

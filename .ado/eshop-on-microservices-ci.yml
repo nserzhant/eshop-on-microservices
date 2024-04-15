@@ -5,6 +5,11 @@ resources:
    - repository: self
      trigger: none
 
+variables:
+  employeeOAuthAuthorizationEndpoint: '/authorize'
+  employeeOAuthClientId: 'employee-portal'
+  employeeOAuthScope: 'openid roles api offline_access'
+
 jobs:
   - job: Api
     pool:
@@ -108,3 +113,6 @@ jobs:
       vmImage: 'ubuntu-latest'
       nodeVersion: '16.x'
       angularCliVersion: '15.2.0'
+      oauthAuthorizationEndpointPath: $(employeeOAuthAuthorizationEndpoint)
+      oauthClientId: $(employeeOAuthClientId)
+      oauthScope: $(employeeOAuthScope)

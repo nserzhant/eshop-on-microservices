@@ -12,6 +12,9 @@ env:
   staticAppTier: Free
   staticWebAppName: employee-portal-${{ vars.SUFFIX }}
   resourceGroupName: eshop-zip-deployment
+  employeeOAuthAuthorizationEndpoint: '/authorize'
+  employeeOAuthClientId: 'employee-portal'
+  employeeOAuthScope: 'openid roles api offline_access'
   location: westeurope
       
 jobs:
@@ -31,7 +34,18 @@ jobs:
     - name: NPM ci
       working-directory: ${{ env.workingDirectory }}
       run: npm ci
-      
+            
+    - name: Replace OAuth Connectivity Tokens
+      working-directory: ${{ env.workingDirectory }}
+      run: |
+        sed -i  "s|__OAUTH_AUTHORIZATION_ENDPOINT_PATH__|${{ env.employeeOAuthAuthorizationEndpoint }}|g" ./src/environments/environment.ts
+        sed -i  "s|__OAUTH_CLIENT_ID__|${{ env.employeeOAuthClientId }}|g" ./src/environments/environment.ts
+        sed -i  "s|__OAUTH_SCOPE__|${{ env.employeeOAuthScope }}|g" ./src/environments/environment.ts
+            
+    - name: Check Configuration
+      working-directory: ${{ env.workingDirectory }}
+      run: cat ./src/environments/environment.ts
+        
     - name: Build Angular App
       working-directory: ${{ env.workingDirectory }}
       run: ng build  --configuration "${{ env.buildConfiguration }}"

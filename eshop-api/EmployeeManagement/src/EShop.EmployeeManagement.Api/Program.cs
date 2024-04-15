@@ -1,14 +1,14 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using NSwag.Generation.Processors.Security;
 using EShop.EmployeeManagement.Api;
+using EShop.EmployeeManagement.Api.Data;
 using EShop.EmployeeManagement.Api.Filters;
 using EShop.EmployeeManagement.Api.Settings;
 using EShop.EmployeeManagement.Core;
-using System.Text;
-using Microsoft.AspNetCore.Identity;
 using EShop.EmployeeManagement.Core.Entities;
-using EShop.EmployeeManagement.Api.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
+using NSwag.Generation.Processors.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,14 +41,16 @@ builder.Services.AddAuthentication(auth =>
     {
         ClockSkew = TimeSpan.FromSeconds(0),
         ValidateIssuer = true,
-        ValidateAudience = false,
+        ValidateAudience = !string.IsNullOrEmpty(jwtSettings.Audience),
         ValidAudience = jwtSettings.Audience,
         ValidIssuer = jwtSettings.Issuer,
         RequireExpirationTime = true,
         ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.JWTSecretKey)),
         ValidateIssuerSigningKey = true
     };
+
+    options.MetadataAddress = jwtSettings.MetadataAddress;
+    options.RequireHttpsMetadata = false;
 });
 
 builder.Services.AddOpenApiDocument(document =>
@@ -68,8 +70,11 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
         builder.WithOrigins(clientOrigin).AllowAnyMethod().AllowAnyHeader();
 }));
 
+builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
+
 var app = builder.Build();
 
+app.UseHttpLogging();
 //// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

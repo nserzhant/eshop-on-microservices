@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using NSwag.Generation.Processors.Security;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,30 +40,34 @@ builder.Services.AddAuthentication()
         {
             ClockSkew = TimeSpan.FromSeconds(0),
             ValidateIssuer = true,
-            ValidateAudience = false,
+            ValidateAudience = !string.IsNullOrEmpty(employeeJwtSettings.Audience),
             ValidAudience = employeeJwtSettings.Audience,
             ValidIssuer = employeeJwtSettings.Issuer,
             RequireExpirationTime = true,
             ValidateLifetime = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(employeeJwtSettings.JWTSecretKey)),
             ValidateIssuerSigningKey = true
         };
+
+        options.RequireHttpsMetadata = false;
+        options.MetadataAddress = employeeJwtSettings.MetadataAddress;
     })
     .AddJwtBearer(AuthenticationSchemeNames.Client, options =>
-     {
-         options.TokenValidationParameters = new TokenValidationParameters
-         {
-             ClockSkew = TimeSpan.FromSeconds(0),
-             ValidateIssuer = true,
-             ValidateAudience = false,
-             ValidAudience = clientJwtSettings.Audience,
-             ValidIssuer = clientJwtSettings.Issuer,
-             RequireExpirationTime = true,
-             ValidateLifetime = true,
-             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(clientJwtSettings.JWTSecretKey)),
-             ValidateIssuerSigningKey = true
-         };
-     });
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ClockSkew = TimeSpan.FromSeconds(0),
+            ValidateIssuer = true,
+            ValidateAudience = !string.IsNullOrEmpty(clientJwtSettings.Audience),
+            ValidAudience = clientJwtSettings.Audience,
+            ValidIssuer = clientJwtSettings.Issuer,
+            RequireExpirationTime = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true
+        };
+
+        options.RequireHttpsMetadata = false;
+        options.MetadataAddress = employeeJwtSettings.MetadataAddress;
+    });
 
 builder.Services.AddAuthorization(options =>
 {

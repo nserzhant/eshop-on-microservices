@@ -7,6 +7,7 @@ export const environment = {
   stsAuthority: 'https://localhost:7272/',
   clientId: 'employee-portal-dev',
   apiRoot: "https://localhost:7158",
+  scope: 'openid roles api offline_access',
   catalogApi: "https://localhost:7208"
 };
 

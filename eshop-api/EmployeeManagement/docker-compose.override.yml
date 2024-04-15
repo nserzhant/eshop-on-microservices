@@ -16,6 +16,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - JWTSettings__MetadataAddress=http://eshop.employeemanagement.authorizationserver/.well-known/openid-configuration
       - initDbOnStartup=true
     ports:
       - "5158:80"

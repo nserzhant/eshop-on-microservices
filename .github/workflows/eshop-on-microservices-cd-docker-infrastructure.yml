@@ -21,6 +21,9 @@ env:
   employeesSqlServerName: employee-sqlserver-${{ vars.SUFFIX }}
   clientsSqlServerName: client-sqlserver-${{ vars.SUFFIX }}  
   sqlDbName: eshop.Db
+  employeeOAuthIssuer: 'https://employee-portal-gateway-${{ vars.SUFFIX }}.azurewebsites.net/authorize'
+  employeeOAuthMetadataEndpoint: 'https://employee-portal-gateway-${{ vars.SUFFIX }}.azurewebsites.net/authorize/.well-known/openid-configuration'
+  employeeOAuthAudience: ''
   
   templateFileName: main-docker.bicep
   resourceGroupName: eshop-docker-deployment
@@ -51,7 +54,7 @@ jobs:
         subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ env.resourceGroupName }}
         template: ./artifacts/Bicep/${{ env.templateFileName }}
-        parameters: dbName=${{ env.sqlDbName }} catalogSqlServerName=${{ env.catalogSqlServerName }} clientsSqlServerName=${{ env.clientsSqlServerName }} employeesSqlServerName=${{ env.employeesSqlServerName }} employeeGatewayAppName=${{ env.employeeGatewayAppName }} clientGatewayAppName=${{ env.clientGatewayAppName }} catalogApiWebAppName=${{ env.catalogApiWebAppName }} clientAuthServerWebAppName=${{ env.clientAuthServerWebAppName }} employeeApiWebAppName=${{ env.employeeApiWebAppName }} employeeAuthServerWebAppName=${{ env.employeeAuthServerWebAppName }} clientPortalWebAppName=${{ env.clientPortalWebAppName }} employeePortalWebAppName=${{ env.employeePortalWebAppName }} storageAccountName=${{ env.storageAccountName }} sqlEntraIdAdminLogin=${{ secrets.AZURE_SP_APP_ID }} sqlEntraIdAdminObjectId=${{ secrets.AZURE_SP_OBJECT_ID }} sqlUserAssignedIdentity=${{ secrets.SQL_DIRECTORY_READER_UMI }} location=${{ env.location }}  suffix=${{ vars.SUFFIX }}
+        parameters: dbName=${{ env.sqlDbName }} catalogSqlServerName=${{ env.catalogSqlServerName }} clientsSqlServerName=${{ env.clientsSqlServerName }} employeesSqlServerName=${{ env.employeesSqlServerName }} employeeGatewayAppName=${{ env.employeeGatewayAppName }} clientGatewayAppName=${{ env.clientGatewayAppName }} catalogApiWebAppName=${{ env.catalogApiWebAppName }} clientAuthServerWebAppName=${{ env.clientAuthServerWebAppName }} employeeApiWebAppName=${{ env.employeeApiWebAppName }} employeeAuthServerWebAppName=${{ env.employeeAuthServerWebAppName }} clientPortalWebAppName=${{ env.clientPortalWebAppName }} employeePortalWebAppName=${{ env.employeePortalWebAppName }} storageAccountName=${{ env.storageAccountName }} sqlEntraIdAdminLogin=${{ secrets.AZURE_SP_APP_ID }} sqlEntraIdAdminObjectId=${{ secrets.AZURE_SP_OBJECT_ID }} sqlUserAssignedIdentity=${{ secrets.SQL_DIRECTORY_READER_UMI }} employeeOAuthIssuer=${{ env.employeeOAuthIssuer }} employeeOAuthMetadataEndpoint=${{ env.employeeOAuthMetadataEndpoint}} employeeOAuthAudience=${{ env.employeeOAuthAudience }} location=${{ env.location }}  suffix=${{ vars.SUFFIX }}
     
     - name: Clear Azure Cache
       run: az cache purge        

@@ -17,7 +17,7 @@ jobs:
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v4.0.0
       with:
-        dotnet-version: 7.0.x
+        dotnet-version: 8.0.x
           
     - name: Restore
       run: dotnet restore ${{ env.workingDirectory }}/eshop-api.sln
@@ -95,3 +95,6 @@ jobs:
       nodeVersion: 16.x
       angularCliVersion: 15.2.0
       artifactsPackageName: EmployeePortal
+      oauthAuthorizationEndpointPath: '/authorize'
+      oauthClientId: 'employee-portal'
+      oauthScope: 'openid roles api offline_access'

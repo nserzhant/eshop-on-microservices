@@ -12,7 +12,10 @@ env:
   clientAuthserverSqlServerName: client-sqlserver-${{ vars.SUFFIX }}
   catalogApiUMIName: catalog-api-identity
   employeeManagementUMIName: employee-management-identity
-  clientAuthServerUMIName: client-authserver-identity
+  clientAuthServerUMIName: client-authserver-identity  
+  employeeExternalOAuthIssuer: '' # When Empty Default Identity Server Will Be Used
+  employeeExternalOAuthMetadataEndpoint: ''
+  employeeExternalOAuthAudience: ''
   resourceGroupName: eshop-aks
   
 jobs:
@@ -103,7 +106,7 @@ jobs:
     - name: Helm Upgrade Or Install
       run: |
         helm upgrade --namespace eshop --install \
-        --set useAks=true,imagesTag=kube-${{ env.BUILD_PIPELINE_ID }},dockerRegistry=${{ vars.ACR_NAME }}.azurecr.io,azure.tenantId=${{ env.tenantId }},azure.aksUmiClientId=${{ env.aks_umi_client_id }},azure.akvName=${{ env.akvName }},azure.catalogApiUmiClientId=${{ env.catalog_api_umi_client_id }},azure.employeeManagementUmiClientId=${{ env.employee_management_umi_client_id }},azure.clientAuthserverUmiClientId=${{ env.client_authserver_umi_client_id }},azure.catalogApiSqlServerName=${{ env.catalogApiSqlServerName }},azure.employeeManagementSqlServerName=${{ env.employeeManagementSqlServerName }},azure.clientAuthserverSqlServerName=${{ env.clientAuthserverSqlServerName }},eshop_ingress.clientPortalDnsName=${{ env.client_portal_dns_name }},eshop_ingress.empoyeePortalDnsName=${{ env.empoyee_portal_dns_name }} \
+        --set useAks=true,imagesTag=kube-${{ env.BUILD_PIPELINE_ID }},dockerRegistry=${{ vars.ACR_NAME }}.azurecr.io,azure.tenantId=${{ env.tenantId }},azure.aksUmiClientId=${{ env.aks_umi_client_id }},azure.akvName=${{ env.akvName }},azure.catalogApiUmiClientId=${{ env.catalog_api_umi_client_id }},azure.employeeManagementUmiClientId=${{ env.employee_management_umi_client_id }},azure.clientAuthserverUmiClientId=${{ env.client_authserver_umi_client_id }},azure.catalogApiSqlServerName=${{ env.catalogApiSqlServerName }},azure.employeeManagementSqlServerName=${{ env.employeeManagementSqlServerName }},azure.clientAuthserverSqlServerName=${{ env.clientAuthserverSqlServerName }},eshop_ingress.clientPortalDnsName=${{ env.client_portal_dns_name }},eshop_ingress.empoyeePortalDnsName=${{ env.empoyee_portal_dns_name }},employee_external_authserver.issuer=${{ env.employeeExternalOAuthIssuer }},employee_external_authserver.metadataAddress=${{ env.employeeExternalOAuthMetadataEndpoint }},employee_external_authserver.audience=${{ env.employeeExternalOAuthAudience }} \
         --wait --timeout 2m --debug --create-namespace eshop  ./artifacts/Helm/eshop-${{ env.BUILD_PIPELINE_ID }}.tgz
     
       

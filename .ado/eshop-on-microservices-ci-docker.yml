@@ -26,6 +26,9 @@ variables:
   publishFolder: 'publish'
   dockerRegistryConnection: 'docker-connection'
   username: $(docker-registry-username)  # Create the "docker-registry-username" pipeline variable in Variables section or replace the expression by the value
+  employeeOAuthAuthorizationEndpoint: '/authorize'
+  employeeOAuthClientId: 'employee-portal'
+  employeeOAuthScope: 'openid roles api offline_access'
 
 jobs:
   - job: test_api
@@ -76,6 +79,9 @@ jobs:
             DOCKER_REGISTRY=$(username)/
             ANGULAR_CONFIGURATION=production
             APPDATA=
+            OAUTH_AUTH_EMPOYEE_ENDPOINT_PATH=$(employeeOAuthAuthorizationEndpoint)
+            OAUTH_EMPOYEE_APP_CLIENT_ID=$(employeeOAuthClientId)
+            OAUTH_EMPOYEE_SCOPE=$(employeeOAuthScope)
           action: 'Build services'
           includeSourceTags: true
           includeLatestTag: true

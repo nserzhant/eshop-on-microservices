@@ -19,6 +19,10 @@ env:
   clientAuthServerWebAppName: client-auth-web-app-${{ vars.SUFFIX }}
   employeeApiWebAppName: employee-api-web-app-${{ vars.SUFFIX }}
   employeeAuthServerWebAppName: employee-authserver-web-app-${{ vars.SUFFIX }}
+  employeeOAuthIssuer: 'https://employee-portal-gateway-${{ vars.SUFFIX }}.azurewebsites.net/authorize'
+  employeeOAuthMetadataEndpoint: 'https://employee-portal-gateway-${{ vars.SUFFIX }}.azurewebsites.net/authorize/.well-known/openid-configuration'
+  employeeOAuthAudience: ''
+
   resourceGroupName: eshop-zip-deployment
   location: westeurope
 
@@ -52,7 +56,7 @@ jobs:
         subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ env.resourceGroupName }}
         template: ./artifacts/Bicep/main.bicep
-        parameters: employeeGatewayAppName="${{ env.employeeGatewayAppName }}" clientGatewayAppName="${{ env.clientGatewayAppName }}" catalogApiWebAppName="${{ env.catalogApiWebAppName }}" clientAuthServerWebAppName="${{ env.clientAuthServerWebAppName }}" employeeApiWebAppName="${{ env.employeeApiWebAppName }}" employeeAuthServerWebAppName="${{ env.employeeAuthServerWebAppName }}" clientPortalStaticAppName="${{ env.clientPortalStaticAppName }}" employeePortalStaticAppName="${{ env.employeePortalStaticAppName }}" storageAccountName="${{ env.storageAccountName }}" location=${{ env.location }} suffix=${{ vars.SUFFIX }}
+        parameters: employeeGatewayAppName="${{ env.employeeGatewayAppName }}" clientGatewayAppName="${{ env.clientGatewayAppName }}" catalogApiWebAppName="${{ env.catalogApiWebAppName }}" clientAuthServerWebAppName="${{ env.clientAuthServerWebAppName }}" employeeApiWebAppName="${{ env.employeeApiWebAppName }}" employeeAuthServerWebAppName="${{ env.employeeAuthServerWebAppName }}" clientPortalStaticAppName="${{ env.clientPortalStaticAppName }}" employeePortalStaticAppName="${{ env.employeePortalStaticAppName }}" storageAccountName="${{ env.storageAccountName }}" employeeOAuthIssuer=${{ env.employeeOAuthIssuer }} employeeOAuthMetadataEndpoint=${{ env.employeeOAuthMetadataEndpoint}} employeeOAuthAudience=${{ env.employeeOAuthAudience }} location=${{ env.location }} suffix=${{ vars.SUFFIX }}
     
     - name: Retrieve Client Portal DNS Name
       run: |

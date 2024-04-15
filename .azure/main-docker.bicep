@@ -61,6 +61,15 @@ param clientPortalWebAppName string = 'client-portal-${suffix}'
 @description('The Name Of The Employee Portal Static Web App')
 param employeePortalWebAppName string = 'employee-portal-${suffix}'
 
+@description('The Issuer Of The Employee Identity Server')
+param employeeOAuthIssuer string = 'https://${employeeGatewayAppName}.azurewebsites.net/authorize'
+
+@description('The Metadata Endpoint Of The Employee Identity Server')
+param employeeOAuthMetadataEndpoint string = 'https://${employeeGatewayAppName}.azurewebsites.net/authorize/.well-known/openid-configuration'
+
+@description('The Audience Of The Employee Identity Server Token')
+param employeeOAuthAudience string = ''
+
 /*----------------------- Storage Account Parameters  -------------*/
 
 @description('The Name Of The Client Gateway Configuration Container')
@@ -300,8 +309,11 @@ module catalogApi 'modules-docker/webapp.bicep' = {
     initDbOnStartup: true
     generatedItemPictureUriHost: '/catalog'
     clients: 'https://${clientGatewayAppName}.azurewebsites.net,https://${employeeGatewayAppName}.azurewebsites.net'
-    EmployeeJWTSettings__Issuer: 'https://${employeeGatewayAppName}.azurewebsites.net/authorize'
+    EmployeeJWTSettings__Issuer: employeeOAuthIssuer
+    EmployeeJWTSettings__MetadataAddress: employeeOAuthMetadataEndpoint
+    EmployeeJWTSettings__Audience: employeeOAuthAudience
     ClientJWTSettings__Issuer: 'https://${clientGatewayAppName}.azurewebsites.net/authorize'
+    ClientJWTSettings__MetadataAddress: 'https://${clientGatewayAppName}.azurewebsites.net/authorize/.well-known/openid-configuration'
     ASPNETCORE_ENVIRONMENT: 'Development'
    }
  }
@@ -358,7 +370,8 @@ module employeeApi 'modules-docker/webapp.bicep' = {
     appConfiguration: {
       initDbOnStartup: true
       clientOrigin: 'https://${employeeGatewayAppName}.azurewebsites.net'
-      JWTSettings__Issuer: 'https://${employeeGatewayAppName}.azurewebsites.net/authorize'
+      JWTSettings__Issuer: employeeOAuthIssuer
+      JWTSettings__MetadataAddress: employeeOAuthMetadataEndpoint
       ASPNETCORE_ENVIRONMENT: 'Development'
     }
   }

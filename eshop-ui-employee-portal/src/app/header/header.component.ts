@@ -30,7 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         if (user) {
           this.isAuthenticated = true;
           this.userEmail = user.profile.email!;
-          const userRoles  = user.profile['role'];
+          const userRoles  = user.profile['role'] ?? user.profile['roles'];
           let roleNames = new Array<string>();
 
           if(userRoles) {

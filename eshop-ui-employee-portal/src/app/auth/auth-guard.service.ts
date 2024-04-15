@@ -16,7 +16,7 @@ export class AuthGuard implements CanActivate {
       const authenticated = !!user;
       const requiredRoleNames = (route.data['roles'] ?? new Array<string>()) as Array<string>;
 
-      const employeeRoles  = authenticated && user.profile && user!.profile['role'];
+      const employeeRoles  = authenticated && user.profile && (user!.profile['role'] ?? user!.profile['roles'] );
       let roleNames = new Array<string>();
 
       if(employeeRoles) {

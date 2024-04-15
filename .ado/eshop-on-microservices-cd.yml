@@ -26,6 +26,10 @@ variables:
   clientAuthServerWebAppName: 'client-auth-web-app-$(suffix)'
   employeeApiWebAppName: 'employee-api-web-app-$(suffix)'
   employeeAuthServerWebAppName: 'employee-authserver-web-app-$(suffix)'
+  
+  employeeOAuthIssuer: 'https://$(employeeGatewayAppName).azurewebsites.net/authorize'
+  employeeOAuthMetadataEndpoint: 'https://$(employeeGatewayAppName).azurewebsites.net/authorize/.well-known/openid-configuration'
+  employeeOAuthAudience: ''
 
   location: 'westeurope'
   
@@ -33,6 +37,7 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+# - checkout: none
 - download: eshop-on-microservices-ci
 
 - task: AzureResourceManagerTemplateDeployment@3
@@ -46,7 +51,7 @@ steps:
     location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: '$(System.DefaultWorkingDirectory)/.azure/main.bicep'
-    overrideParameters: '-employeeGatewayAppName $(employeeGatewayAppName) -clientGatewayAppName $(clientGatewayAppName) -catalogApiWebAppName $(catalogApiWebAppName) -clientAuthServerWebAppName $(clientAuthServerWebAppName) -employeeApiWebAppName $(employeeApiWebAppName) -employeeAuthServerWebAppName $(employeeAuthServerWebAppName) -clientPortalStaticAppName $(clientPortalStaticAppName) -employeePortalStaticAppName $(employeePortalStaticAppName) -storageAccountName $(storageAccountName)'
+    overrideParameters: '-employeeGatewayAppName $(employeeGatewayAppName) -clientGatewayAppName $(clientGatewayAppName) -catalogApiWebAppName $(catalogApiWebAppName) -clientAuthServerWebAppName $(clientAuthServerWebAppName) -employeeApiWebAppName $(employeeApiWebAppName) -employeeAuthServerWebAppName $(employeeAuthServerWebAppName) -clientPortalStaticAppName $(clientPortalStaticAppName) -employeePortalStaticAppName $(employeePortalStaticAppName) -storageAccountName $(storageAccountName) -employeeOAuthIssuer $(employeeOAuthIssuer) -employeeOAuthMetadataEndpoint $(employeeOAuthMetadataEndpoint) -employeeOAuthAudience $(employeeOAuthAudience) -suffix $(suffix)'
     deploymentMode: 'Incremental'
     deploymentOutputs: 'deploymentOutputs'
 

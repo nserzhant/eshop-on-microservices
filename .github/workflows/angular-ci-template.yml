@@ -21,6 +21,15 @@ on:
       artifactsPackageName:
         required: true
         type: string
+      oauthAuthorizationEndpointPath:
+        default: '/authorize'
+        type: string
+      oauthClientId:
+        default: ''
+        type: string
+      oauthScope:
+        default: 'openid roles api offline_access'
+        type: string
   
 jobs:
   build:
@@ -41,6 +50,13 @@ jobs:
       working-directory: ${{ inputs.appFolder }}
       run: npm ci
       
+    - name: Replace OAuth Connectivity Tokens
+      working-directory: ${{ inputs.appFolder }}
+      run: |
+        sed -i  "s|__OAUTH_AUTHORIZATION_ENDPOINT_PATH__|${{ inputs.oauthAuthorizationEndpointPath }}|g" ./src/environments/environment.ts
+        sed -i  "s|__OAUTH_CLIENT_ID__|${{ inputs.oauthClientId }}|g" ./src/environments/environment.ts
+        sed -i  "s|__OAUTH_SCOPE__|${{ inputs.oauthScope }}|g" ./src/environments/environment.ts
+
     - name: Build Angular App
       working-directory: ${{ inputs.appFolder }}
       run: ng build  --configuration ${{ inputs.buildConfiguration }}

@@ -23,7 +23,9 @@ services:
       - initDbOnStartup=true
       - generatedItemPictureUriHost=https://localhost:7208
       - EmployeeJWTSettings__Issuer=https://localhost:7272/
+      - EmployeeJWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
       - ClientJWTSettings__Issuer=https://localhost:7086/
+      - ClientJWTSettings__MetadataAddress=http://client-authorizationserver/.well-known/openid-configuration
       - clients=http://localhost:4201,http://localhost:4202
     ports:
       - "7208:443"
@@ -40,7 +42,7 @@ services:
       dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443
+      - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__clientDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
       - clients__0__clientOrigin=http://localhost:4201
@@ -64,6 +66,7 @@ services:
       - initDbOnStartup=true
       - clientOrigin=http://localhost:4202
       - JWTSettings__Issuer=https://localhost:7272/
+      - JWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
     ports:
       - "7158:443"
     volumes:
@@ -79,7 +82,7 @@ services:
       dockerfile: src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443
+      - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true      
       - clients__0__clientOrigin=http://localhost:4202
     ports:
@@ -98,6 +101,9 @@ services:
       dockerfile: Dockerfile
       args:
         - CONFIGURATION=${ANGULAR_CONFIGURATION:-development}
+        - OAUTH_AUTHORIZATION_ENDPOINT_PATH=${OAUTH_AUTH_EMPOYEE_ENDPOINT_PATH}
+        - OAUTH_CLIENT_ID=${OAUTH_EMPOYEE_APP_CLIENT_ID}
+        - OAUTH_SCOPE=${OAUTH_EMPOYEE_SCOPE}
     ports:
       - '4202:80'
     depends_on:

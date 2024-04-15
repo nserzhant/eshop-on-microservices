@@ -40,13 +40,11 @@ spec:
           - name: clientOrigin
             value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}"
           - name: JWTSettings__Issuer
-            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}/authorize"
-          {{ if .Values.useAks -}}- name: JWTSettings__JWTSecretKey
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.azure.akvEmployeeSigningSecretName }}
-                key: jwt
-          {{- end }}   
+            value: {{ template "employee-authorization-server.OAuthIssuer" . }}
+          - name: JWTSettings__MetadataAddress
+            value: {{ template "employee-authorization-server.OAuthMetadataAddress" . }}
+          - name: JWTSettings__Audience
+            value: {{ template "employee-authorization-server.OAuthAudience" . }}
         resources:
           limits:
             memory:  {{ .Values.employeemanagement_api.resources.memory }}

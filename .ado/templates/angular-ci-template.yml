@@ -9,6 +9,12 @@ parameters:
   default: '16.x'
 - name: angularCliVersion
   default: '15.2.0'
+- name: oauthAuthorizationEndpointPath
+  default: '/authorize'
+- name: oauthClientId
+  default: ''
+- name: oauthScope
+  default: 'openid roles api offline_access'
 
 jobs:
 - job: ${{ parameters.jobName }}
@@ -17,6 +23,7 @@ jobs:
   variables:
     buildConfiguration: 'production' 
     workingDirectory: '$(System.DefaultWorkingDirectory)/${{ parameters.projectFolder }}'
+    environmentFilePath: '$(workingDirectory)/src/environments/environment.ts'
   steps:     
   - task: NodeTool@0
     displayName: 'Install Node.js'
@@ -34,6 +41,13 @@ jobs:
     inputs:
       command: 'ci'
       workingDir: '$(workingDirectory)'
+
+  - powershell: (Get-Content '$(environmentFilePath)' -Encoding utf8) `
+        -replace '__OAUTH_AUTHORIZATION_ENDPOINT_PATH__', '${{ parameters.oauthAuthorizationEndpointPath }}' `
+        -replace '__OAUTH_CLIENT_ID__', '${{ parameters.oauthClientId }}' `
+        -replace '__OAUTH_SCOPE__', '${{ parameters.oauthScope }}' `
+      | Set-Content '$(environmentFilePath)'
+    displayName: Replace OAuth Connectivity Tokens
 
   - script: |
       cd $(workingDirectory)

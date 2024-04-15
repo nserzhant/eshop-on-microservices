@@ -103,6 +103,10 @@ employeemanagement_authserver:
     cpu: "100m"
   servicePort: 5218
 
+employee_external_authserver:
+  issuer: ''
+  metadataAddress: ''
+  audience: ''
 
 sql_db:
   appName: sql-db

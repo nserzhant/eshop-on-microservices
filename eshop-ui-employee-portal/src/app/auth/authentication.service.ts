@@ -16,7 +16,7 @@ export class AuthenticationService {
       redirect_uri : `${location.origin}/login-callback`,
       post_logout_redirect_uri: `${location.origin}/`,
       response_type : 'code',
-      scope : 'openid api roles offline_access'
+      scope : environment.scope
     };
 
     this.userManager = new UserManager(userManagerSettings);

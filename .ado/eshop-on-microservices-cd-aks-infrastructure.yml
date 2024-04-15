@@ -1,8 +1,8 @@
 resources:
- repositories:
-   - repository: self
-     trigger: none
- pipelines:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
   - pipeline: eshop-on-microservices-ci-aks
     source: eshop-on-microservices-ci-aks
 
@@ -28,7 +28,7 @@ variables:
 - name: acrName
   value: $(acr-name)  # From variable group
 - name: resourceGroupName
-  value: 'eshop-on-microservices-rg'
+  value: 'eshop-aks'
 - name: location
   value: 'eastus' 
 - name: employeeSqlServerName

@@ -26,7 +26,7 @@ jobs:
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v4.0.0
       with:
-        dotnet-version: 7.0.x
+        dotnet-version: 8.0.x
           
     - name: Restore
       run: dotnet restore "${{ env.workingDirectory }}/Catalog.sln"
@@ -44,7 +44,7 @@ jobs:
       run: dotnet test "${{ env.workingDirectory }}/tests/EShop.Catalog.Api.IntegrationTests/EShop.Catalog.Api.IntegrationTests.csproj" --verbosity normal --logger "trx;LogFileName=EShop.Catalog.Api.IntegrationTestsResults.trx"
 
     - name: Install EF
-      run: dotnet tool install --global dotnet-ef --version 7.0.0
+      run: dotnet tool install --global dotnet-ef --version 8.0.3
 
     - name: Generate EF Migrations Script
       run: dotnet ef migrations script  --project "${{ env.workingDirectory }}/src/EShop.Catalog.Infrastructure/EShop.Catalog.Infrastructure.csproj" --idempotent --context EShop.Catalog.Infrastructure.CatalogDbContext --output "./artifacts/migrations/${{ env.migrationsFileName }}"
