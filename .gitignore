@@ -31,3 +31,4 @@ _ReSharper*/
 #Nuget packages folder
 packages/
 dev_cert
+.docker-local-storage

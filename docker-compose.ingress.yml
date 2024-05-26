@@ -27,6 +27,11 @@ services:
       - EmployeeJWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
       - ClientJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT}/authorize
       - ClientJWTSettings__MetadataAddress=http://client-authorizationserver/.well-known/openid-configuration
+    logging:
+        driver: gelf
+        options:
+          gelf-address: "udp://127.0.0.1:12201"
+          tag: catalog-api
     depends_on:
       - sqlserver
   
@@ -64,6 +69,11 @@ services:
     volumes:
       - ${CERTIFICATES_PATH}:/etc/nginx/certs
       - ./.ingress/nginx-client-portal.conf:/etc/nginx/nginx.conf
+    logging:
+        driver: gelf
+        options:
+          gelf-address: "udp://127.0.0.1:12201"
+          tag: client-portal-nginx-ingress
     depends_on:
      - client-authorizationserver
 
@@ -80,6 +90,11 @@ services:
       - clientOrigin=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}
       - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}/authorize
       - JWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
+    logging:
+        driver: gelf
+        options:
+          gelf-address: "udp://127.0.0.1:12201"
+          tag: employeemanagement-api
     depends_on:
       - sqlserver
 
@@ -122,8 +137,61 @@ services:
     volumes:
       - ${CERTIFICATES_PATH}:/etc/nginx/certs
       - ./.ingress/nginx-employee-portal.conf:/etc/nginx/nginx.conf
+    logging:
+        driver: gelf
+        options:
+          gelf-address: "udp://127.0.0.1:12201"
+          tag: employee-portal-nginx-ingress
     depends_on:
      - client-authorizationserver
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    volumes:
+      - ./.docker-local-storage/grafana:/var/lib/grafana
+      - ./.config/grafana/grafana-datasources-config.yaml:/etc/grafana/provisioning/datasources/datasource.yaml   
+      - ./.config/grafana/dashboards:/var/lib/grafana/dashboards      
+      - ./.config/grafana/dashboards-provisioning:/etc/grafana/provisioning/dashboards
+    ports:
+      - "3000:3000"
+
+  loki:
+    image: grafana/loki:2.9.4
+    volumes:
+      - ./.docker-local-storage/loki:/loki
+
+  logstash-agent:
+    image: grafana/logstash-output-loki:2.9.7
+    volumes:
+      - ./.config/logstash/logstash.conf:/etc/logstash/logstash.conf
+    command: logstash -f /etc/logstash/logstash.conf   
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    depends_on:
+      - loki
+    ports:
+      - 12201:12201/udp
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.1
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - 8080:8080
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./.config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - 9090:9090
+    depends_on:
+      - cadvisor
 
 volumes:
   eshop-api-data-wproxy:
