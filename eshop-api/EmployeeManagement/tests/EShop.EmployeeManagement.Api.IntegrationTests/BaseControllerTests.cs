@@ -29,7 +29,7 @@ public class BaseControllerTests : BaseEmployeeIntegrationTests
         await base.Setup();
 
         var projectDir = Directory.GetCurrentDirectory();
-        var configPath = Path.Combine(projectDir, "appsettings.json");
+        var configPath = Path.Combine(projectDir, "appsettings.tests.json");
         _testAuthenticationContextBuilder = new TestAuthenticationContextBuilder();
         _webApplicationFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {

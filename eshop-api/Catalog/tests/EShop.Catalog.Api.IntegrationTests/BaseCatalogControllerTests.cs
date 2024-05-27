@@ -22,7 +22,7 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
         await base.SetupAsync();
 
         var projectDir = Directory.GetCurrentDirectory();
-        var configPath = Path.Combine(projectDir, "appsettings.json");
+        var configPath = Path.Combine(projectDir, "appsettings.tests.json");
         testAuthenticationContextBuilder = new TestAuthenticationContextBuilder();
         webApplicationFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {

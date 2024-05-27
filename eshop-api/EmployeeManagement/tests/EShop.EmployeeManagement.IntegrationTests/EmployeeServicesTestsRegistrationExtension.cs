@@ -9,7 +9,7 @@ public static class EmployeeServicesTestsRegistrationExtension
     public static IServiceCollection AddTestEmployeeServices(this IServiceCollection services)
     {
         var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.tests.json")
             .AddEnvironmentVariables()
             .Build();
 
