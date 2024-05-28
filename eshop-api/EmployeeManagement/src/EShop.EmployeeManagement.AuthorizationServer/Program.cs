@@ -28,10 +28,9 @@ var clients = clientConfigurations.Get<List<ClientConfiguration>>();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<OpenIDDictDbContext>(options => 
+builder.Services.AddDbContext<OpenIDDictDbContext>(options =>
 {
-    // Configure the context to use an in-memory store.
-    options.UseInMemoryDatabase(nameof(OpenIDDictDbContext));
+    options.UseSqlite(builder.Configuration.GetConnectionString(Consts.OpenIddict_DB_CONNECTION_STRING_NAME));
 
     // Register the entity sets needed by OpenIddict.
     options.UseOpenIddict();

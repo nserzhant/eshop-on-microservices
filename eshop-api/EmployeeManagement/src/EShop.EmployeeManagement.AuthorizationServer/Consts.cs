@@ -8,4 +8,5 @@ public class Consts
     public const string SIGNING_CERTIFICATE_THUMBPRINT_CONFIG_NAME = "signingCertificateThumbprint";
     public const string ENCRYPTION_CERTIFICATE_THUMBPRINT_CONFIG_NAME = "encryptionCertificateThumbprint";
     public const string USE_EPHEMERAL_KEYS = "useEphemeralKeys";
+    public const string OpenIddict_DB_CONNECTION_STRING_NAME = "openIddictDbConnectionString";
 }
