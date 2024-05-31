@@ -72,6 +72,9 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 
 builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
 
+// The following line enables Application Insights telemetry collection.
+builder.Services.AddApplicationInsightsTelemetry();
+
 var app = builder.Build();
 
 app.UseHttpLogging();
