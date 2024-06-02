@@ -1,0 +1,34 @@
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
+
+namespace EShop.Basket.Api.IntegrationTests.Infrastructure;
+public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+{
+    private readonly TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
+    public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock,
+        TestAuthenticationContextBuilder testAuthenticationContextBuilder)
+        : base(options, logger, encoder, clock)
+    {
+        _testAuthenticationContextBuilder = testAuthenticationContextBuilder;
+    }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        if (!_testAuthenticationContextBuilder.IsAuthenticated)
+        {
+            var failResult = AuthenticateResult.Fail("Fail");
+            return Task.FromResult(failResult);
+        }
+
+        var identity = new ClaimsIdentity(_testAuthenticationContextBuilder.Claims, "Test");
+        var principal = new ClaimsPrincipal(identity);
+        var ticket = new AuthenticationTicket(principal, "Test");
+        var successResult = AuthenticateResult.Success(ticket);
+
+        return Task.FromResult(successResult);
+    }
+}

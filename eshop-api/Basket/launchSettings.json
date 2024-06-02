@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "eshop.basket.api": "StartDebugging",
+        "redis": "StartWithoutDebugging"
+      }
+    },
+    "redis": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "eshop.basket.api": "DoNotStart",
+        "redis": "StartWithoutDebugging"
+      }
+    }
+  }
+}

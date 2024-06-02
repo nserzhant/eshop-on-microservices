@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  redis:
+    image: redis:7.0.15-alpine3.20
+
+  eshop.basket.api:
+    image: ${DOCKER_REGISTRY-}eshopbasketapi
+    build:
+      context: .
+      dockerfile: src/Eshop.Basket.Api/Dockerfile
+    depends_on:
+      - redis
