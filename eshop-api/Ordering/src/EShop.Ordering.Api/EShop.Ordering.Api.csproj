@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>712ca62f-80f7-45a8-acbe-a6ab0a3a7ec4</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+	  <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
+	  <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
+	  <PackageReference Include="NSwag.AspNetCore" Version="14.0.7" />
+	  <PackageReference Include="NSwag.MSBuild" Version="14.0.7">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Client\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EShop.Ordering.Core\EShop.Ordering.Core.csproj" />
+    <ProjectReference Include="..\EShop.Ordering.Infrastructure\EShop.Ordering.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <Target Name="NSwag" AfterTargets="Build">
+  	<Exec ConsoleToMSBuild="true" ContinueOnError="true" Command="$(NSwagExe_Net80) run ordering.api.nswag.json /variables:Configuration=$(Configuration),OutDir=$(OutDir)">
+  	  <Output TaskParameter="ExitCode" PropertyName="NSwagExitCode" />
+  	  <Output TaskParameter="ConsoleOutput" PropertyName="NSwagOutput" />
+  	</Exec>
+  	<Message Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' == '0'" Importance="low" />
+  	<Error Text="$(NSwagOutput)" Condition="'$(NSwagExitCode)' != '0'" />
+  </Target>
+</Project>
