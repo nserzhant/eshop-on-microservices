@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  eshop.payment.processor:
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro

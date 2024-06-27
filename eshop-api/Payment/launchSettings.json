@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "eshop.payment.processor": "StartDebugging",
+        "rabbitmq": "StartWithoutDebugging"
+      }
+    },
+    "rabbitmq": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "eshop.payment.processor": "DoNotStart",
+        "rabbitmq": "StartWithoutDebugging"
+      }
+    }
+  }
+}

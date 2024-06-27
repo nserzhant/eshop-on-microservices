@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+
+  eshop.payment.processor:
+    image: ${DOCKER_REGISTRY-}eshoppaymentprocessor
+    build:
+      context: .
+      dockerfile: src/EShop.Payment.Processor/Dockerfile
+    depends_on:
+      - rabbitmq
