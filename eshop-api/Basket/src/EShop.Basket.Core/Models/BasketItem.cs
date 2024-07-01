@@ -9,6 +9,5 @@ public class BasketItem
     public required string Type { get; set; }
     public int Qty { get; set; }
     public decimal Price { get; set; }
-
     public string? PictureUri { get; set; }
 }

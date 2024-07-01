@@ -7,11 +7,11 @@ public class BaseBasketIntegrationTests
     protected ServiceProvider serviceProvider;
 
     [SetUp]
-    public virtual void Setup()
+    public virtual async Task SetupAsync()
     {
         var sc = new ServiceCollection();
 
-        sc.AddTestBasketServices();
+        AddServices(sc);
 
         serviceProvider = sc.BuildServiceProvider();
 
@@ -20,9 +20,14 @@ public class BaseBasketIntegrationTests
         database.Execute("FLUSHDB");
     }
 
-    [TearDown]
-    public virtual void TearDown()
+    protected virtual void AddServices(ServiceCollection sc)
     {
-        serviceProvider.Dispose();
+        sc.AddTestBasketServices();
+    }
+
+    [TearDown]
+    public virtual async Task TearDownAsync()
+    {
+        await serviceProvider.DisposeAsync();
     }
 }

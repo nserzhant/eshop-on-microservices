@@ -168,6 +168,7 @@ export class BasketClient {
 }
 
 export class CustomerBasket implements ICustomerBasket {
+    id?: string;
     items?: BasketItem[];
 
     constructor(data?: ICustomerBasket) {
@@ -181,6 +182,7 @@ export class CustomerBasket implements ICustomerBasket {
 
     init(_data?: any) {
         if (_data) {
+            this.id = _data["id"];
             if (Array.isArray(_data["items"])) {
                 this.items = [] as any;
                 for (let item of _data["items"])
@@ -198,6 +200,7 @@ export class CustomerBasket implements ICustomerBasket {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
         if (Array.isArray(this.items)) {
             data["items"] = [];
             for (let item of this.items)
@@ -208,6 +211,7 @@ export class CustomerBasket implements ICustomerBasket {
 }
 
 export interface ICustomerBasket {
+    id?: string;
     items?: BasketItem[];
 }
 

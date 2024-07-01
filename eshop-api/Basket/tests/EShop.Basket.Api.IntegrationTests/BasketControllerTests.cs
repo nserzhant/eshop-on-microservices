@@ -1,12 +1,16 @@
-﻿using EShop.Basket.Api.IntegrationTests.Infrastructure;
+﻿using EShop.Basket.Api.Integration.Events;
+using EShop.Basket.Api.IntegrationTests.Infrastructure;
 using EShop.Basket.Core.Interfaces;
 using EShop.Basket.Core.Models;
 using EShop.Basket.Infrastructure.IntegrationTests;
+using MassTransit;
+using MassTransit.Testing;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
+using System;
 using System.Net;
 using System.Net.Mime;
 using System.Text.Json;
@@ -20,11 +24,12 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
 
     private WebApplicationFactory<Program> webApplicationFactory;
     private TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
+    private ITestHarness _harness;
 
     [SetUp]
-    public override void Setup()
+    public override async Task SetupAsync()
     {
-        base.Setup();
+        await base.SetupAsync();
 
         _testAuthenticationContextBuilder = new TestAuthenticationContextBuilder();
         webApplicationFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -38,16 +43,21 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
                 services.AddSingleton(_testAuthenticationContextBuilder);
+                services.AddMassTransitTestHarness();
             });
         });
+
+        _harness = webApplicationFactory.Services.GetTestHarness();
+        await _harness.Start();
     }
 
-    [TearDown]
-    public override void TearDown()
+    [TearDown]  
+    public override async Task TearDownAsync()
     {
-        base.TearDown();
+        await _harness.Stop();
+        await base.TearDownAsync();
 
-        webApplicationFactory.Dispose();
+        await webApplicationFactory.DisposeAsync();
     }
 
     [Test]
@@ -97,7 +107,29 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
 
         var response = await basketClient.PostAsync(CheckoutUrl, null);
 
+        Assert.That(await _harness.Published.Any());
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    [Category("Checkout Basket")]
+    public async Task When_Checkout_Basket_Then_Integration_Event_Should_Be_Published()
+    {
+        var customerId = Guid.NewGuid();
+        var basket = createCustomerBasket(customerId);
+        _testAuthenticationContextBuilder.SetAuthorizedAs(customerId);
+        var basketClient = webApplicationFactory.CreateClient();
+
+        await basketClient.PostAsync(CheckoutUrl, null);
+
+        var itemPublished = await _harness.Published.SelectAsync<BasketCheckedOutEvent>().FirstOrDefault();
+        var basketCheckedOutEvent = itemPublished?.Context?.Message;
+        Assert.That(basketCheckedOutEvent, Is.Not.Null);
+        Assert.That(basketCheckedOutEvent.BasketId, Is.EqualTo(basket.Id));
+        Assert.That(basketCheckedOutEvent.CorrelationId, Is.EqualTo(basket.Id));
+        Assert.That(basketCheckedOutEvent.CustomerId, Is.EqualTo(customerId));
+        Assert.That(basketCheckedOutEvent.Items[0].CatalogItemId, Is.EqualTo(basket.Items[0].CatalogItemId));
+        Assert.That(basketCheckedOutEvent.Items[0].Qty, Is.EqualTo(basket.Items[0].Qty));
     }
 
     [Test]
@@ -129,24 +161,22 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     public async Task When_Customer_Saved_Basket_Then_Basket_Can_Get()
     {
         var customerId = Guid.NewGuid();
-        var storedBasket = createCustomerBasket(customerId);
+        var basket = createCustomerBasket(customerId);
         _testAuthenticationContextBuilder.SetAuthorizedAs(customerId);
         var basketClient = webApplicationFactory.CreateClient();
 
         var response = await basketClient.GetAsync(API_BASE_URL);
-        var basket = await fromHttpResponseMessage<CustomerBasket>(response);
 
-        Assert.That(basket, Is.Not.Null);
-        Assert.That(basket.Items[0].CatalogItemId, Is.EqualTo(storedBasket.Items[0].CatalogItemId));
-        Assert.That(basket.Items[0].Name, Is.EqualTo(storedBasket.Items[0].Name));
-        Assert.That(basket.Items[0].BrandName, Is.EqualTo(storedBasket.Items[0].BrandName));
-        Assert.That(basket.Items[0].Type, Is.EqualTo(storedBasket.Items[0].Type));
-        Assert.That(basket.Items[0].Qty, Is.EqualTo(storedBasket.Items[0].Qty));
-        Assert.That(basket.Items[0].PictureUri, Is.EqualTo(storedBasket.Items[0].PictureUri));
-        Assert.That(basket.Items[0].Price, Is.EqualTo(storedBasket.Items[0].Price));
+        var basketFromReponse = await fromHttpResponseMessage<CustomerBasket>(response);
+        Assert.That(basketFromReponse, Is.Not.Null);
+        Assert.That(basketFromReponse.Items[0].CatalogItemId, Is.EqualTo(basket.Items[0].CatalogItemId));
+        Assert.That(basketFromReponse.Items[0].Name, Is.EqualTo(basket.Items[0].Name));
+        Assert.That(basketFromReponse.Items[0].BrandName, Is.EqualTo(basket.Items[0].BrandName));
+        Assert.That(basketFromReponse.Items[0].Type, Is.EqualTo(basket.Items[0].Type));
+        Assert.That(basketFromReponse.Items[0].Qty, Is.EqualTo(basket.Items[0].Qty));
+        Assert.That(basketFromReponse.Items[0].PictureUri, Is.EqualTo(basket.Items[0].PictureUri));
+        Assert.That(basketFromReponse.Items[0].Price, Is.EqualTo(basket.Items[0].Price));
     }
-
-    // Save Basket => Checkout Basket => Get Basket => Check Content
 
     private CustomerBasket createCustomerBasket(Guid customerId)
     {

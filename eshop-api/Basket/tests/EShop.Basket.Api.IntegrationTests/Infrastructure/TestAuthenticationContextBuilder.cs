@@ -11,7 +11,7 @@ public class TestAuthenticationContextBuilder
         IsAuthenticated = false;
     }
 
-    internal void SetAuthorizedAs(Guid customerId)
+    public void SetAuthorizedAs(Guid customerId)
     {
         Claims.Add(new Claim(ClaimTypes.NameIdentifier, customerId.ToString()));
     }

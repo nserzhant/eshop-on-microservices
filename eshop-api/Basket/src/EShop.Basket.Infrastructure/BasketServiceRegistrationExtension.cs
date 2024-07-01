@@ -1,5 +1,4 @@
 ﻿using EShop.Basket.Core.Interfaces;
-using EShop.Basket.Core.Services;
 using EShop.Basket.Infrastructure.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +13,6 @@ public static class BasketServiceRegistrationExtension
     public static IServiceCollection AddBasketSercices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddTransient<IBasketRepository, BasketRepository>();
-        services.AddTransient<IBasketService, BasketService>();
         services.AddScoped(services =>
         {
             var connectionString = configuration.GetConnectionString(REDIS_CONNECTION_STRING_CONFIG_NAME);

@@ -4,6 +4,9 @@ services:
   redis:
     image: redis:7.0.15-alpine3.20
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+
   eshop.basket.api:
     image: ${DOCKER_REGISTRY-}eshopbasketapi
     build:

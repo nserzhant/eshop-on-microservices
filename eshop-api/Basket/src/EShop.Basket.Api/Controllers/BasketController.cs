@@ -1,6 +1,7 @@
+using EShop.Basket.Api.Integration.Events;
 using EShop.Basket.Core.Interfaces;
 using EShop.Basket.Core.Models;
-using EShop.Basket.Core.Services;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,15 +15,15 @@ public class BasketController : ControllerBase
 {
     private readonly ILogger<BasketController> _logger;
     private readonly IBasketRepository _basketRepository;
-    private readonly IBasketService _basketService;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public BasketController(ILogger<BasketController> logger, 
         IBasketRepository basketRepository,
-        IBasketService basketService)
+        IPublishEndpoint publishEndpoint)
     {
         _logger = logger;
         _basketRepository = basketRepository;
-        _basketService = basketService;
+        _publishEndpoint = publishEndpoint;
     }
 
     [ProducesResponseType(typeof(CustomerBasket), StatusCodes.Status200OK)]
@@ -50,8 +51,17 @@ public class BasketController : ControllerBase
     public async Task<IActionResult> CheckOutAsync()
     {
         var customerId = getCustomerId();
+        var basket = await _basketRepository.GetBasketAsync(customerId);
+        var checkoutEvent = new BasketCheckedOutEvent
+            (
+                basket.Id,
+                customerId,
+                basket.Id,
+                basket.Items.Select(itm => new BasketCheckoutItem(itm.CatalogItemId, itm.Qty))
+                    .ToList()
+            );
 
-        await _basketService.CheckOutAsync(customerId);
+        await _publishEndpoint.Publish(checkoutEvent);
 
         return Ok();
     }
