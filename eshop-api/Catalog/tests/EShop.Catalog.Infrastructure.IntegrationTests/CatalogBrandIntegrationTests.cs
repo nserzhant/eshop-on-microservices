@@ -70,8 +70,8 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
     [Category("Catalog Brand Query Service")]
     public async Task When_Update_Catalog_Brand_Then_It_Could_Be_Retreived_By_Id()
     {
-        string catalogBrandName = "catalog brand";
-        CatalogBrand catalogBrand = await createCatalogBrandAsync(catalogBrandName);
+        var catalogBrandName = "catalog brand";
+        var catalogBrand = await createCatalogBrandAsync(catalogBrandName);
         catalogBrand.UpdateBrand("updated brand");
 
         await _catalogBrandService.UpdateCatalogBrandAsync(catalogBrand);
@@ -85,9 +85,10 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
     [Category("Catalog Brand Repository")]
     public async Task When_Delete_Catalog_Brand_Then_It_Could_Not_Be_Retreived_By_Id()
     {
-        string catalogBrandName = "catalog brand";
-        CatalogBrand catalogBrand = await createCatalogBrandAsync(catalogBrandName);
+        var catalogBrandName = "catalog brand";
+        var catalogBrand = await createCatalogBrandAsync(catalogBrandName);
         await _catalogBrandRepository.SaveChangesAsync();
+        
 
         await _catalogBrandService.DeleteCatalogBrandAsync(catalogBrand);
 

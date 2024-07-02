@@ -116,9 +116,9 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     [Category("Catalog Item Query Service")]
     public async Task When_Update_Catalog_Item_Then_It_Could_Be_Retreived_By_Id()
     {
-        string catalogItemName = "test catalog item";
-        string updatedCatalogItemName = "updated catalog item";
-        CatalogItem catalogItem = await createCatalogItemAsync(catalogItemName);
+        var catalogItemName = "test catalog item";
+        var updatedCatalogItemName = "updated catalog item";
+        var catalogItem = await createCatalogItemAsync(catalogItemName);
         await _catalogItemRepository.SaveChangesAsync();
         catalogItem.UpdateName(updatedCatalogItemName);
 
@@ -133,8 +133,8 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     [Category("Catalog Item Repository")]
     public async Task When_Delete_Catalog_Item_Then_It_Could_Not_Be_Retreived_By_Id()
     {
-        string catalogItemName = "test catalog item";
-        CatalogItem catalogItem = await createCatalogItemAsync(catalogItemName);
+        var catalogItemName = "test catalog item";
+        var catalogItem = await createCatalogItemAsync(catalogItemName);
         await _catalogItemRepository.SaveChangesAsync();
 
         _catalogItemRepository.DeleteCatalogItem(catalogItem);

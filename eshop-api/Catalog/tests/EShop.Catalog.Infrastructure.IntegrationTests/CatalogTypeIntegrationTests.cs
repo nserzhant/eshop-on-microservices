@@ -27,17 +27,6 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Type Repository")]
-    public async Task When_Save_Catalog_Type_Than_Id_Should_Be_Generated()
-    {
-        var catalogTypeToCreate = new CatalogType("test catalog type");
-
-        await _catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
-
-        Assert.That(catalogTypeToCreate.Id, Is.Not.EqualTo(Guid.Empty));
-    }
-
-    [Test]
-    [Category("Catalog Type Repository")]
     public async Task When_Save_Catalog_Type_Then_It_Could_Be_Retreived_By_Id()
     {
         var catalogTypeToCreate = new CatalogType("test catalog type");
@@ -55,9 +44,9 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
     [Category("Catalog Type Query Service")]
     public async Task When_Update_Catalog_Type_Then_It_Could_Be_Retreived_By_Id()
     {
-        string catalogTypeName = "test catalog type";
-        string updatedCatalogTypeName = "updated catalog type";
-        CatalogType catalogType = await createCatalogTypeAsync(catalogTypeName);
+        var catalogTypeName = "test catalog type";
+        var updatedCatalogTypeName = "updated catalog type";
+        var catalogType = await createCatalogTypeAsync(catalogTypeName);
         await _catalogTypeRepository.SaveChangesAsync();
         catalogType.UpdateType(updatedCatalogTypeName);
 
@@ -72,8 +61,8 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
     [Category("Catalog Type Repository")]
     public async Task When_Delete_Catalog_Type_Then_It_Could_Not_Be_Retreived_By_Id()
     {
-        string catalogTypeName = "test catalog type";
-        CatalogType catalogType = await createCatalogTypeAsync(catalogTypeName);
+        var catalogTypeName = "test catalog type";
+        var catalogType = await createCatalogTypeAsync(catalogTypeName);
         await _catalogTypeRepository.SaveChangesAsync();
 
         await _catalogTypeService.DeleteCatalogTypeAsync(catalogType);

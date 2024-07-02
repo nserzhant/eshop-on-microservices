@@ -31,6 +31,7 @@ public class CatalogItemRepository : ICatalogItemRepository
     public async Task<CatalogItem?> GetCatalogItemAsync(Guid catalogItemId)
     {
         var item = await _catalogDbContext.CatalogItems
+            .AsNoTracking()
             .FirstOrDefaultAsync(ci => ci.Id == catalogItemId);
 
         return item;
@@ -38,14 +39,18 @@ public class CatalogItemRepository : ICatalogItemRepository
 
     public async Task<bool> DoesCatalogItemsWithTypeExistsAsync(Guid catalogTypeId)
     {
-        var exists = await _catalogDbContext.CatalogItems.AnyAsync(ci => ci.CatalogTypeId == catalogTypeId);
+        var exists = await _catalogDbContext.CatalogItems
+            .AsNoTracking()
+            .AnyAsync(ci => ci.CatalogTypeId == catalogTypeId);
 
         return exists;
     }
 
     public async Task<bool> DoesCatalogItemsWithBrandExistsAsync(Guid catalogBrandId)
     {
-        var exists = await _catalogDbContext.CatalogItems.AnyAsync(ci => ci.CatalogBrandId == catalogBrandId);
+        var exists = await _catalogDbContext.CatalogItems
+            .AsNoTracking()
+            .AnyAsync(ci => ci.CatalogBrandId == catalogBrandId);
 
         return exists;
     }
@@ -53,6 +58,7 @@ public class CatalogItemRepository : ICatalogItemRepository
     public async Task<CatalogItem?> GetCatalogItemAsync(string catalogItemName, Guid catalogTypeId, Guid catalogBrandId)
     {
         var item = await _catalogDbContext.CatalogItems
+            .AsNoTracking()
             .FirstOrDefaultAsync(ci => ci.Name == catalogItemName &&
             ci.CatalogTypeId == catalogTypeId &&
             ci.CatalogBrandId == catalogBrandId );

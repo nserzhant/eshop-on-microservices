@@ -32,8 +32,11 @@ public class BaseCatalogIntegrationTests
 
     protected async Task<CatalogType> createCatalogTypeAsync(string catalogTypeName)
     {
-        var catalogTypeRepository = serviceProvider.GetRequiredService<ICatalogTypeRepository>();
-        var catalogTypeService = serviceProvider.GetRequiredService<ICatalogTypeService>();
+        // Create scoped context to prevent any side effects
+
+        using var scopedProvider = serviceProvider.CreateScope();
+        var catalogTypeRepository = scopedProvider.ServiceProvider.GetRequiredService<ICatalogTypeRepository>();
+        var catalogTypeService = scopedProvider.ServiceProvider.GetRequiredService<ICatalogTypeService>();
         var catalogTypeToCreate = new CatalogType(catalogTypeName);
         
         await catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
@@ -45,8 +48,9 @@ public class BaseCatalogIntegrationTests
 
     protected async Task<CatalogBrand> createCatalogBrandAsync(string catalogBrandName)
     {
-        var catalogBrandRepository = serviceProvider.GetRequiredService<ICatalogBrandRepository>();
-        var catalogBrandService = serviceProvider.GetRequiredService<ICatalogBrandService>();
+        using var scopedProvider = serviceProvider.CreateScope();
+        var catalogBrandRepository = scopedProvider.ServiceProvider.GetRequiredService<ICatalogBrandRepository>();
+        var catalogBrandService = scopedProvider.ServiceProvider.GetRequiredService<ICatalogBrandService>();
         var catalogBrandToCreate = new CatalogBrand(catalogBrandName);
 
         await catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
@@ -58,8 +62,9 @@ public class BaseCatalogIntegrationTests
 
     protected async Task<CatalogItem> createCatalogItemAsync(string catalogItemName, string? catalogBrandName = null, string? catalogTypeName = null, decimal? price = null, string? description = null)
     {
-        var catalogItemService = serviceProvider.GetRequiredService<ICatalogItemService>();
-        var catalogItemRepository = serviceProvider.GetRequiredService<ICatalogItemRepository>();
+        using var scopedProvider = serviceProvider.CreateScope();
+        var catalogItemService = scopedProvider.ServiceProvider.GetRequiredService<ICatalogItemService>();
+        var catalogItemRepository = scopedProvider.ServiceProvider.GetRequiredService<ICatalogItemRepository>();
         var catalogBrandNameToCreate = catalogBrandName ?? Guid.NewGuid().ToString();
         var catalogTypeNameToCreate = catalogTypeName ?? Guid.NewGuid().ToString();
         var catalogBrandId = (await createCatalogBrandAsync(catalogBrandNameToCreate)).Id;
