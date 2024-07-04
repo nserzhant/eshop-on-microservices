@@ -226,6 +226,7 @@ public class AuthorizationController : Controller
 
             case Claims.Email:
                 yield return Destinations.IdentityToken;
+                yield return Destinations.AccessToken;
 
                 yield break;
 

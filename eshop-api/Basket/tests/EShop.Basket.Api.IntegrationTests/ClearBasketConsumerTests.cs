@@ -1,14 +1,16 @@
-﻿using EShop.Basket.Api.Integration.Commands;
-using EShop.Basket.Api.Integration.Consumers;
-using EShop.Basket.Api.Integration.Events;
+﻿using EShop.Basket.Api.Integration.Consumers;
 using EShop.Basket.Core.Interfaces;
 using EShop.Basket.Core.Models;
 using EShop.Basket.Infrastructure.IntegrationTests;
+using EShop.Basket.Integration.Commands;
+using EShop.Basket.Integration.Events;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EShop.Basket.Api.IntegrationTests;
+
+[TestFixture]
 public class ClearBasketConsumerTests : BaseBasketIntegrationTests
 {
     private ITestHarness _harness;
@@ -51,8 +53,8 @@ public class ClearBasketConsumerTests : BaseBasketIntegrationTests
                 new BasketItem()
                 {
                     CatalogItemId = Guid.NewGuid(),
-                    Name = "Sample Name",
-                    Type = "Sample Basket Item Type",
+                    ItemName = "Sample Name",
+                    TypeName = "Sample Basket Item Type",
                     BrandName = "Sample Brand",
                     PictureUri = "/image-test.png",
                     Price = 55m,

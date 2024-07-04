@@ -1,6 +1,6 @@
-﻿using EShop.Basket.Api.Integration.Commands;
-using EShop.Basket.Api.Integration.Events;
-using EShop.Basket.Core.Interfaces;
+﻿using EShop.Basket.Core.Interfaces;
+using EShop.Basket.Integration.Commands;
+using EShop.Basket.Integration.Events;
 using MassTransit;
 
 namespace EShop.Basket.Api.Integration.Consumers;
@@ -22,11 +22,11 @@ public class ClearBasketConsumer : IConsumer<ClearBasketCommand>
 
         _logger.LogInformation("Start Processing ClearBasketCommand, CorrelationId: {CorrelationId}, Command: {@command}", context.CorrelationId, command);
 
-        var basket = await _basketRepository.GetBasketAsync(command.UserId);
+        var basket = await _basketRepository.GetBasketAsync(command.CustomerId);
 
         if (basket.Id == command.BasketId)
         {
-            await _basketRepository.DeleteBasketAsync(command.UserId);
+            await _basketRepository.DeleteBasketAsync(command.CustomerId);
         }
 
         var basketCleared = new BasketClearedEvent(command.CorrelationId);

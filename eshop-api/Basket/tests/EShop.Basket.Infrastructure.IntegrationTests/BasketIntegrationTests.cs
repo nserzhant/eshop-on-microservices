@@ -4,11 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EShop.Basket.Infrastructure.IntegrationTests;
 
+[TestFixture]
 public class BasketIntegrationTests : BaseBasketIntegrationTests
 {
     private IBasketRepository _repository;
 
-    [SetUp]
     public override async Task SetupAsync()
     {
         await base.SetupAsync();
@@ -39,9 +39,10 @@ public class BasketIntegrationTests : BaseBasketIntegrationTests
             Items = [      
                 new BasketItem () {
                     CatalogItemId = Guid.NewGuid(), 
-                    Name = "Test Name",
-                    Type = "Test Basket Item Type",
-                    BrandName = "Sample Brand",
+                    ItemName = "Test Name",
+                    TypeName = "Test Basket Item Type",
+                    BrandName = "Test Brand",
+                    Description = "Test Description",
                     PictureUri = "/image.png",
                     Price = 123.3m,
                     Qty = 19
@@ -54,11 +55,12 @@ public class BasketIntegrationTests : BaseBasketIntegrationTests
 
         Assert.That(basketSaved, Is.Not.Null);
         Assert.That(basketSaved.Items[0].CatalogItemId, Is.EqualTo(basket.Items[0].CatalogItemId));
-        Assert.That(basketSaved.Items[0].Name, Is.EqualTo(basket.Items[0].Name));
+        Assert.That(basketSaved.Items[0].ItemName, Is.EqualTo(basket.Items[0].ItemName));
         Assert.That(basketSaved.Items[0].BrandName, Is.EqualTo(basket.Items[0].BrandName));
-        Assert.That(basketSaved.Items[0].Type, Is.EqualTo(basket.Items[0].Type));
+        Assert.That(basketSaved.Items[0].TypeName, Is.EqualTo(basket.Items[0].TypeName));
         Assert.That(basketSaved.Items[0].Qty, Is.EqualTo(basket.Items[0].Qty));
         Assert.That(basketSaved.Items[0].Price, Is.EqualTo(basket.Items[0].Price));
         Assert.That(basketSaved.Items[0].PictureUri, Is.EqualTo(basket.Items[0].PictureUri));
+        Assert.That(basketSaved.Items[0].Description, Is.EqualTo(basket.Items[0].Description));
     }
 }

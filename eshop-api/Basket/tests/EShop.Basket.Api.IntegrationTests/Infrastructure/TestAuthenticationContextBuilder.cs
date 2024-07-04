@@ -11,8 +11,9 @@ public class TestAuthenticationContextBuilder
         IsAuthenticated = false;
     }
 
-    public void SetAuthorizedAs(Guid customerId)
+    public void SetAuthorizedAs(Guid customerId, string email = "sample@email.com")
     {
         Claims.Add(new Claim(ClaimTypes.NameIdentifier, customerId.ToString()));
+        Claims.Add(new Claim(ClaimTypes.Email, email));
     }
 }

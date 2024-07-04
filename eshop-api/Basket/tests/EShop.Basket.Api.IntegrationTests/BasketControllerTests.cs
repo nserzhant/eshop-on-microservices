@@ -1,8 +1,9 @@
-﻿using EShop.Basket.Api.Integration.Events;
-using EShop.Basket.Api.IntegrationTests.Infrastructure;
+﻿using EShop.Basket.Api.IntegrationTests.Infrastructure;
+using EShop.Basket.Api.Models;
 using EShop.Basket.Core.Interfaces;
 using EShop.Basket.Core.Models;
 using EShop.Basket.Infrastructure.IntegrationTests;
+using EShop.Basket.Integration.Events;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.AspNetCore.Authentication;
@@ -10,14 +11,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
-using System;
 using System.Net;
 using System.Net.Mime;
 using System.Text.Json;
 
 namespace EShop.Basket.Api.IntegrationTests;
 
-internal class BasketControllerTests : BaseBasketIntegrationTests
+[TestFixture]
+public class BasketControllerTests : BaseBasketIntegrationTests
 {
     private const string API_BASE_URL = "api/Basket";
     private readonly string CheckoutUrl = $"{API_BASE_URL}/checkout";
@@ -26,7 +27,6 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     private TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
     private ITestHarness _harness;
 
-    [SetUp]
     public override async Task SetupAsync()
     {
         await base.SetupAsync();
@@ -51,7 +51,6 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
         await _harness.Start();
     }
 
-    [TearDown]  
     public override async Task TearDownAsync()
     {
         await _harness.Stop();
@@ -66,7 +65,7 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var basketClient = webApplicationFactory.CreateClient();
-        var content = createBasketContent(new CustomerBasket());
+        var content = createStringContent(new CustomerBasket());
 
         var response = await basketClient.PostAsync(API_BASE_URL, content);
 
@@ -79,7 +78,7 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     {
         _testAuthenticationContextBuilder.SetAuthorizedAs(Guid.NewGuid());
         var basketClient = webApplicationFactory.CreateClient();
-        var content = createBasketContent(new CustomerBasket());
+        var content = createStringContent(new CustomerBasket());
 
         var response = await basketClient.PostAsync(API_BASE_URL, content);
 
@@ -92,10 +91,26 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var basketClient = webApplicationFactory.CreateClient();
+        var checkoutDTO = new CheckoutDTO() { ShippingAddress = "Shipping Address" };
+        var content = createStringContent(checkoutDTO);
 
-        var response = await basketClient.PostAsync(CheckoutUrl, null);
+        var response = await basketClient.PostAsync(CheckoutUrl, content);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    [Category("Checkout Basket")]
+    public async Task When_Customer_Does_Not_Have_Email_Then_Checkout_Basket_Returns_Forbidden()
+    {
+        _testAuthenticationContextBuilder.SetAuthorizedAs(Guid.NewGuid(), string.Empty);
+        var basketClient = webApplicationFactory.CreateClient();
+        var checkoutDTO = new CheckoutDTO() { ShippingAddress = "Shipping Address" };
+        var content = createStringContent(checkoutDTO);
+
+        var response = await basketClient.PostAsync(CheckoutUrl, content);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
     }
 
     [Test]
@@ -104,8 +119,10 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     {
         _testAuthenticationContextBuilder.SetAuthorizedAs(Guid.NewGuid());
         var basketClient = webApplicationFactory.CreateClient();
+        var checkoutDTO = new CheckoutDTO() { ShippingAddress = "Shipping Address" };
+        var content = createStringContent(checkoutDTO);
 
-        var response = await basketClient.PostAsync(CheckoutUrl, null);
+        var response = await basketClient.PostAsync(CheckoutUrl, content);
 
         Assert.That(await _harness.Published.Any());
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
@@ -116,11 +133,15 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     public async Task When_Checkout_Basket_Then_Integration_Event_Should_Be_Published()
     {
         var customerId = Guid.NewGuid();
+        var shippingAddress = "Test Address";
+        var email = "testEmail@example.com";
         var basket = createCustomerBasket(customerId);
-        _testAuthenticationContextBuilder.SetAuthorizedAs(customerId);
+        _testAuthenticationContextBuilder.SetAuthorizedAs(customerId, email);
         var basketClient = webApplicationFactory.CreateClient();
+        var checkoutDTO = new CheckoutDTO() { ShippingAddress = shippingAddress };
+        var content = createStringContent(checkoutDTO);
 
-        await basketClient.PostAsync(CheckoutUrl, null);
+        await basketClient.PostAsync(CheckoutUrl, content);
 
         var itemPublished = await _harness.Published.SelectAsync<BasketCheckedOutEvent>().FirstOrDefault();
         var basketCheckedOutEvent = itemPublished?.Context?.Message;
@@ -128,10 +149,18 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
         Assert.That(basketCheckedOutEvent.BasketId, Is.EqualTo(basket.Id));
         Assert.That(basketCheckedOutEvent.CorrelationId, Is.EqualTo(basket.Id));
         Assert.That(basketCheckedOutEvent.CustomerId, Is.EqualTo(customerId));
+        Assert.That(basketCheckedOutEvent.ShippingAddress, Is.EqualTo(shippingAddress));
+        Assert.That(basketCheckedOutEvent.CustomerEmail, Is.EqualTo(email));
         Assert.That(basketCheckedOutEvent.Items[0].CatalogItemId, Is.EqualTo(basket.Items[0].CatalogItemId));
         Assert.That(basketCheckedOutEvent.Items[0].Qty, Is.EqualTo(basket.Items[0].Qty));
+        Assert.That(basketCheckedOutEvent.Items[0].ItemName, Is.EqualTo(basket.Items[0].ItemName));
+        Assert.That(basketCheckedOutEvent.Items[0].BrandName, Is.EqualTo(basket.Items[0].BrandName));
+        Assert.That(basketCheckedOutEvent.Items[0].Description, Is.EqualTo(basket.Items[0].Description));
+        Assert.That(basketCheckedOutEvent.Items[0].PictureUri, Is.EqualTo(basket.Items[0].PictureUri));
+        Assert.That(basketCheckedOutEvent.Items[0].TypeName, Is.EqualTo(basket.Items[0].TypeName));
+        Assert.That(basketCheckedOutEvent.Items[0].Price, Is.EqualTo(basket.Items[0].Price));
     }
-
+       
     [Test]
     [Category("Get Basket")]
     public async Task When_Customer_Is_Unauthenticated_Then_Get_Basket_Returns_Unathorized()
@@ -153,7 +182,7 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
 
         var response = await basketClient.GetAsync(API_BASE_URL);
 
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));        
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
     }
 
     [Test]
@@ -170,9 +199,10 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
         var basketFromReponse = await fromHttpResponseMessage<CustomerBasket>(response);
         Assert.That(basketFromReponse, Is.Not.Null);
         Assert.That(basketFromReponse.Items[0].CatalogItemId, Is.EqualTo(basket.Items[0].CatalogItemId));
-        Assert.That(basketFromReponse.Items[0].Name, Is.EqualTo(basket.Items[0].Name));
+        Assert.That(basketFromReponse.Items[0].ItemName, Is.EqualTo(basket.Items[0].ItemName));
+        Assert.That(basketFromReponse.Items[0].Description, Is.EqualTo(basket.Items[0].Description));
         Assert.That(basketFromReponse.Items[0].BrandName, Is.EqualTo(basket.Items[0].BrandName));
-        Assert.That(basketFromReponse.Items[0].Type, Is.EqualTo(basket.Items[0].Type));
+        Assert.That(basketFromReponse.Items[0].TypeName, Is.EqualTo(basket.Items[0].TypeName));
         Assert.That(basketFromReponse.Items[0].Qty, Is.EqualTo(basket.Items[0].Qty));
         Assert.That(basketFromReponse.Items[0].PictureUri, Is.EqualTo(basket.Items[0].PictureUri));
         Assert.That(basketFromReponse.Items[0].Price, Is.EqualTo(basket.Items[0].Price));
@@ -182,14 +212,15 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
     {
         CustomerBasket basket = new CustomerBasket();
 
-        basket.Items = 
+        basket.Items =
         [
             new BasketItem
-            { 
-                CatalogItemId = Guid.NewGuid(), 
-                Name = "Test Catalog Item",
-                BrandName = "Test Brand", 
-                Type = "Test Type", 
+            {
+                CatalogItemId = Guid.NewGuid(),
+                ItemName = "Test Catalog Item",
+                Description = "Test Catalog Item Description",
+                BrandName = "Test Brand",
+                TypeName = "Test Type",
                 Qty = 1,
                 PictureUri = "/images/testItem.png",
                 Price = 34m
@@ -203,15 +234,16 @@ internal class BasketControllerTests : BaseBasketIntegrationTests
         return basket;
     }
 
-    private static StringContent createBasketContent(CustomerBasket customerBasket)
+    private static StringContent createStringContent<T>(T contentSource)
     {
-        var content = new StringContent(JsonSerializer.Serialize(customerBasket));
+        var content = new StringContent(JsonSerializer.Serialize(contentSource));
 
         content.Headers.Remove(HeaderNames.ContentType);
         content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
 
         return content;
     }
+
     protected async Task<T?> fromHttpResponseMessage<T>(HttpResponseMessage? response)
     {
         if (response == null)

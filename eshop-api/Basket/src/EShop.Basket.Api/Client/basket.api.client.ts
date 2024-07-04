@@ -66,6 +66,13 @@ export class BasketClient {
             result200 = CustomerBasket.fromJS(resultData200);
             return _observableOf(result200);
             }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -114,6 +121,13 @@ export class BasketClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return _observableOf(null as any);
             }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -122,14 +136,18 @@ export class BasketClient {
         return _observableOf(null as any);
     }
 
-    checkOut(): Observable<void> {
+    checkOut(checkoutDTO: CheckoutDTO): Observable<void> {
         let url_ = this.baseUrl + "/api/Basket/checkout";
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(checkoutDTO);
+
         let options_ : any = {
+            body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Content-Type": "application/json",
             })
         };
 
@@ -157,6 +175,20 @@ export class BasketClient {
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return _observableOf(null as any);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result401: any = null;
+            let resultData401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result401 = ProblemDetails.fromJS(resultData401);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -217,12 +249,13 @@ export interface ICustomerBasket {
 
 export class BasketItem implements IBasketItem {
     catalogItemId?: string;
-    name?: string;
+    itemName?: string;
     brandName?: string;
-    type?: string;
+    typeName?: string;
     qty?: number;
     price?: number;
     pictureUri?: string | undefined;
+    description?: string | undefined;
 
     constructor(data?: IBasketItem) {
         if (data) {
@@ -236,12 +269,13 @@ export class BasketItem implements IBasketItem {
     init(_data?: any) {
         if (_data) {
             this.catalogItemId = _data["catalogItemId"];
-            this.name = _data["name"];
+            this.itemName = _data["itemName"];
             this.brandName = _data["brandName"];
-            this.type = _data["type"];
+            this.typeName = _data["typeName"];
             this.qty = _data["qty"];
             this.price = _data["price"];
             this.pictureUri = _data["pictureUri"];
+            this.description = _data["description"];
         }
     }
 
@@ -255,24 +289,126 @@ export class BasketItem implements IBasketItem {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["catalogItemId"] = this.catalogItemId;
-        data["name"] = this.name;
+        data["itemName"] = this.itemName;
         data["brandName"] = this.brandName;
-        data["type"] = this.type;
+        data["typeName"] = this.typeName;
         data["qty"] = this.qty;
         data["price"] = this.price;
         data["pictureUri"] = this.pictureUri;
+        data["description"] = this.description;
         return data;
     }
 }
 
 export interface IBasketItem {
     catalogItemId?: string;
-    name?: string;
+    itemName?: string;
     brandName?: string;
-    type?: string;
+    typeName?: string;
     qty?: number;
     price?: number;
     pictureUri?: string | undefined;
+    description?: string | undefined;
+}
+
+export class ProblemDetails implements IProblemDetails {
+    type?: string | undefined;
+    title?: string | undefined;
+    status?: number | undefined;
+    detail?: string | undefined;
+    instance?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IProblemDetails) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.type = _data["type"];
+            this.title = _data["title"];
+            this.status = _data["status"];
+            this.detail = _data["detail"];
+            this.instance = _data["instance"];
+        }
+    }
+
+    static fromJS(data: any): ProblemDetails {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProblemDetails();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["type"] = this.type;
+        data["title"] = this.title;
+        data["status"] = this.status;
+        data["detail"] = this.detail;
+        data["instance"] = this.instance;
+        return data;
+    }
+}
+
+export interface IProblemDetails {
+    type?: string | undefined;
+    title?: string | undefined;
+    status?: number | undefined;
+    detail?: string | undefined;
+    instance?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class CheckoutDTO implements ICheckoutDTO {
+    shippingAddress?: string;
+
+    constructor(data?: ICheckoutDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.shippingAddress = _data["shippingAddress"];
+        }
+    }
+
+    static fromJS(data: any): CheckoutDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new CheckoutDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["shippingAddress"] = this.shippingAddress;
+        return data;
+    }
+}
+
+export interface ICheckoutDTO {
+    shippingAddress?: string;
 }
 
 export class ApiException extends Error {

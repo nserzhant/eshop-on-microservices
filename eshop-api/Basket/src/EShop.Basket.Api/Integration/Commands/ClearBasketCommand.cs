@@ -1,3 +1,3 @@
-﻿namespace EShop.Basket.Api.Integration.Commands;
+﻿namespace EShop.Basket.Integration.Commands;
 
-public record ClearBasketCommand(Guid CorrelationId, Guid UserId, Guid BasketId);
+public record ClearBasketCommand(Guid CorrelationId, Guid CustomerId, Guid BasketId);
