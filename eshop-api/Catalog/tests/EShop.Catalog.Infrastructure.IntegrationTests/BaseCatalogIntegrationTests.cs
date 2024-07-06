@@ -16,7 +16,7 @@ public class BaseCatalogIntegrationTests
         //Setup services
         ServiceCollection sc = new ServiceCollection();
 
-        sc.AddTestCatalogServices();
+        AddServices(sc);
 
         serviceProvider = sc.BuildServiceProvider();
         var dbContext = serviceProvider.GetRequiredService<CatalogDbContext>();
@@ -25,10 +25,16 @@ public class BaseCatalogIntegrationTests
     }
 
     [TearDown]
-    public virtual void TearDown()
+    public virtual async Task TearDownAsync()
     {
-        serviceProvider.Dispose();
+        await serviceProvider.DisposeAsync();
     }
+
+    protected virtual void AddServices(ServiceCollection sc)
+    {
+        sc.AddTestCatalogServices();
+    }
+
 
     protected async Task<CatalogType> createCatalogTypeAsync(string catalogTypeName)
     {
@@ -38,7 +44,7 @@ public class BaseCatalogIntegrationTests
         var catalogTypeRepository = scopedProvider.ServiceProvider.GetRequiredService<ICatalogTypeRepository>();
         var catalogTypeService = scopedProvider.ServiceProvider.GetRequiredService<ICatalogTypeService>();
         var catalogTypeToCreate = new CatalogType(catalogTypeName);
-        
+
         await catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
 
         var result = await catalogTypeRepository.GetCatalogTypeAsync(catalogTypeToCreate.Id);
@@ -60,7 +66,7 @@ public class BaseCatalogIntegrationTests
         return result!;
     }
 
-    protected async Task<CatalogItem> createCatalogItemAsync(string catalogItemName, string? catalogBrandName = null, string? catalogTypeName = null, decimal? price = null, string? description = null)
+    protected async Task<CatalogItem> createCatalogItemAsync(string catalogItemName, string? catalogBrandName = null, string? catalogTypeName = null, decimal? price = null, string? description = null, int availableQty = 0, string? pictureUri = null)
     {
         using var scopedProvider = serviceProvider.CreateScope();
         var catalogItemService = scopedProvider.ServiceProvider.GetRequiredService<ICatalogItemService>();
@@ -68,13 +74,12 @@ public class BaseCatalogIntegrationTests
         var catalogBrandNameToCreate = catalogBrandName ?? Guid.NewGuid().ToString();
         var catalogTypeNameToCreate = catalogTypeName ?? Guid.NewGuid().ToString();
         var catalogBrandId = (await createCatalogBrandAsync(catalogBrandNameToCreate)).Id;
-        var catalogTypeId =  (await createCatalogTypeAsync(catalogTypeNameToCreate)).Id;
+        var catalogTypeId = (await createCatalogTypeAsync(catalogTypeNameToCreate)).Id;
         var itemPrice = price ?? 1m;
-        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
+        var catalogItemDescription = description ?? Guid.NewGuid().ToString();
+        var catalogItemPictureURI = pictureUri ?? Guid.NewGuid().ToString();
+        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId, catalogItemDescription, itemPrice, availableQty, catalogItemPictureURI);
 
-        catalogItemToCreate.UpdatePrice(itemPrice);
-        catalogItemToCreate.Description = description;
-        
         await catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
 
         var result = await catalogItemRepository.GetCatalogItemAsync(catalogItemToCreate.Id);

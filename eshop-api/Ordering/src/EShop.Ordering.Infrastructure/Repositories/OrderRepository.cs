@@ -20,6 +20,7 @@ public class OrderRepository : IOrderRepository
     public async Task<Order?> GetOrderByIdAsync(int orderId)
     {
         var order = await _orderingDbContext.Orders
+            .AsNoTracking()
             .Include(o=> o.OrderItems)
             .FirstOrDefaultAsync(o => o.Id == orderId);
 
@@ -34,6 +35,5 @@ public class OrderRepository : IOrderRepository
     public async Task SaveChangesAsync()
     {
         await _orderingDbContext.SaveChangesAsync();
-        _orderingDbContext.ChangeTracker.Clear();
     }
 }

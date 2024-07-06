@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace EShop.Catalog.Infrastructure.IntegrationTests.Extensions;
 
-public static class CatalogServicesTestsRegistrationExtension
+public static class TestCatalogServicesRegistrationExtension
 {
     public static IServiceCollection AddTestCatalogServices(this IServiceCollection services)
     {

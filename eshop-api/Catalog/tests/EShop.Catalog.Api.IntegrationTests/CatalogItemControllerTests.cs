@@ -20,8 +20,7 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
     private CatalogType defaultCatalogType;
     private CatalogBrand defaultCatalogBrand;
 
-    [SetUp]
-    public async Task SetupAsync()
+    public override async Task SetupAsync()
     {
         await base.SetupAsync();
 
@@ -113,6 +112,43 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Item")]
+    public async Task When_Employee_Created_The_Item_Then_It_Returned_With_Response()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
+        var catalogItemClient = webApplicationFactory.CreateClient();
+        var itemName = "Test Item";
+        var description = "Test Item Description";
+        var price = 33m;
+        var pictureURI = @"http:\\localhost\testpicture.png";
+        var availableQty = 47;
+        var catalogItem = new CatalogItemDTO
+        {
+            Name = itemName,
+            Description = description,
+            Price = price,
+            PictureUri = pictureURI,
+            BrandId = defaultCatalogBrand.Id,
+            TypeId = defaultCatalogType.Id,
+            AvailableQty = availableQty
+        };
+        var content = createItemContent(catalogItem);
+
+        var response = await catalogItemClient.PostAsync(Post.Item, content);
+
+        var createdCatalogItem = await fromHttpResponseMessage<CatalogItemReadModel>(response);
+        Assert.That(createdCatalogItem, Is.Not.Null);
+        Assert.That(createdCatalogItem.Name, Is.EqualTo(itemName));
+        Assert.That(createdCatalogItem.Description, Is.EqualTo(description));
+        Assert.That(createdCatalogItem.Price, Is.EqualTo(price));
+        Assert.That(createdCatalogItem.PictureUri, Is.EqualTo(pictureURI));
+        Assert.That(createdCatalogItem.CatalogBrandId, Is.EqualTo(defaultCatalogBrand.Id));
+        Assert.That(createdCatalogItem.CatalogBrand.Id, Is.EqualTo(defaultCatalogBrand.Id));
+        Assert.That(createdCatalogItem.CatalogType.Id, Is.EqualTo(defaultCatalogType.Id));
+        Assert.That(createdCatalogItem.AvailableQty, Is.EqualTo(availableQty));
+    }
+
+    [Test]
     [Category("Get Item")]
     public async Task When_Employee_Created_The_Item_Then_It_Can_Be_Requested_By_Id()
     {
@@ -137,13 +173,11 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         var content = createItemContent(catalogItem);
         var response = await catalogItemClient.PostAsync(Post.Item, content);
         var createdCatalogItem = await fromHttpResponseMessage<CatalogItemReadModel>(response);
-        Assert.That(createdCatalogItem, Is.Not.Null);
         var createdCatalogItemId = createdCatalogItem.Id;
 
-        var getResponse = await catalogItemClient.GetAsync(Item(createdCatalogItemId));
-        var getCatalogItem = await fromHttpResponseMessage<CatalogItemReadModel>(getResponse);
+        var getResponse = await catalogItemClient.GetAsync(Item(createdCatalogItemId!));
 
-        Assert.That(createdCatalogItem.Name, Is.EqualTo(itemName));
+        var getCatalogItem = await fromHttpResponseMessage<CatalogItemReadModel>(getResponse);
         Assert.That(getCatalogItem, Is.Not.Null);
         Assert.That(getCatalogItem.Name, Is.EqualTo(itemName));
         Assert.That(getCatalogItem.Description, Is.EqualTo(description));
@@ -326,8 +360,8 @@ public class CatalogItemControllerTests : BaseCatalogControllerTests
         };
 
         var response = await catalogItemClient.GetAsync(Items(listCatalogItemQuery));
-        var listReponse = await fromHttpResponseMessage<ListCatalogItemResult>(response);
 
+        var listReponse = await fromHttpResponseMessage<ListCatalogItemResult>(response);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(listReponse, Is.Not.Null);
         Assert.That(listReponse.TotalCount, Is.EqualTo(3));

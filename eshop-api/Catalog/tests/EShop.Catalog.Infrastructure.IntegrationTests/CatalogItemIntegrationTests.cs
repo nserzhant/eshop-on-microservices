@@ -15,7 +15,6 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     private ICatalogItemService _catalogItemService;
     private ICatalogItemQueryService _catalogItemQueryService;
 
-    [SetUp]
     public override async Task SetupAsync()
     {
         await base.SetupAsync();
@@ -174,6 +173,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     }
 
     [Test]
+    [Category("Catalog Item Query Service")]
     [TestCase(ListCatalogItemOrderBy.Name, OrderByDirections.ASC, "FIRST ITEM")]
     [TestCase(ListCatalogItemOrderBy.Name, OrderByDirections.DESC, "FOURTH ITEM")]
     [TestCase(ListCatalogItemOrderBy.Brand, OrderByDirections.ASC, "FOURTH ITEM")]
@@ -182,7 +182,6 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     [TestCase(ListCatalogItemOrderBy.Type, OrderByDirections.DESC, "SECOND ITEM")]
     [TestCase(ListCatalogItemOrderBy.Price, OrderByDirections.ASC, "SECOND ITEM")]
     [TestCase(ListCatalogItemOrderBy.Price, OrderByDirections.DESC, "FIRST ITEM")]
-    [Category("Catalog Item Query Service")]
     public async Task When_Catalog_Items_Exists_Then_They_Could_Ordered_By_Name_Brand_Type_Price(ListCatalogItemOrderBy orderBy, OrderByDirections directions, string resultingItemDescription)
     {
         await createCatalogItemAsync("A Catalog Item", "B Catalog Brand", "C Catalog Type", 40m, "FIRST ITEM");
@@ -207,6 +206,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
 
     [Test]
+    [Category("Catalog Item Query Service")]
     [TestCase("A Catalog", null, null, "FIRST ITEM")]
     [TestCase("C Catalog", null, null, "THRIRD ITEM")]
     [TestCase(null, "A Catalog", null, "FOURTH ITEM")]

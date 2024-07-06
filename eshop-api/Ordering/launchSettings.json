@@ -5,15 +5,17 @@
       "commandVersion": "1.0",
       "serviceActions": {
         "eshop.ordering.api": "StartDebugging",
-        "sqlserver": "StartWithoutDebugging"
+        "sqlserver": "StartWithoutDebugging",
+        "rabbitmq": "StartWithoutDebugging"
       }
     },
-    "SQL Server": {
+    "SQL Server + RabbitMQ": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
         "eshop.ordering.api": "DoNotStart",
-        "sqlserver": "StartWithoutDebugging"
+        "sqlserver": "StartWithoutDebugging",
+        "rabbitmq": "StartWithoutDebugging"
       }
     }
   }

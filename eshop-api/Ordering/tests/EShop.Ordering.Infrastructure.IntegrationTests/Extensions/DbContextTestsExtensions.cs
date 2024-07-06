@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 
-namespace EShop.Ordering.Infrastructure.IntegrationTests;
+namespace EShop.Ordering.Infrastructure.IntegrationTests.Extensions;
 public static class DbContextTestsExtensions
 {
     public static async Task ClearDb(this DbContext dbContext, params string[] tablesToPreserve)

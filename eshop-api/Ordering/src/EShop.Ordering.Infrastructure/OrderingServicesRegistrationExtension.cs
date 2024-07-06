@@ -1,6 +1,7 @@
 ﻿using EShop.Ordering.Core.Interfaces;
 using EShop.Ordering.Infrastructure.Read;
 using EShop.Ordering.Infrastructure.Repositories;
+using EShop.Ordering.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ public static class OrderingServicesRegistrationExtension
     {
         services.AddTransient<IOrderRepository, OrderRepository>();
         services.AddTransient<IOrderQueryService, OrderQueryService>();
+        services.AddTransient<IDateTimeService, DateTimeService>();
 
         services.AddDbContext<OrderingDbContext>(options =>
         {

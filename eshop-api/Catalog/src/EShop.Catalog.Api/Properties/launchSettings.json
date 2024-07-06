@@ -36,17 +36,36 @@
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
-      "publishAllPorts": true,
-      "useSSL": true,
-      "httpPort": 5035,
-      "sslPort": 7208,
       "environmentVariables": {
         "ConnectionStrings__catalogDbConnectionString": "Server=host.docker.internal,2433;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true",
         "EmployeeJWTSettings__MetadataAddress": "http://host.docker.internal:5218/.well-known/openid-configuration",
         "ClientJWTSettings__MetadataAddress": "http://host.docker.internal:5058/.well-known/openid-configuration",
         "initDbOnStartup": "true",
-        "generatedItemPictureUriHost": "https://localhost:7208"
-      }
+        "generatedItemPictureUriHost": "https://localhost:7208",
+        "broker__rabbitMQHost": "host.docker.internal",
+        "broker__rabbitMQPort": "5672",
+        "broker__rabbitMQVirtualHost": "/",
+        "broker__rabbitMQUsername": "guest",
+        "broker__rabbitMQPassword": "guest",
+        "broker__reserveStockQueueName": "reserve-stocks",
+        "broker__releaseStockQueueName": "release-stocks"
+      },
+      "publishAllPorts": true,
+      "useSSL": true,
+      "httpPort": 5035,
+      "sslPort": 7208
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "launchBrowser": true,
+      "launchUrl": "https://localhost:7208/swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7208;http://localhost:5035",
+        "generatedItemPictureUriHost": "https://localhost:7208",
+        "initDbOnStartup": "true"
+      },
+      "distributionName": ""
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json",

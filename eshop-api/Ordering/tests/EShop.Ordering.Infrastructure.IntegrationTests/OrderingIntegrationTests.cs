@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EShop.Ordering.Infrastructure.IntegrationTests;
 
+[TestFixture]
 public class OrderingIntegrationTests : BaseOrderingIntegationTests
 {
     private IOrderRepository _orderRepository;
@@ -35,10 +36,11 @@ public class OrderingIntegrationTests : BaseOrderingIntegationTests
         var typeName = "Type Name";
         var brandName = "Brand Name";
         var qty = 25;
+        var price = 45;
         var pictureUri = @"\picture.png";
         List<OrderItem> orderItems =
             [
-                new OrderItem(catalogItemId, name, description, typeName, brandName, qty, pictureUri)
+                new OrderItem(catalogItemId, name, description, price, typeName, brandName, qty, pictureUri)
             ];
         var order = new Order(orderDate, customerId, customerEmail, shippingAddress, orderItems);
 
@@ -74,6 +76,7 @@ public class OrderingIntegrationTests : BaseOrderingIntegationTests
         Assert.That(orderItemReadModel.TypeName, Is.EqualTo(typeName));
         Assert.That(orderItemReadModel.BrandName, Is.EqualTo(brandName));
         Assert.That(orderItemReadModel.Qty, Is.EqualTo(qty));
+        Assert.That(orderItemReadModel.Price, Is.EqualTo(price));
         Assert.That(orderItemReadModel.PictureUri, Is.EqualTo(pictureUri));
     }
 
@@ -98,6 +101,7 @@ public class OrderingIntegrationTests : BaseOrderingIntegationTests
     }
 
     [Test]
+    [Category("Order Query Service")]
     [TestCase(ListOrderOrderBy.Id, OrderByDirections.ASC, "FIRST ITEM")]
     [TestCase(ListOrderOrderBy.Id, OrderByDirections.DESC, "FOURTH ITEM")]
     [TestCase(ListOrderOrderBy.OrderDate, OrderByDirections.ASC, "SECOND ITEM")]
@@ -137,10 +141,11 @@ public class OrderingIntegrationTests : BaseOrderingIntegationTests
         var typeName = "Type Name 1";
         var brandName = "Brand Name 2";
         var qty = 125;
+        var price = 98m;
         var pictureUri = @"\image.png";
         List<OrderItem> orderItems =
             [
-                new OrderItem(catalogItemId, name, description, typeName, brandName, qty, pictureUri)
+                new OrderItem(catalogItemId, name, description, price, typeName, brandName, qty, pictureUri)
             ];
         var order = new Order(orderDate, customerId, customerEmail, shippingAddress, orderItems);
 

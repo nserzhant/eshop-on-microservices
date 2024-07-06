@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using EShop.Ordering.Core.Models;
+using EShop.Ordering.Infrastructure.ConsumeFilters;
 
 namespace EShop.Ordering.Infrastructure;
 
@@ -10,6 +11,7 @@ public class OrderingDbContext : DbContext
 {
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<ConsumedIntegrationCommand> ConsumedIntegrationCommands { get; set; }
 
     public OrderingDbContext(DbContextOptions<OrderingDbContext> options) : base(options)
     {

@@ -8,15 +8,17 @@
       "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}/swagger",
       "serviceActions": {
         "eshop.catalog.api": "StartDebugging",
-        "sqlserver": "StartWithoutDebugging"
+        "sqlserver": "StartWithoutDebugging",
+        "rabbitmq": "StartWithoutDebugging"
       }
     },
-    "SQL Server": {
+    "SQL Server + RabbitMQ": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
         "eshop.catalog.api": "DoNotStart",
-        "sqlserver": "StartWithoutDebugging"
+        "sqlserver": "StartWithoutDebugging",
+        "rabbitmq": "StartWithoutDebugging"
       }
     }
   }

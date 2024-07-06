@@ -41,7 +41,13 @@
         "ASPNETCORE_HTTP_PORTS": "8080",
         "JWTSettings__MetadataAddress": "http://host.docker.internal:5058/.well-known/openid-configuration",
         "ConnectionStrings__orderingDbConnectionString": "Server=host.docker.internal,2433;Integrated Security=false;Initial Catalog=eshop.ordering.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true",
-        "initDbOnStartup": "true"
+        "initDbOnStartup": "true",
+        "broker__rabbitMQHost": "host.docker.internal",
+        "broker__rabbitMQPort": "5672",
+        "broker__rabbitMQVirtualHost": "/",
+        "broker__rabbitMQUsername": "guest",
+        "broker__rabbitMQPassword": "guest",
+        "broker__queueName": "create-order"
       },
       "publishAllPorts": true,
       "useSSL": true

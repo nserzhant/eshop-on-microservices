@@ -119,6 +119,17 @@ namespace EShop.Ordering.Infrastructure.Migrations
                     b.ToTable("OrderItems", "ordering");
                 });
 
+            modelBuilder.Entity("EShop.Ordering.Infrastructure.ConsumeFilters.ConsumedIntegrationCommand", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("MessageId");
+
+                    b.ToTable("ConsumedIntegrationCommands", "ordering");
+                });
+
             modelBuilder.Entity("EShop.Ordering.Core.Models.OrderItem", b =>
                 {
                     b.HasOne("EShop.Ordering.Core.Models.Order", null)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EShop.Ordering.Infrastructure.IntegrationTests.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EShop.Ordering.Infrastructure.IntegrationTests;
 

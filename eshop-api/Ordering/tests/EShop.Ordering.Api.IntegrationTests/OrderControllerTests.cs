@@ -14,6 +14,8 @@ using System.Text.Json;
 
 namespace EShop.Ordering.Api.IntegrationTests;
 
+[TestFixture]
+[Category("OrderController")]
 public class OrderControllerTests : BaseOrderingIntegationTests
 {
     private const string API_BASE_URL = "api/order";
@@ -22,7 +24,6 @@ public class OrderControllerTests : BaseOrderingIntegationTests
     private TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
     private IOrderRepository _orderRepository;
 
-    [SetUp]
     public override async Task SetupAsync()
     {
         await base.SetupAsync();
@@ -52,10 +53,9 @@ public class OrderControllerTests : BaseOrderingIntegationTests
         _orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
     }
 
-    [TearDown]
-    public override void TearDown()
+    public override async Task TearDownAsync()
     {
-        base.TearDown();
+        await base.TearDownAsync();
 
         webApplicationFactory.Dispose();
     }
@@ -73,6 +73,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
         var orderFromResponse = await fromHttpResponseMessage<OrderReadModel>(response);
         var orderItemFromReponse = orderFromResponse?.OrderItems?.FirstOrDefault();
+        var orderItem = order.OrderItems.First();
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(orderFromResponse, Is.Not.Null);
         Assert.That(orderFromResponse.Id, Is.EqualTo(order.Id));
@@ -80,12 +81,13 @@ public class OrderControllerTests : BaseOrderingIntegationTests
         Assert.That(orderFromResponse.CustomerId, Is.EqualTo(customerId));
         Assert.That(orderFromResponse.ShippingAddress, Is.EqualTo(order.ShippingAddress));
         Assert.That(orderItemFromReponse, Is.Not.Null);
-        Assert.That(orderItemFromReponse.Name, Is.EqualTo(order.OrderItems.First().Name));
-        Assert.That(orderItemFromReponse.Description, Is.EqualTo(order.OrderItems.First().Description));
-        Assert.That(orderItemFromReponse.TypeName, Is.EqualTo(order.OrderItems.First().TypeName));
-        Assert.That(orderItemFromReponse.BrandName, Is.EqualTo(order.OrderItems.First().BrandName));
-        Assert.That(orderItemFromReponse.Qty, Is.EqualTo(order.OrderItems.First().Qty));
-        Assert.That(orderItemFromReponse.PictureUri, Is.EqualTo(order.OrderItems.First().PictureUri));
+        Assert.That(orderItemFromReponse.Name, Is.EqualTo(orderItem.Name));
+        Assert.That(orderItemFromReponse.Description, Is.EqualTo(orderItem.Description));
+        Assert.That(orderItemFromReponse.TypeName, Is.EqualTo(orderItem.TypeName));
+        Assert.That(orderItemFromReponse.BrandName, Is.EqualTo(orderItem.BrandName));
+        Assert.That(orderItemFromReponse.Qty, Is.EqualTo(orderItem.Qty));
+        Assert.That(orderItemFromReponse.Price, Is.EqualTo(orderItem.Price));
+        Assert.That(orderItemFromReponse.PictureUri, Is.EqualTo(orderItem.PictureUri));
     }
 
     [Test]
@@ -243,10 +245,11 @@ public class OrderControllerTests : BaseOrderingIntegationTests
         var typeName = "Type Name";
         var brandName = "Brand Name";
         var qty = 25;
+        var price = 412m;
         var pictureUri = @"\picture.png";
         List<OrderItem> orderItems =
             [
-                new OrderItem(catalogItemId, name, description, typeName, brandName, qty, pictureUri)
+                new OrderItem(catalogItemId, name, description, price, typeName, brandName, qty, pictureUri)
             ];
         var order = new Order(orderDate, customerId, customerEmail, shippingAddress, orderItems);
 

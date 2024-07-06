@@ -8,6 +8,7 @@ using EShop.Catalog.Infrastructure.IntegrationTests;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using MassTransit;
 
 namespace EShop.Catalog.Api.IntegrationTests;
 
@@ -16,8 +17,7 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
     protected WebApplicationFactory<Program> webApplicationFactory;
     protected TestAuthenticationContextBuilder testAuthenticationContextBuilder;
 
-    [SetUp]
-    public async Task SetupAsync()
+    public override async Task SetupAsync()
     {
         await base.SetupAsync();
 
@@ -35,15 +35,15 @@ public class BaseCatalogControllerTests : BaseCatalogIntegrationTests
             {
                 services.AddSingleton(testAuthenticationContextBuilder);
                 services.AddTransient<IAuthenticationSchemeProvider, TestAuthenticationSchemeProvider>();
+                services.RemoveMassTransitHostedService();
             });
         });
-
     }
 
-    public override void TearDown()
+    public override async Task TearDownAsync()
     {
-        webApplicationFactory.Dispose();
-        base.TearDown();
+        await webApplicationFactory.DisposeAsync();
+        await base.TearDownAsync();
     }
 
 

@@ -18,9 +18,8 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
     private const string API_BASE_URL = "api/CatalogType";
     private Guid defaultCatalogTypeId = Guid.Empty;
     private CatalogType? defaultType = null;
-
-    [SetUp]
-    public async Task SetupAsync()
+    
+    public override async Task SetupAsync()
     {
         await base.SetupAsync();
 
@@ -107,6 +106,23 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Catalog Type")]
+    public async Task When_Employee_Created_The_Type_Then_It_Returned_With_Response()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
+        var catalogTypeClient = webApplicationFactory.CreateClient();
+        var catalogType = new CatalogTypeDTO { Type = "Test catalog type" };
+        var content = createCatalogTypeContent(catalogType);
+
+        var response = await catalogTypeClient.PostAsync(Post.CatalogType, content);
+
+        var createdCatalogType = await fromHttpResponseMessage<CatalogTypeReadModel>(response);
+        Assert.That(createdCatalogType, Is.Not.Null);
+        Assert.That(createdCatalogType.Type, Is.EqualTo("Test catalog type"));
+    }
+
+    [Test]
+    [Category("Create Catalog Type")]
     [Category("Get Catalog Type")]
     public async Task When_Employee_Created_The_Type_Then_It_Can_Be_Requested_By_Id()
     {
@@ -118,13 +134,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
         var response = await catalogTypeClient.PostAsync(Post.CatalogType, content);
         var createdCatalogType = await fromHttpResponseMessage<CatalogTypeReadModel>(response);
 
-        Assert.That(createdCatalogType, Is.Not.Null);
-        var createdCatalogTypeId = createdCatalogType.Id;
+        var getResponse = await catalogTypeClient.GetAsync(CatalogType(createdCatalogType!.Id));
 
-        var getResponse = await catalogTypeClient.GetAsync(CatalogType(createdCatalogTypeId));
         var getCatalogType = await fromHttpResponseMessage<CatalogTypeReadModel>(getResponse);
-
-        Assert.That(createdCatalogType.Type, Is.EqualTo("Test catalog type"));
         Assert.That(getCatalogType, Is.Not.Null);
         Assert.That(getCatalogType.Type, Is.EqualTo("Test catalog type"));
     }
@@ -282,8 +294,8 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
         };
 
         var response = await catalogTypeClient.GetAsync(CatalogTypes(listCatalogTypeQuery));
-        var listReponse = await fromHttpResponseMessage<ListCatalogTypeResult>(response);
 
+        var listReponse = await fromHttpResponseMessage<ListCatalogTypeResult>(response);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(listReponse, Is.Not.Null);
         Assert.That(listReponse.TotalCount, Is.EqualTo(3));

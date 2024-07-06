@@ -3,9 +3,13 @@ using EShop.Catalog.Api.Data;
 using EShop.Catalog.Api.Filters;
 using EShop.Catalog.Api.Settings;
 using EShop.Catalog.Infrastructure;
+using EShop.Catalog.Infrastructure.ConsumeFilters;
+using EShop.Catalog.Integration.Consumers;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using NSwag.Generation.Processors.Security;
@@ -14,13 +18,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Get settings to configure JWT tokens
 
-var employeeJwtSettingsSection = builder.Configuration.GetSection(ConfigurationKeys.EMPLOYEE_JWT_CONFIG_NAME);
-var employeeJwtSettings = new JWTSettings();
-employeeJwtSettingsSection.Bind(employeeJwtSettings);
+var employeeJwtSettings = builder.Configuration.GetSection(ConfigurationKeys.EMPLOYEE_JWT_CONFIG_NAME)
+    .Get<JWTSettings>() ?? new JWTSettings();
 
-var clientJwtSettingsSection = builder.Configuration.GetSection(ConfigurationKeys.CLIENT_JWT_CONFIG_NAME);
-var clientJwtSettings = new JWTSettings();
-clientJwtSettingsSection.Bind(clientJwtSettings);
+var clientJwtSettings = builder.Configuration.GetSection(ConfigurationKeys.CLIENT_JWT_CONFIG_NAME)
+    .Get<JWTSettings>() ?? new JWTSettings();
+
+// Get settings to configure Message Broker connection
+
+var messageBrokerSettings = builder.Configuration.GetSection(ConfigurationKeys.MESSAGE_BROKER_CONFIG_NAME)
+    .Get<MessageBrockerSettings>() ?? new MessageBrockerSettings();
 
 // Configure settings for Client app
 var clientOrigins = builder.Configuration[ConfigurationKeys.SPA_CLIENT_ORIGINS_CONFIG_NAME];
@@ -97,8 +104,41 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 
 builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
 
+builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy());
+
 // The following line enables Application Insights telemetry collection.
 builder.Services.AddApplicationInsightsTelemetry();
+
+// Add MassTransit Consumers worker (Generally it should be implemented as a separate worker service)
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<ReserveStocksConsumer>();
+    x.AddConsumer<ReleaseStocksConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+        {
+            h.Username(messageBrokerSettings.RabbitMQUsername);
+            h.Password(messageBrokerSettings.RabbitMQPassword);
+            
+        });
+
+        cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
+        {
+            configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
+            configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+        });
+
+        cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
+        {
+            configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
+            configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+        });
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 var app = builder.Build();
 
@@ -116,6 +156,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/hc");
 
 app.UseStaticFiles(new StaticFileOptions
 {

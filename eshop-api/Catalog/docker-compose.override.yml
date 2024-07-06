@@ -11,6 +11,11 @@ services:
     volumes:
       - eshop-api-data:/var/opt/mssql
 
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
   eshop.catalog.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -20,6 +25,13 @@ services:
       - ClientJWTSettings__MetadataAddress=http://host.docker.internal:5058/.well-known/openid-configuration
       - initDbOnStartup=true
       - generatedItemPictureUriHost=https://localhost:7208
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__reserveStockQueueName=reserve-stocks
+      - broker__releaseStockQueueName=release-stocks
     ports:
       - "5035:80"
       - "7208:443"

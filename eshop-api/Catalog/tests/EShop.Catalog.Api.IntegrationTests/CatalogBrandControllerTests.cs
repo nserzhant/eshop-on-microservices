@@ -19,13 +19,18 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
     private Guid defaultCatalogBrandId = Guid.Empty;
     private CatalogBrand? defaultBrand = null;
 
-    [SetUp]
-    public async Task SetupAsync()
+    public override async Task SetupAsync()
     {
         await base.SetupAsync();
-        
+
         defaultBrand = await createCatalogBrandAsync("default brand");
         defaultCatalogBrandId = defaultBrand.Id;
+    }
+
+    public override async Task TearDownAsync()
+    {
+        //Thread.Sleep(100);
+        await base.TearDownAsync();
     }
 
     [Test]
@@ -104,8 +109,25 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
+
     [Test]
     [Category("Create Brand")]
+    public async Task When_Employee_Created_The_Brand_Then_It_Returned_With_Response()
+    {
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
+            .AsSalesManager();
+        var catalogBrandClient = webApplicationFactory.CreateClient();
+        var brand = new CatalogBrandDTO { Brand = "Test Brand" };
+        var content = createBrandContent(brand);
+
+        var response = await catalogBrandClient.PostAsync(Post.Brand, content);
+
+        var createdCatalogBrand = await fromHttpResponseMessage<CatalogBrandReadModel>(response);
+        Assert.That(createdCatalogBrand, Is.Not.Null);
+        Assert.That(createdCatalogBrand.Brand, Is.EqualTo("Test Brand"));
+    }
+
+    [Test]
     [Category("Get Brand")]
     public async Task When_Employee_Created_The_Brand_Then_It_Can_Be_Requested_By_Id()
     {
@@ -117,13 +139,9 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
         var response = await catalogBrandClient.PostAsync(Post.Brand, content);
         var createdCatalogBrand = await fromHttpResponseMessage<CatalogBrandReadModel>(response);
 
-        Assert.That(createdCatalogBrand, Is.Not.Null);
-        var createdCatalogBrandId = createdCatalogBrand.Id;
+        var getResponse = await catalogBrandClient.GetAsync(Brand(createdCatalogBrand!.Id));
 
-        var getResponse = await catalogBrandClient.GetAsync(Brand(createdCatalogBrandId));
         var getCatalogBrand = await fromHttpResponseMessage<CatalogBrandReadModel>(getResponse);
-
-        Assert.That(createdCatalogBrand.Brand, Is.EqualTo("Test Brand"));
         Assert.That(getCatalogBrand, Is.Not.Null);
         Assert.That(getCatalogBrand.Brand, Is.EqualTo("Test Brand"));
     }
@@ -284,8 +302,8 @@ public class CatalogBrandControllerTests : BaseCatalogControllerTests
         };
 
         var response = await catalogBrandClient.GetAsync(Brands(listCatalogBrandQuery));
-        var listReponse = await fromHttpResponseMessage<ListCatalogBrandResult>(response);
 
+        var listReponse = await fromHttpResponseMessage<ListCatalogBrandResult>(response);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(listReponse, Is.Not.Null);
         Assert.That(listReponse.TotalCount, Is.EqualTo(3));

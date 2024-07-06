@@ -15,7 +15,6 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
     private ICatalogTypeService _catalogTypeService;
     private ICatalogTypeQueryService _catalogTypeQueryService;
 
-    [SetUp]
     public override async Task SetupAsync()
     {
         await base.SetupAsync();
@@ -94,7 +93,6 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
         Assert.That(resultAsc.TotalCount, Is.EqualTo(3));
         Assert.That(resultAsc.CatalogTypes.Count, Is.EqualTo(2));
         Assert.That(resultAsc.CatalogTypes[0].Type, Is.EqualTo("A Catalog Type"));
-
         Assert.That(resultDesc, Is.Not.Null);
         Assert.That(resultDesc.TotalCount, Is.EqualTo(3));
         Assert.That(resultDesc.CatalogTypes.Count, Is.EqualTo(2));
@@ -108,7 +106,6 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
         await createCatalogTypeAsync("A Catalog Type");
         await createCatalogTypeAsync("B Catalog Type");
         await createCatalogTypeAsync("C Catalog Type");
-
         var listCatalogTypeQuery = new ListCatalogTypeQuery()
         {
             OrderByDirection = OrderByDirections.ASC,

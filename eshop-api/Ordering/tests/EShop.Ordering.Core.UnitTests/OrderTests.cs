@@ -1,7 +1,7 @@
 using EShop.Ordering.Core.Exceptions;
 using EShop.Ordering.Core.Models;
 
-namespace EShop.Ordering.Core.Tests;
+namespace EShop.Ordering.Core.UnitTests;
 
 [TestFixture]
 [Category("Order")]
@@ -16,10 +16,11 @@ public class OrderTests
         var typeName = "Type Name";
         var brandName = "Brand Name";
         var qty = 25;
+        var price = 12.3m;
         var pictureUri = @"\picture.url";
         List<OrderItem> orderItems =
             [
-                new OrderItem(catalogItemId, name, description, typeName, brandName, qty, pictureUri)
+                new OrderItem(catalogItemId, name, description, price, typeName, brandName, qty, pictureUri)
             ];
         var orderDate = DateTime.UtcNow;
         var customerId = Guid.NewGuid();
@@ -37,6 +38,7 @@ public class OrderTests
         Assert.That(orderItem.CatalogItemId, Is.EqualTo(catalogItemId));
         Assert.That(orderItem.Name, Is.EqualTo(name));
         Assert.That(orderItem.Description, Is.EqualTo(description));
+        Assert.That(orderItem.Price, Is.EqualTo(price));
         Assert.That(orderItem.TypeName, Is.EqualTo(typeName));
         Assert.That(orderItem.BrandName, Is.EqualTo(brandName));
         Assert.That(orderItem.Qty, Is.EqualTo(qty));
@@ -161,7 +163,7 @@ public class OrderTests
 
     private Order createNewOrder()
     {
-        var orderItems = new List<OrderItem>() { new OrderItem(Guid.NewGuid(), "Test Item", "Test Description", "Tset type", "Test Brand", 11, @"\picture.png") };
+        var orderItems = new List<OrderItem>() { new OrderItem(Guid.NewGuid(), "Test Item", "Test Description", 12m, "Tset type", "Test Brand", 11, @"\picture.png") };
         var order = new Order(DateTime.UtcNow, Guid.NewGuid(), "sample@example.com", "test address", orderItems);
 
         return order;

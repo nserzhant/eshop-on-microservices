@@ -2,8 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace EShop.Ordering.Infrastructure.IntegrationTests;
-public static class OrderingServicesTestsRegistrationExtension
+namespace EShop.Ordering.Infrastructure.IntegrationTests.Extensions;
+public static class TestOrderingServicesRegistrationExtension
 {
     public static IServiceCollection AddTestOrderingServices(this IServiceCollection services)
     {

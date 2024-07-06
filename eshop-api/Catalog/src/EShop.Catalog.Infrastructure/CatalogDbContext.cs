@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using EShop.Catalog.Core.Models;
 using System.Reflection;
+using EShop.Catalog.Infrastructure.ConsumeFilters;
 
 namespace EShop.Catalog.Infrastructure;
 
@@ -11,6 +12,7 @@ public class CatalogDbContext : DbContext
     public DbSet<CatalogBrand> CatalogBrands { get; set; }
     public DbSet<CatalogType> CatalogTypes { get; set; }
     public DbSet<CatalogItem> CatalogItems { get; set; }
+    public DbSet<ConsumedIntegrationCommand> ConsumedIntegrationCommands { get; set; }
 
     public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options)
     {

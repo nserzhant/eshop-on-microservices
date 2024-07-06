@@ -11,11 +11,12 @@ public class OrderItem : BaseEntity
     public int Qty { get; private set; }
     private OrderItem() { }
 
-    public OrderItem(Guid catalogItemId, string name, string? description, string typeName, string brandName, int qty, string pictureUri)
+    public OrderItem(Guid catalogItemId, string name, string? description, decimal price, string typeName, string brandName, int qty, string pictureUri)
     {
         CatalogItemId = catalogItemId;
         Name = name;
         Description = description;
+        Price = price;
         TypeName = typeName;
         BrandName = brandName;
         PictureUri = pictureUri;

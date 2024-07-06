@@ -4,10 +4,21 @@ services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
   eshop.ordering.api:
     image: ${DOCKER_REGISTRY-}eshop.ordering.api:${TAG:-latest}
     build:
       context: .
       dockerfile: src/EShop.Ordering.Api/Dockerfile
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy

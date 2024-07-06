@@ -3,8 +3,8 @@ using EShop.Catalog.Core.Models;
 
 namespace EShop.Catalog.Core.UnitTests;
 
-[Category("Catalog Item")]
 [TestFixture]
+[Category("Catalog Item")]
 public class CatalogItemUnitTests
 {
 
@@ -34,7 +34,8 @@ public class CatalogItemUnitTests
     [Test]
     public void When_Create_Catalog_Item_With_Null_Or_Empty_Name_Then_Exception_Should_Be_Thrown()
     {
-        var (_, _, _, _, catalogTypeId, catalogBrandId, _) = createDefaultValues();
+        var catalogTypeId = Guid.NewGuid();
+        var catalogBrandId = Guid.NewGuid();
 
         Action actNull = () => new CatalogItem(null, catalogTypeId, catalogBrandId);
         Action actEmpty = () => new CatalogItem(string.Empty, catalogTypeId, catalogBrandId);
@@ -47,7 +48,8 @@ public class CatalogItemUnitTests
     [Test]
     public void When_Create_Catalog_Item_With_Empty_Type_Reference_Then_Exception_Should_Be_Thrown()
     {
-        var (name, _, _, _, _, catalogBrandId, _) = createDefaultValues();
+        var name = "Test Name";
+        var catalogBrandId = Guid.NewGuid();
 
         Action act = () => new CatalogItem(name,Guid.Empty, catalogBrandId);
 
@@ -57,7 +59,8 @@ public class CatalogItemUnitTests
     [Test]
     public void When_Create_Catalog_Item_With_Empty_Brand_Reference_Then_Exception_Should_Be_Thrown()
     {
-        var (name, _, _, _, catalogTypeId, _, _) = createDefaultValues();
+        var name = "Test Name";
+        var catalogTypeId = Guid.NewGuid();
 
         Action act = () => new CatalogItem(name, catalogTypeId, Guid.Empty);
 

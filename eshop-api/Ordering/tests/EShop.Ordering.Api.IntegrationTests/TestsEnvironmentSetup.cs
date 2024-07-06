@@ -1,6 +1,6 @@
 ﻿using EShop.Ordering.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using EShop.Ordering.Infrastructure.IntegrationTests;
+using EShop.Ordering.Infrastructure.IntegrationTests.Extensions;
 
 namespace EShop.Ordering.Api.IntegrationTests;
 

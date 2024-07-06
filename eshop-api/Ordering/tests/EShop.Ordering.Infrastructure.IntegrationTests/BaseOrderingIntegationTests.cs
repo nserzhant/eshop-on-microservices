@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EShop.Ordering.Infrastructure.IntegrationTests.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EShop.Ordering.Infrastructure.IntegrationTests;
 public class BaseOrderingIntegationTests
@@ -10,7 +11,7 @@ public class BaseOrderingIntegationTests
     {
         var sc = new ServiceCollection();
 
-        sc.AddTestOrderingServices();
+        AddServices(sc);
 
         serviceProvider = sc.BuildServiceProvider();
 
@@ -19,9 +20,15 @@ public class BaseOrderingIntegationTests
         await _orderDbContext.ClearDb();
     }
 
-    [TearDown]
-    public virtual void TearDown()
+    protected virtual void AddServices(ServiceCollection sc)
     {
-        serviceProvider.Dispose();
+        sc.AddTestOrderingServices();
     }
+
+    [TearDown]
+    public virtual async Task TearDownAsync()
+    {
+        await serviceProvider.DisposeAsync();
+    }
+    
 }
