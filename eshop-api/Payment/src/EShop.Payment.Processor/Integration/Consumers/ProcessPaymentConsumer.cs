@@ -1,9 +1,9 @@
-﻿using EShop.Payment.Processor.Commands;
-using EShop.Payment.Processor.Events;
+﻿using EShop.Payment.Integration.Commands;
+using EShop.Payment.Integration.Events;
 using MassTransit;
 using Microsoft.Extensions.Options;
 
-namespace EShop.Payment.Processor.Consumers;
+namespace EShop.Payment.Processor.Integration.Consumers;
 
 public class ProcessPaymentConsumer : IConsumer<ProcessPaymentCommand>
 {
@@ -35,7 +35,7 @@ public class ProcessPaymentConsumer : IConsumer<ProcessPaymentCommand>
             await context.Publish(new PaymentFailedEvent(command.CorrelationId));
         }
 
-        _logger.LogInformation("End Processing ProcessPaymentCommand, CorrelationId: {CorrelationId}, Result: {@command}", context.CorrelationId, isPaymentSuccess);
+        _logger.LogInformation("End Processing ProcessPaymentCommand, CorrelationId: {CorrelationId}, Result: {isPaymentSuccess}", context.CorrelationId, isPaymentSuccess);
 
     }
 }

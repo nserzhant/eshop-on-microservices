@@ -130,12 +130,13 @@ public class BasketControllerTests : BaseBasketIntegrationTests
 
     [Test]
     [Category("Checkout Basket")]
+    [Category("Saga")]
     public async Task When_Checkout_Basket_Then_Integration_Event_Should_Be_Published()
     {
         var customerId = Guid.NewGuid();
         var shippingAddress = "Test Address";
         var email = "testEmail@example.com";
-        var basket = createCustomerBasket(customerId);
+        var basket = await createCustomerBasketAsync(customerId);
         _testAuthenticationContextBuilder.SetAuthorizedAs(customerId, email);
         var basketClient = webApplicationFactory.CreateClient();
         var checkoutDTO = new CheckoutDTO() { ShippingAddress = shippingAddress };
@@ -190,7 +191,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
     public async Task When_Customer_Saved_Basket_Then_Basket_Can_Get()
     {
         var customerId = Guid.NewGuid();
-        var basket = createCustomerBasket(customerId);
+        var basket = await createCustomerBasketAsync(customerId);
         _testAuthenticationContextBuilder.SetAuthorizedAs(customerId);
         var basketClient = webApplicationFactory.CreateClient();
 
@@ -208,7 +209,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
         Assert.That(basketFromReponse.Items[0].Price, Is.EqualTo(basket.Items[0].Price));
     }
 
-    private CustomerBasket createCustomerBasket(Guid customerId)
+    private async Task<CustomerBasket> createCustomerBasketAsync(Guid customerId)
     {
         CustomerBasket basket = new CustomerBasket();
 
@@ -229,7 +230,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
 
         var basketRepository = serviceProvider.GetRequiredService<IBasketRepository>();
 
-        basketRepository.SaveBasketAsync(customerId, basket);
+        await basketRepository.SaveBasketAsync(customerId, basket);
 
         return basket;
     }

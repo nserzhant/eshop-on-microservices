@@ -1,2 +1,2 @@
-﻿namespace EShop.Payment.Processor.Events;
+﻿namespace EShop.Payment.Integration.Events;
 public record PaymentFailedEvent(Guid CorrelationId);

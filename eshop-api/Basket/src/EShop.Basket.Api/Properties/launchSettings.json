@@ -32,11 +32,19 @@
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
+      "httpPort": 5150,
+      "sslPort": 7120,
       "environmentVariables": {
         "ASPNETCORE_HTTPS_PORTS": "8081",
         "ASPNETCORE_HTTP_PORTS": "8080",
         "JWTSettings__MetadataAddress": "http://host.docker.internal:5058/.well-known/openid-configuration",
-        "ConnectionStrings__redisConnectionString": "host.docker.internal:6379"
+        "ConnectionStrings__redisConnectionString": "host.docker.internal:6379",
+        "broker__rabbitMQHost": "host.docker.internal",
+        "broker__rabbitMQPort": "5672",
+        "broker__rabbitMQVirtualHost": "/",
+        "broker__rabbitMQUsername": "guest",
+        "broker__rabbitMQPassword": "guest",
+        "broker__queueName": "clear-basket"
       },
       "publishAllPorts": true,
       "useSSL": true

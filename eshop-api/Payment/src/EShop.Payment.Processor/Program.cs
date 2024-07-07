@@ -1,8 +1,9 @@
 using EShop.Payment.Processor;
-using EShop.Payment.Processor.Consumers;
+using EShop.Payment.Processor.Integration.Consumers;
 using MassTransit;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddLogging(log => log.AddConsole());
@@ -34,7 +35,14 @@ builder.Services.AddMassTransit(x =>
 
         cfg.ConfigureEndpoints(context);
     });
-});
+});  
+
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy());
 
 var host = builder.Build();
+
+
+host.MapHealthChecks("/hc");
+
 host.Run();

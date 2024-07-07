@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace EShop.Basket.Infrastructure.IntegrationTests;
-public static class BasketServicesTestsRegistrationExtension
+public static class TestBasketServicesRegistrationExtension
 {
     public static IServiceCollection AddTestBasketServices(this IServiceCollection services)
     {

@@ -6,11 +6,19 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   eshop.basket.api:
-    image: ${DOCKER_REGISTRY-}eshopbasketapi
+    image: ${DOCKER_REGISTRY-}eshop.basket.api:${TAG:-latest}
     build:
       context: .
       dockerfile: src/Eshop.Basket.Api/Dockerfile
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy

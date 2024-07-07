@@ -16,8 +16,8 @@ public class BasketIntegrationTests : BaseBasketIntegrationTests
         _repository = serviceProvider.GetRequiredService<IBasketRepository>();
     }
 
-    [Category("Get Basket")]
     [Test]
+    [Category("Get Basket")]
     public async Task When_No_Basket_Created_Then_Empty_Should_Be_Returned()
     {
         var customerId = Guid.NewGuid();
@@ -29,8 +29,8 @@ public class BasketIntegrationTests : BaseBasketIntegrationTests
         Assert.That(basketSaved.Items.Count, Is.EqualTo(0));
     }
 
-    [Category("Get Basket")]
     [Test]
+    [Category("Get Basket")]
     public async Task When_Save_Basket_Then_It_Could_Be_Retreived_By_Customer_Id()
     {
         var customerId = Guid.NewGuid();

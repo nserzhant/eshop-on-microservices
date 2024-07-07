@@ -5,6 +5,7 @@ using EShop.Basket.Infrastructure;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using NSwag.Generation.Processors.Security;
 
@@ -28,6 +29,7 @@ var clientOrigins = builder.Configuration[Consts.SPA_CLIENT_ORIGIN_CONFIG_NAME];
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddBasketSercices(builder.Configuration);
+
 builder.Services.AddAuthentication(auth =>
 {
     auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -49,6 +51,7 @@ builder.Services.AddAuthentication(auth =>
     options.MetadataAddress = jwtSettings.MetadataAddress;
     options.RequireHttpsMetadata = false;
 });
+
 builder.Services.AddOpenApiDocument(document =>
 {
     document.AddSecurity("Bearer", new NSwag.OpenApiSecurityScheme
@@ -60,6 +63,7 @@ builder.Services.AddOpenApiDocument(document =>
     });
     document.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("Bearer"));
 });
+
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 {
     if (clientOrigins != null)
@@ -67,6 +71,11 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 }));
 
 builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
+
+builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy());
+
+// The following line enables Application Insights telemetry collection.
+builder.Services.AddApplicationInsightsTelemetry();
 
 // Add MassTransit Consumers worker (Generally it should be implemented as a separate worker service)
 builder.Services.AddMassTransit(x =>
@@ -106,6 +115,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/hc");
+
 app.Run();
 
 public partial class Program { }

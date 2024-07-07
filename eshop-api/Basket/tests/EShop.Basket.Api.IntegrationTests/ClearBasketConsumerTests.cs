@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace EShop.Basket.Api.IntegrationTests;
 
 [TestFixture]
+[Category("Clear Basket Consumer")]
+[Category("Saga")]
 public class ClearBasketConsumerTests : BaseBasketIntegrationTests
 {
     private ITestHarness _harness;
@@ -48,8 +50,8 @@ public class ClearBasketConsumerTests : BaseBasketIntegrationTests
         var customerId = Guid.NewGuid();
         var basket = new CustomerBasket()
         {
-            Items = new List<BasketItem>()
-            {
+            Items =
+            [
                 new BasketItem()
                 {
                     CatalogItemId = Guid.NewGuid(),
@@ -57,10 +59,11 @@ public class ClearBasketConsumerTests : BaseBasketIntegrationTests
                     TypeName = "Sample Basket Item Type",
                     BrandName = "Sample Brand",
                     PictureUri = "/image-test.png",
+                    Description = "Test Description",
                     Price = 55m,
                     Qty = 7
                 }
-            }
+            ]
         };
         await _basketRepository.SaveBasketAsync(customerId, basket);
 

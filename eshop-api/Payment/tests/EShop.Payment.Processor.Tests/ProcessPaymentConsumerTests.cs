@@ -1,12 +1,14 @@
 using MassTransit.Testing;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
-using EShop.Payment.Processor.Consumers;
-using EShop.Payment.Processor.Commands;
-using EShop.Payment.Processor.Events;
+using EShop.Payment.Processor.Integration.Consumers;
+using EShop.Payment.Integration.Commands;
+using EShop.Payment.Integration.Events;
 
 namespace EShop.Payment.Processor.Tests;
 
+[TestFixture]
+[Category("Payment")]
 public class ProcessPaymentConsumerTests
 {
     private ServiceProvider _serviceProvider;

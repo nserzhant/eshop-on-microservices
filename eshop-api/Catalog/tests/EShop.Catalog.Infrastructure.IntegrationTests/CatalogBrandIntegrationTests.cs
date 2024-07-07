@@ -78,7 +78,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
         var catalogBrandUpdated = await _catalogBrandQueryService.GetById(catalogBrand.Id);
         Assert.That(catalogBrandUpdated, Is.Not.Null);
-        Assert.That(catalogBrandUpdated.Brand, Is.EqualTo(catalogBrandUpdated.Brand));
+        Assert.That(catalogBrandUpdated.Brand, Is.EqualTo("updated brand"));
     }
 
     [Test]

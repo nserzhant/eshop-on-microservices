@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Core", "src\Es
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Infrastructure", "src\Eshop.Basket.Infrastructure\EShop.Basket.Infrastructure.csproj", "{FA653556-C2FB-4EDA-80F3-638FDA2366DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EShop.Basket.Infrastructure.IntegrationTests", "tests\EShop.Basket.Infrastructure.IntegrationTests\EShop.Basket.Infrastructure.IntegrationTests.csproj", "{2EE919DA-638A-4575-A7DD-5BB072118D41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Infrastructure.IntegrationTests", "tests\EShop.Basket.Infrastructure.IntegrationTests\EShop.Basket.Infrastructure.IntegrationTests.csproj", "{2EE919DA-638A-4575-A7DD-5BB072118D41}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{77B03341-EF02-4BDD-B290-F7A542DF2DF2}"
 EndProject

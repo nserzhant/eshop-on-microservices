@@ -9,31 +9,13 @@
         "rabbitmq": "StartWithoutDebugging"
       }
     },
-    "redis": {
+    "Redis + RabbitMQ": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
         "eshop.basket.api": "DoNotStart",
         "redis": "StartWithoutDebugging",
-        "rabbitmq": "DoNotStart"
-      }
-    },
-    "rabbitmq": {
-      "commandName": "DockerCompose",
-      "commandVersion": "1.0",
-      "serviceActions": {
-        "eshop.basket.api": "DoNotStart",
-        "rabbitmq": "StartWithoutDebugging",
-        "redis": "DoNotStart"
-      }
-    },
-    "infrastructure-services": {
-      "commandName": "DockerCompose",
-      "commandVersion": "1.0",
-      "serviceActions": {
-        "eshop.basket.api": "DoNotStart",
-        "rabbitmq": "StartWithoutDebugging",
-        "redis": "StartWithoutDebugging"
+        "rabbitmq": "StartWithoutDebugging"
       }
     }
   }

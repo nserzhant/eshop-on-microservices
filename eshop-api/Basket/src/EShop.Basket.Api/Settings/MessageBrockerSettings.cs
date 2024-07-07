@@ -2,10 +2,10 @@
 
 public class MessageBrockerSettings
 {
-    public string RabbitMQHost { get; set; }
-    public ushort RabbitMQPort { get; set; }
-    public string RabbitMQVirtualHost { get; set; }
-    public string RabbitMQUsername { get; set; }
-    public string RabbitMQPassword { get; set; }
-    public string QueueName { get; set; }
+    public string RabbitMQHost { get; set; } = "localhost";
+    public ushort RabbitMQPort { get; set; } = 5672;
+    public string RabbitMQVirtualHost { get; set; } = "/";
+    public string RabbitMQUsername { get; set; } = "guest";
+    public string RabbitMQPassword { get; set; } = "guest";
+    public string QueueName { get; set; } = "clear-basket";
 }
