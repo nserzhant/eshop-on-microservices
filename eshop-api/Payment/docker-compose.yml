@@ -3,11 +3,17 @@ version: '3.4'
 services:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   eshop.payment.processor:
-    image: ${DOCKER_REGISTRY-}eshoppaymentprocessor
+    image: ${DOCKER_REGISTRY-}eshop.payment.processor:${TAG:-latest}
     build:
       context: .
       dockerfile: src/EShop.Payment.Processor/Dockerfile
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy

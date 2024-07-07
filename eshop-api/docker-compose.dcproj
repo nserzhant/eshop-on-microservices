@@ -9,6 +9,8 @@
     <DockerServiceName>eshop.catalog.api</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include=".config\definitions.json" />
+    <None Include=".config\rabbitmq.conf" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>

@@ -8,6 +8,15 @@ services:
 
   eshop.payment.processor:
     environment:
-      - DOTNET_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - queueName=process-payment
+    ports:
+      - "5010:8080"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro

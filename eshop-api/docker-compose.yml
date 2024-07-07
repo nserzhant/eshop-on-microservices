@@ -3,6 +3,20 @@ version: '3.4'
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles: ["dev", "test"]
+
+  redis:
+    image: redis:7.0.15-alpine3.20
+    profiles: ["dev", "test"]
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    profiles: ["dev", "test"]
 
   catalog.api:
     image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
@@ -10,7 +24,11 @@ services:
       context: Catalog/
       dockerfile: src/EShop.Catalog.Api/Dockerfile
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["dev"]
 
   client.authorizationserver:
     image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver:${TAG:-latest}
@@ -19,6 +37,7 @@ services:
       dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
     depends_on:
       - sqlserver
+    profiles: ["dev"]
 
   employeemanagement.api:
     image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api:${TAG:-latest}
@@ -27,6 +46,7 @@ services:
       dockerfile: src/EShop.EmployeeManagement.Api/Dockerfile
     depends_on:
       - sqlserver
+    profiles: ["dev"]
       
   employeemanagement.authorizationserver:
     image: ${DOCKER_REGISTRY-}eshop.employeemanagement.authorizationserver:${TAG:-latest}
@@ -36,4 +56,96 @@ services:
     depends_on:
       - sqlserver
       - employeemanagement.api
+    profiles: ["dev"]
+      
+  basket.api:
+    image: ${DOCKER_REGISTRY-}eshop.basket.api:${TAG:-latest}
+    build:
+      context: Basket/
+      dockerfile: src/EShop.Basket.Api/Dockerfile
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["dev"]
+      
+  ordering.api:
+    image: ${DOCKER_REGISTRY-}eshop.ordering.api:${TAG:-latest}
+    build:
+      context: Ordering/
+      dockerfile: src/EShop.Ordering.Api/Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["dev"]
+      
+  payment.processor:
+    image: ${DOCKER_REGISTRY-}eshop.payment.processor:${TAG:-latest}
+    build:
+      context: Payment/
+      dockerfile: src/EShop.Payment.Processor/Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["dev"]
 
+  saga.processor:
+    image: ${DOCKER_REGISTRY-}eshop.saga.processor:${TAG:-latest}
+    build:
+      context: Saga/
+      dockerfile: src/EShop.Saga.Processor/Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["dev"]
+
+  catalog.api.tests:
+    image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
+    build:
+      context: Catalog/
+      dockerfile: src/EShop.Catalog.Api/Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["test"]
+
+  basket.api.tests:
+    image: ${DOCKER_REGISTRY-}eshop.basket.api:${TAG:-latest}
+    build:
+      context: Basket/
+      dockerfile: src/EShop.Basket.Api/Dockerfile
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["test"]
+      
+  ordering.api.tests:
+    image: ${DOCKER_REGISTRY-}eshop.ordering.api:${TAG:-latest}
+    build:
+      context: Ordering/
+      dockerfile: src/EShop.Ordering.Api/Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["test"]
+      
+  payment.processor.tests:
+    image: ${DOCKER_REGISTRY-}eshop.payment.processor:${TAG:-latest}
+    build:
+      context: Payment/
+      dockerfile: src/EShop.Payment.Processor/Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    profiles: ["test"]

@@ -11,6 +11,18 @@ services:
     volumes:
       - eshop-api-data:/var/opt/mssql
 
+  redis:
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./.config/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./.config/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+
   catalog.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -20,6 +32,13 @@ services:
       - generatedItemPictureUriHost=https://localhost:7208
       - EmployeeJWTSettings__Issuer=https://localhost:7272/
       - ClientJWTSettings__Issuer=https://localhost:7086/
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__reserveStockQueueName=reserve-stocks
+      - broker__releaseStockQueueName=release-stocks
     ports:
       - "5035:80"
       - "7208:443"
@@ -65,6 +84,147 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  basket.api:
+    environment:
+      - ConnectionStrings__redisConnectionString=redis:6379
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=clear-basket
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081    
+    ports:
+      - "5150:8080"
+      - "7120:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  ordering.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - JWTSettings__MetadataAddress=http://host.docker.internal:5058/.well-known/openid-configuration
+      - ConnectionStrings__orderingDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=create-order
+    ports:
+      - "5009:8080"
+      - "7247:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  payment.processor:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - queueName=process-payment
+    ports:
+      - "5010:8080"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+
+  saga.processor:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__sagaDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - ordering__reserveStocksQueueName=reserve-stocks
+      - ordering__processPaymentQueueName=process-payment
+      - ordering__createOrderQueueName=create-order
+      - ordering__releaseStockQueueName=release-stocks
+      - ordering__clearBasketQueueName=clear-basket 
+    ports:
+      - "5011:8080"      
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+
+  catalog.api.tests:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ConnectionStrings__catalogDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.catalog.testDb;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=false
+      - generatedItemPictureUriHost=https://localhost:7208
+      - EmployeeJWTSettings__Issuer=https://localhost:7272/
+      - ClientJWTSettings__Issuer=https://localhost:7086/
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=tests
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__reserveStockQueueName=reserve-stocks
+      - broker__releaseStockQueueName=release-stocks
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  basket.api.tests:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__redisConnectionString=redis:6379
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=tests
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=clear-basket
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      
+  ordering.api.tests:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - JWTSettings__MetadataAddress=http://host.docker.internal:5058/.well-known/openid-configuration
+      - ConnectionStrings__orderingDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.testDb;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=false
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=tests
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=create-order
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      
+  payment.processor.tests:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=tests
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - queueName=process-payment
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
 
 volumes:
   eshop-api-data:

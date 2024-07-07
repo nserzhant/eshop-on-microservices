@@ -1,0 +1,33 @@
+{
+  "profiles": {
+    "EShop.Saga.Processor": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5011",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "httpPort": 5011,
+      "environmentVariables": {
+        "ASPNETCORE_HTTP_PORTS": "8080",
+        "ConnectionStrings__sagaDbConnectionString": "Server=host.docker.internal,2433;Integrated Security=false;Initial Catalog=eshop.ordering.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true",
+        "broker__rabbitMQHost": "host.docker.internal",
+        "broker__rabbitMQPort": "5672",
+        "broker__rabbitMQVirtualHost": "/",
+        "broker__rabbitMQUsername": "guest",
+        "broker__rabbitMQPassword": "guest",
+        "ordering__reserveStocksQueueName": "reserve-stocks",
+        "ordering__processPaymentQueueName": "process-payment",
+        "ordering__createOrderQueueName": "create-order",
+        "ordering__releaseStockQueueName": "release-stocks",
+        "ordering__clearBasketQueueName": "clear-basket"
+      },
+      "publishAllPorts": true
+    }
+  },
+  "$schema": "http://json.schemastore.org/launchsettings.json"
+}

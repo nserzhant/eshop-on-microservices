@@ -3,15 +3,13 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
-      "serviceActions": {
-        "catalog.api": "StartDebugging",
-        "client.authorizationserver": "StartDebugging",
-        "employeemanagement.api": "StartDebugging",
-        "employeemanagement.authorizationserver": "StartDebugging",
-        "sqlserver": "StartWithoutDebugging"
+      "composeProfile": {
+        "includes": [
+          "dev"
+        ]
       }
     },
-    "SQL Server": {
+    "SQL Server + Redis + RabbitMQ": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
@@ -19,7 +17,27 @@
         "client.authorizationserver": "DoNotStart",
         "employeemanagement.api": "DoNotStart",
         "employeemanagement.authorizationserver": "DoNotStart",
-        "sqlserver": "StartWithoutDebugging"
+        "sqlserver": "StartWithoutDebugging",
+        "ordering.api": "DoNotStart",
+        "catalog.api.tests": "StartDebugging",
+        "basket.api.tests": "StartDebugging",
+        "basket.api": "StartDebugging",
+        "rabbitmq": "StartWithoutDebugging",
+        "redis": "StartWithoutDebugging",
+        "ordering.api.tests": "DoNotStart",
+        "payment.processor": "DoNotStart",
+        "payment.processor.tests": "DoNotStart",
+        "saga.processor": "DoNotStart",
+        "saga.processor.tests": "DoNotStart"
+      }
+    },
+    "Saga integration tests": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeProfile": {
+        "includes": [
+          "test"
+        ]
       }
     }
   }
