@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+  eshop.customer.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.customer.authorizationserver:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: src/EShop.Customer.AuthorizationServer/Dockerfile
+    depends_on:
+      - sqlserver

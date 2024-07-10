@@ -1,0 +1,23 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeLaunchAction": "LaunchBrowser",
+      "composeLaunchServiceName": "eshop.customer.authorizationserver",
+      "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}",
+      "serviceActions": {
+        "eshop.customer.authorizationserver": "StartDebugging",
+        "sqlserver": "StartWithoutDebugging"
+      }
+    },
+    "SQL Server": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "eshop.customer.authorizationserver": "DoNotStart",
+        "sqlserver": "StartWithoutDebugging"
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ namespace EShop.Catalog.Api.IntegrationTests;
 
 [TestFixture]
 [Category("ReleaseStocksConsumer")]
+[Category("Saga")]
 public class ReleaseStocksConsumerTests : BaseCatalogIntegrationTests
 {
     private ITestHarness _harness;

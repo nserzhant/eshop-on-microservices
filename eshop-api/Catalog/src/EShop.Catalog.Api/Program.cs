@@ -21,7 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 var employeeJwtSettings = builder.Configuration.GetSection(ConfigurationKeys.EMPLOYEE_JWT_CONFIG_NAME)
     .Get<JWTSettings>() ?? new JWTSettings();
 
-var clientJwtSettings = builder.Configuration.GetSection(ConfigurationKeys.CLIENT_JWT_CONFIG_NAME)
+var customerJWTSettings = builder.Configuration.GetSection(ConfigurationKeys.CUSTOMER_JWT_CONFIG_NAME)
     .Get<JWTSettings>() ?? new JWTSettings();
 
 // Get settings to configure Message Broker connection
@@ -64,9 +64,9 @@ builder.Services.AddAuthentication()
         {
             ClockSkew = TimeSpan.FromSeconds(0),
             ValidateIssuer = true,
-            ValidateAudience = !string.IsNullOrEmpty(clientJwtSettings.Audience),
-            ValidAudience = clientJwtSettings.Audience,
-            ValidIssuer = clientJwtSettings.Issuer,
+            ValidateAudience = !string.IsNullOrEmpty(customerJWTSettings.Audience),
+            ValidAudience = customerJWTSettings.Audience,
+            ValidIssuer = customerJWTSettings.Issuer,
             RequireExpirationTime = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true
