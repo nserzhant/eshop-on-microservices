@@ -1,4 +1,4 @@
-﻿using EShop.EmployeeManagement.Core.Enums;
+﻿using EShop.EmployeeManagement.Infrastructure.Enums;
 using System.Security.Claims;
 
 namespace EShop.EmployeeManagement.Api.IntegrationTests.Infrastructure;

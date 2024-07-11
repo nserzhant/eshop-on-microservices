@@ -8,7 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 using Microsoft.Extensions.Primitives;
-using EShop.EmployeeManagement.Core.Entities;
+using EShop.EmployeeManagement.Infrastructure.Entities;
 using EShop.EmployeeManagement.AuthorizationServer.Helpers;
 using Microsoft.IdentityModel.Tokens;
 

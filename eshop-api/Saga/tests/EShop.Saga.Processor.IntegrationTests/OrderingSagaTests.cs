@@ -68,7 +68,7 @@ public class OrderingSagaTests
     }
 
     [Test]
-    public async Task When_Ordering_Processs_Completed_Then_Data_Should_Be_Consistent_Across_All_Services()
+    public async Task When_Ordering_Process_Completed_Then_Data_Should_Be_Consistent_Across_All_Services()
     {
         var customerId = Guid.NewGuid();
         var customerEmail = "test@example.com";

@@ -8,10 +8,10 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Saga/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj", "Saga/src/EShop.Saga.Processor/"]
-RUN dotnet restore "./Saga/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj"
+COPY ["src/EShop.Saga.Processor/EShop.Saga.Processor.csproj", "src/EShop.Saga.Processor/"]
+RUN dotnet restore "./src/EShop.Saga.Processor/EShop.Saga.Processor.csproj"
 COPY . .
-WORKDIR "/src/Saga/src/EShop.Saga.Processor"
+WORKDIR "/src/src/EShop.Saga.Processor"
 RUN dotnet build "./EShop.Saga.Processor.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

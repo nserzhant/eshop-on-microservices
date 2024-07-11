@@ -1,4 +1,4 @@
-﻿namespace EShop.EmployeeManagement.AuthorizationServer.Helpers;
+﻿  namespace EShop.EmployeeManagement.AuthorizationServer.Helpers;
 public static class AsyncEnumerableExtensions
 {
     public static Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source)
@@ -23,3 +23,4 @@ public static class AsyncEnumerableExtensions
         }
     }
 }
+  

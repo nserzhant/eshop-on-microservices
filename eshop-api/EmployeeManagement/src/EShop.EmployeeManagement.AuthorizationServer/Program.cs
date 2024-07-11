@@ -1,10 +1,11 @@
-using EShop.Client.AuthorizationServer.Helpers;
 using EShop.EmployeeManagement.AuthorizationServer;
 using EShop.EmployeeManagement.AuthorizationServer.Data;
-using EShop.EmployeeManagement.Core;
+using EShop.EmployeeManagement.AuthorizationServer.Helpers;
+using EShop.EmployeeManagement.Infrastructure;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Quartz;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -16,8 +17,8 @@ builder.Services.AddEmployeeServices(builder.Configuration);
 var accessTokenLifetime = configuration.GetValue<int>(Consts.ACCESS_TOKEN_LIFETIME_CONFIG_NAME);
 
 //Configure OpenIdDict
-var signingCertificateThumbprint = configuration[Consts.SIGNING_CERTIFICATE_THUMBPRINT_CONFIG_NAME];
-var encryptionCertificateThumbprint = configuration[Consts.ENCRYPTION_CERTIFICATE_THUMBPRINT_CONFIG_NAME];
+var findSigningCertificateValue = configuration[Consts.SIGNING_CERTIFICATE_CONFIG_NAME];
+var findEncryptionCertificateValue = configuration[Consts.ENCRYPTION_CERTIFICATE_CONFIG_NAME];
 var useEphemeralKeys = configuration.GetValue(Consts.USE_EPHEMERAL_KEYS, false);
 
 //Configure settings for Client apps
@@ -80,9 +81,9 @@ builder.Services.AddOpenIddict()
                 .SetTokenEndpointUris("connect/token")
                 .SetLogoutEndpointUris("connect/logout");
 
-            if (signingCertificateThumbprint != null)
+            if (findSigningCertificateValue != null)
             {
-                options.AddSigningCertificate(CertificatesHelper.FindCertificate(signingCertificateThumbprint));
+                options.AddSigningCertificate(CertificatesHelper.FindCertificate(findSigningCertificateValue));
             }
             else if (builder.Environment.IsDevelopment())
             {
@@ -93,9 +94,9 @@ builder.Services.AddOpenIddict()
                 else { options.AddDevelopmentSigningCertificate(); }
             }
 
-            if (encryptionCertificateThumbprint != null)
+            if (findEncryptionCertificateValue != null)
             {
-                options.AddEncryptionCertificate(CertificatesHelper.FindCertificate(encryptionCertificateThumbprint));
+                options.AddEncryptionCertificate(CertificatesHelper.FindCertificate(findEncryptionCertificateValue));
             }
             else if (builder.Environment.IsDevelopment())
             {
@@ -142,6 +143,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
 
+builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy());
+
 // The following line enables Application Insights telemetry collection.
 builder.Services.AddApplicationInsightsTelemetry();
 
@@ -176,5 +179,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHealthChecks("/hc");
 
 app.Run();

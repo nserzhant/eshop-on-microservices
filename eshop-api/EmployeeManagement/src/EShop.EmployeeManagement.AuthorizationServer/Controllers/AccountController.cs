@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using EShop.EmployeeManagement.AuthorizationServer.Models;
 using Microsoft.AspNetCore.Identity;
-using EShop.EmployeeManagement.Core.Entities;
+using EShop.EmployeeManagement.Infrastructure.Entities;
 
 namespace EShop.EmployeeManagement.AuthorizationServer.Controllers;
 

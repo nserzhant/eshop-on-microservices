@@ -12,23 +12,10 @@
     "SQL Server + Redis + RabbitMQ": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
-      "serviceActions": {
-        "catalog.api": "DoNotStart",
-        "client.authorizationserver": "DoNotStart",
-        "employeemanagement.api": "DoNotStart",
-        "employeemanagement.authorizationserver": "DoNotStart",
-        "sqlserver": "StartWithoutDebugging",
-        "ordering.api": "DoNotStart",
-        "catalog.api.tests": "StartDebugging",
-        "basket.api.tests": "StartDebugging",
-        "basket.api": "StartDebugging",
-        "rabbitmq": "StartWithoutDebugging",
-        "redis": "StartWithoutDebugging",
-        "ordering.api.tests": "DoNotStart",
-        "payment.processor": "DoNotStart",
-        "payment.processor.tests": "DoNotStart",
-        "saga.processor": "DoNotStart",
-        "saga.processor.tests": "DoNotStart"
+      "composeProfile": {
+        "includes": [
+          "infrastructure"
+        ]
       }
     },
     "Saga integration tests": {

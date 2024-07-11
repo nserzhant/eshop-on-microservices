@@ -27,8 +27,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\EShop.EmployeeManagement.Api\EShop.EmployeeManagement.Api.csproj" />
-    <ProjectReference Include="..\..\src\EShop.EmployeeManagement.Core\EShop.EmployeeManagement.Core.csproj" />
-    <ProjectReference Include="..\EShop.EmployeeManagement.IntegrationTests\EShop.EmployeeManagement.Core.IntegrationTests.csproj" />
+    <ProjectReference Include="..\..\src\EShop.EmployeeManagement.Infrastructure\EShop.EmployeeManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\EShop.EmployeeManagement.Infrastructure.IntegrationTests\EShop.EmployeeManagement.Infrastructure.IntegrationTests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

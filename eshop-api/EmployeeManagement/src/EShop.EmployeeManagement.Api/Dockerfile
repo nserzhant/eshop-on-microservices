@@ -9,7 +9,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:8.0.203 AS build
 WORKDIR /src
 COPY ["src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj", "src/EShop.EmployeeManagement.Api/"]
-COPY ["src/EShop.EmployeeManagement.Core/EShop.EmployeeManagement.Core.csproj", "src/EShop.EmployeeManagement.Core/"]
+COPY ["src/EShop.EmployeeManagement.Infrastructure/EShop.EmployeeManagement.Infrastructure.csproj", "src/EShop.EmployeeManagement.Infrastructure/"]
 RUN dotnet restore "src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj"
 COPY . .
 WORKDIR "/src/src/EShop.EmployeeManagement.Api"

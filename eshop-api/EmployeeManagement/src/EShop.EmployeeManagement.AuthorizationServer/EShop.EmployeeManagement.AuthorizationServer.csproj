@@ -9,10 +9,6 @@
     <DockerfileContext>..\..</DockerfileContext>
     <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\EShop.EmployeeManagement.Core\EShop.EmployeeManagement.Core.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
@@ -34,6 +30,10 @@
     <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="5.6.0" />
     <PackageReference Include="OpenIddict.Quartz" Version="5.6.0" />
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EShop.EmployeeManagement.Infrastructure\EShop.EmployeeManagement.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

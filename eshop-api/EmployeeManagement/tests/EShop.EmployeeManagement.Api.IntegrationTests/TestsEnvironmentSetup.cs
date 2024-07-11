@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using EShop.EmployeeManagement.Core;
-using EShop.EmployeeManagement.Core.IntegrationTests;
-using EShop.EmployeeManagement.Core.IntegrationTests.Infrastructure;
+using EShop.EmployeeManagement.Infrastructure;
+using EShop.EmployeeManagement.Infrastructure.IntegrationTests;
+using EShop.EmployeeManagement.Infrastructure.IntegrationTests.Infrastructure;
 
 namespace EShop.EmployeeManagement.Api.IntegrationTests;
 

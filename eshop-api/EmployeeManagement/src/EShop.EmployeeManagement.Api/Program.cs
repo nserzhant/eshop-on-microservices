@@ -1,12 +1,12 @@
 using EShop.EmployeeManagement.Api;
 using EShop.EmployeeManagement.Api.Data;
-using EShop.EmployeeManagement.Api.Filters;
 using EShop.EmployeeManagement.Api.Settings;
-using EShop.EmployeeManagement.Core;
-using EShop.EmployeeManagement.Core.Entities;
+using EShop.EmployeeManagement.Infrastructure;
+using EShop.EmployeeManagement.Infrastructure.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using NSwag.Generation.Processors.Security;
 
@@ -14,10 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Get settings to configure JWT tokens
 
-var jwtSettingsSection = builder.Configuration.GetSection(Consts.JWT_CONFIG_NAME);
-var jwtSettings = new JWTSettings();
-
-jwtSettingsSection.Bind(jwtSettings);
+var jwtSettings = builder.Configuration.GetSection(Consts.JWT_CONFIG_NAME)
+    .Get<JWTSettings>() ?? new JWTSettings();
 
 // Configure settings for Client app
 var clientOrigin = builder.Configuration[Consts.SPA_CLIENT_ORIGIN_CONFIG_NAME];
@@ -27,8 +25,7 @@ var initDbOnStartup = builder.Configuration.GetValue<bool>(Consts.INIT_DB_ON_STA
 
 // Add services to the container.
 
-builder.Services.Configure<JWTSettings>(jwtSettingsSection);
-builder.Services.AddControllers(options => options.Filters.Add<EmployeeDomainExceptionFilter>());
+builder.Services.AddControllers();
 builder.Services.AddEmployeeServices(builder.Configuration);
 
 builder.Services.AddAuthentication(auth =>
@@ -72,13 +69,16 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 
 builder.Services.AddHttpLogging(options => new HttpLoggingOptions());
 
+builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy());
+
 // The following line enables Application Insights telemetry collection.
 builder.Services.AddApplicationInsightsTelemetry();
 
 var app = builder.Build();
 
 app.UseHttpLogging();
-//// Configure the HTTP request pipeline.
+
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseOpenApi();
@@ -89,8 +89,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
+app.MapHealthChecks("/hc");
 
 if (initDbOnStartup)
 {

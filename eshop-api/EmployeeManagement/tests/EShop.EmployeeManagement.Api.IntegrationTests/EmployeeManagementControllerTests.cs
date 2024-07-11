@@ -1,6 +1,7 @@
+using EShop.EmployeeManagement.Infrastructure.Entities;
+using EShop.EmployeeManagement.Infrastructure.Enums;
+using EShop.EmployeeManagement.Infrastructure.Read.Queries;
 using Microsoft.Net.Http.Headers;
-using EShop.EmployeeManagement.Core.Enums;
-using EShop.EmployeeManagement.Core.Read.Queries;
 using System.Net;
 using System.Net.Mime;
 using System.Text.Json;
@@ -11,21 +12,9 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 {
     private const string API_BASE_URL = "api/EmployeeManagement";
 
-    [SetUp]
-    public override async Task Setup()
-    {
-        await base.Setup();
-    }
-
-    [TearDown]
-    public override void TearDown()
-    {
-        base.TearDown();
-    }
-
     [Test]
     [Category("Get Employee")]
-    public async Task When_Employee_Is_Unauthenitcated_Then_Get_Employee_By_Id_Returns_Unathorized()
+    public async Task When_Unauthenitcated_Gets_Employee_By_Id_Then_Unathorized_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -37,7 +26,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Get Employee")]
-    public async Task When_Employee_Is_Sales_Manager_Then_It_Cant_Get_Employee_By_Id()
+    public async Task When_Sales_Manager_Gets_Employee_By_Id_Then_Forbidden_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -49,11 +38,11 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Get Employee")]
-    public async Task When_Employee_Is_Administrator_Then_It_Can_Get_Employee_By_Id()
+    public async Task When_Administrator_Gets_Employee_By_Id_Then_Employee_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
-        
+
         var response = await employeeManagementClient.GetAsync(Get.Employee(defaultemployeeId));
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
@@ -62,7 +51,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Get Employee")]
-    public async Task When_Getting_Non_Existing_Employee_Then_Not_Found_Should_Be_Returned()
+    public async Task When_Administrator_Gets_Non_Existing_Employee_Then_Not_Found_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -74,7 +63,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("List Employees")]
-    public async Task When_Employee_Is_Unauthenitcated_Then_List_Employees_Returns_Unathorized()
+    public async Task When_Unauthenitcated_Lists_Employees_Then_Unathorized_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -93,7 +82,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("List Employees")]
-    public async Task When_Employee_Is_Administrator_Then_It_Can_List_Employees()
+    public async Task When_Administrator_Lists_Employees_Then_List_Of_Employees_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -112,7 +101,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("List Employees")]
-    public async Task When_Employee_Is_Sales_Manager_Then_It_Cant_List_Employees()
+    public async Task When_Sales_Manager_Lists_Employees_Then_Forbidden_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -131,14 +120,12 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Employee Roles")]
-    public async Task When_Employee_Is_Unauthenitcated_Then_Save_Roles_Returns_Unathorized()
+    public async Task When_Unauthenitcateds_Changes_Roles_Then_Unathorized_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
         var roles = new Roles[] { Roles.Administrator, Roles.SalesManager };
-        var content = new StringContent(JsonSerializer.Serialize(roles));
-        content.Headers.Remove(HeaderNames.ContentType);
-        content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
+        var content = createStringContent(roles);
 
         var response = await employeeManagementClient.PatchAsync(Patch.Roles(defaultemployeeId), content);
 
@@ -147,30 +134,31 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Employee Roles")]
-    public async Task When_Employee_Is_Administrator_Then_It_Can_Save_Roles()
+    public async Task When_Administrator_Saves_Roles_Then_Roles_Should_Be_Successfully_Saved()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
         var roles = new Roles[] { Roles.Administrator, Roles.SalesManager };
-        var content = new StringContent(JsonSerializer.Serialize(roles));
-        content.Headers.Remove(HeaderNames.ContentType);
-        content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
+        var content = createStringContent(roles);
 
         var response = await employeeManagementClient.PatchAsync(Patch.Roles(defaultemployeeId), content);
 
+        var actualRoles = await userManager.GetRolesAsync(new Employee { Id = defaultemployeeId });
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(actualRoles, Is.Not.Null);
+        Assert.That(actualRoles.Count, Is.EqualTo(2));
+        Assert.That(actualRoles, Does.Contain(Roles.Administrator.ToString()));
+        Assert.That(actualRoles, Does.Contain(Roles.SalesManager.ToString()));
     }
 
     [Test]
     [Category("Update Employee Roles")]
-    public async Task When_Employee_Is_Sales_Manager_Then_It_Cant_Save_Roles()
+    public async Task When_Sales_Manager_Saves_Roles_Then_Forbidden_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
         var roles = new Roles[] { Roles.Administrator, Roles.SalesManager };
-        var content = new StringContent(JsonSerializer.Serialize(roles));
-        content.Headers.Remove(HeaderNames.ContentType);
-        content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
+        var content = createStringContent(roles);
 
         var response = await employeeManagementClient.PatchAsync(Patch.Roles(defaultemployeeId), content);
 
@@ -179,45 +167,42 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Password")]
-    public async Task When_Employee_Is_Unauthenitcated_Then_Update_Password_Returns_Unathorized()
+    public async Task When_Unauthenitcated_Changes_Password_Then_Unathorized_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
-        var content = new StringContent(JsonSerializer.Serialize("passworD!c^12"));
-        content.Headers.Remove(HeaderNames.ContentType);
-        content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
+        var newPasswordContent = createStringContent("passworD!c^12");
 
-        var response = await employeeManagementClient.PatchAsync(Patch.Password(defaultemployeeId), content);
+        var response = await employeeManagementClient.PatchAsync(Patch.Password(defaultemployeeId), newPasswordContent);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
     [Test]
     [Category("Update Password")]
-    public async Task When_Employee_Is_Administrator_Then_It_Can_Change_Password()
+    public async Task When_Administrator_Changes_Password_Then_Password_Should_Be_Successfully_Changed()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
-        var content = new StringContent(JsonSerializer.Serialize("passworD!c^12"));
-        content.Headers.Remove(HeaderNames.ContentType);
-        content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
+        var newPassword = "passworD!c^12";
+        var newPasswordContent = createStringContent(newPassword);
 
-        var response = await employeeManagementClient.PatchAsync(Patch.Password(defaultemployeeId), content);
+        var response = await employeeManagementClient.PatchAsync(Patch.Password(defaultemployeeId), newPasswordContent);
 
+        async Task assert() => await userManager.CheckPasswordAsync(new Employee { Email = defaultEmail }, newPassword);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(assert, Throws.Nothing);
     }
 
     [Test]
     [Category("Update Password")]
-    public async Task When_Employee_Is_Sales_Manager_Then_It_Cant_Change_Password()
+    public async Task When_Sales_Manager_Changes_Password_Then_Forbidden_Should_Be_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
-        var content = new StringContent(JsonSerializer.Serialize("passworD!c^12"));
-        content.Headers.Remove(HeaderNames.ContentType);
-        content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
+        var newPasswordContent = createStringContent("passworD!c^12");
 
-        var response = await employeeManagementClient.PatchAsync(Patch.Password(defaultemployeeId), content);
+        var response = await employeeManagementClient.PatchAsync(Patch.Password(defaultemployeeId), newPasswordContent);
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
     }
@@ -234,6 +219,16 @@ public class EmployeeManagementControllerTests : BaseControllerTests
     {
         public static string Roles(Guid employeeId) => $"{API_BASE_URL}/{employeeId}/roles";
         public static string Password(Guid employeeId) => $"{API_BASE_URL}/{employeeId}/password";
+    }
+
+    private static StringContent createStringContent<T>(T contentSource)
+    {
+        var content = new StringContent(JsonSerializer.Serialize(contentSource));
+
+        content.Headers.Remove(HeaderNames.ContentType);
+        content.Headers.Add(HeaderNames.ContentType, MediaTypeNames.Application.Json);
+
+        return content;
     }
 }
 

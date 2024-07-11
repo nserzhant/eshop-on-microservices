@@ -3,11 +3,11 @@ version: '3.4'
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    profiles: ["dev", "test"]
+    profiles: ["dev", "test", "infrastructure"]
 
   redis:
     image: redis:7.0.15-alpine3.20
-    profiles: ["dev", "test"]
+    profiles: ["dev", "test", "infrastructure"]
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -16,7 +16,7 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
-    profiles: ["dev", "test"]
+    profiles: ["dev", "test", "infrastructure"]
 
   catalog.api:
     image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
@@ -30,11 +30,11 @@ services:
         condition: service_healthy
     profiles: ["dev"]
 
-  client.authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver:${TAG:-latest}
+  customer.authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.customer.authorizationserver:${TAG:-latest}
     build:
-      context: Client/
-      dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
+      context: Customer/
+      dockerfile: src/EShop.Customer.AuthorizationServer/Dockerfile
     depends_on:
       - sqlserver
     profiles: ["dev"]

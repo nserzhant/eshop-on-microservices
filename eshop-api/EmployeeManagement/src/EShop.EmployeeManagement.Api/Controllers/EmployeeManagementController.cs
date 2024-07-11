@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using EShop.EmployeeManagement.Api.Models;
+using EShop.EmployeeManagement.Infrastructure.Entities;
+using EShop.EmployeeManagement.Infrastructure.Enums;
+using EShop.EmployeeManagement.Infrastructure.Read;
+using EShop.EmployeeManagement.Infrastructure.Read.Queries;
+using EShop.EmployeeManagement.Infrastructure.Read.Queries.Results;
+using EShop.EmployeeManagement.Infrastructure.Read.ReadModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using EShop.EmployeeManagement.Api.Models;
-using EShop.EmployeeManagement.Core.Enums;
-using EShop.EmployeeManagement.Core.Read;
-using EShop.EmployeeManagement.Core.Read.Queries;
-using EShop.EmployeeManagement.Core.Read.Queries.Results;
-using EShop.EmployeeManagement.Core.Read.ReadModels;
-using EShop.EmployeeManagement.Core.Services;
 
 namespace EShop.EmployeeManagement.Api.Controllers;
 
@@ -15,14 +16,17 @@ namespace EShop.EmployeeManagement.Api.Controllers;
 [Authorize(Roles = "Administrator")]
 public class EmployeeManagementController : ControllerBase
 {
-    private IEmployeeQueryService _employeeQueryService;
-    private IEmployeeService _employeeService;
+    private readonly IEmployeeQueryService _employeeQueryService;
+    private readonly UserManager<Employee> _userManager;
+    private readonly ILogger<EmployeeManagementController> _logger;
 
     public EmployeeManagementController(IEmployeeQueryService employeeQueryService,
-        IEmployeeService employeeService)
+        UserManager<Employee> userManager,
+        ILogger<EmployeeManagementController> logger)
     {
         _employeeQueryService = employeeQueryService ?? throw new ArgumentNullException(nameof(employeeQueryService));
-        _employeeService = employeeService ?? throw new ArgumentNullException(nameof(employeeService));
+        _userManager = userManager;
+        _logger = logger;
     }
 
     [ProducesResponseType(typeof(EmployeeReadModel), StatusCodes.Status200OK)]
@@ -49,29 +53,56 @@ public class EmployeeManagementController : ControllerBase
     }
 
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPatch("{employeeId:Guid}/roles")]
     public async Task<IActionResult> SetRolesAsync(Guid employeeId, [FromBody] Roles[] roles)
     {
-        var result = await _employeeService.SetRoles(employeeId, roles);
+        var employee = await _userManager.FindByIdAsync(employeeId.ToString());
+
+        if (employee == null) return NotFound();
+
+        var roleNames = roles.Select(r => r.ToString());
+        var existingRoles = await _userManager.GetRolesAsync(employee);
+        var result = await _userManager.RemoveFromRolesAsync(employee, existingRoles);
 
         if (!result.Succeeded)
         {
+            _logger.LogError($"Failed to update roles for employeeId: {employeeId}");
+
             return BadRequest(new ApiErrorDTO(result.Errors));
         }
+
+        result = await _userManager.AddToRolesAsync(employee, roleNames);
+
+        if (!result.Succeeded)
+        {
+            _logger.LogError($"Failed to update roles for employeeId: {employeeId}");
+            return BadRequest(new ApiErrorDTO(result.Errors));
+        }
+
+        _logger.LogInformation($"Roles successfully updated for employeeId: {employeeId} ");
 
         return Ok();
     }
 
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPatch("{employeeId:Guid}/password")]
     public async Task<IActionResult> SetPassword(Guid employeeId, [FromBody] string newPassword)
     {
-        var result = await _employeeService.SetPassword(employeeId, newPassword);
+        var employee = await _userManager.FindByIdAsync(employeeId.ToString());
+
+        if (employee == null) return NotFound();
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(employee);
+        var result = await _userManager.ResetPasswordAsync(employee, token, newPassword);
 
         if (!result.Succeeded)
         {
+            _logger.LogError($"Failed to update password for employeeId: {employeeId}");
+
             return BadRequest(new ApiErrorDTO(result.Errors));
         }
 

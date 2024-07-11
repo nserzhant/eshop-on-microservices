@@ -1,6 +1,6 @@
-﻿using EShop.EmployeeManagement.Core;
-using EShop.EmployeeManagement.Core.Entities;
-using EShop.EmployeeManagement.Core.Enums;
+﻿using EShop.EmployeeManagement.Infrastructure;
+using EShop.EmployeeManagement.Infrastructure.Entities;
+using EShop.EmployeeManagement.Infrastructure.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

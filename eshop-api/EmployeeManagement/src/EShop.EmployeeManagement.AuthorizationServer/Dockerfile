@@ -9,7 +9,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:8.0.203 AS build
 WORKDIR /src
 COPY ["src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj", "src/EShop.EmployeeManagement.AuthorizationServer/"]
-COPY ["src/EShop.EmployeeManagement.Core/EShop.EmployeeManagement.Core.csproj", "src/EShop.EmployeeManagement.Core/"]
+COPY ["src/EShop.EmployeeManagement.Infrastructure/EShop.EmployeeManagement.Infrastructure.csproj", "src/EShop.EmployeeManagement.Infrastructure/"]
 RUN dotnet restore "src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj"
 COPY . .
 WORKDIR "/src/src/EShop.EmployeeManagement.AuthorizationServer"

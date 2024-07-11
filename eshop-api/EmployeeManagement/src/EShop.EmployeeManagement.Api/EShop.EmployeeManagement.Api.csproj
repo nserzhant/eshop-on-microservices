@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EShop.EmployeeManagement.Core\EShop.EmployeeManagement.Core.csproj" />
+    <ProjectReference Include="..\EShop.EmployeeManagement.Infrastructure\EShop.EmployeeManagement.Infrastructure.csproj" />
   </ItemGroup>
   
   <Target Name="NSwag" AfterTargets="Build">

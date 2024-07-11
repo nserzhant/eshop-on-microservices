@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using EShop.EmployeeManagement.Api.IntegrationTests.Infrastructure;
+using EShop.EmployeeManagement.Infrastructure.IntegrationTests;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using EShop.EmployeeManagement.Api.IntegrationTests.Infrastructure;
-using EShop.EmployeeManagement.Core.IntegrationTests;
-using EShop.EmployeeManagement.Core.Read;
-using EShop.EmployeeManagement.Core.Services;
 using System.Reflection;
 using System.Text;
 
@@ -18,10 +16,6 @@ public class BaseControllerTests : BaseEmployeeIntegrationTests
     protected TestAuthenticationContextBuilder _testAuthenticationContextBuilder;
     protected Guid defaultemployeeId;
     protected string defaultEmail = "test@user.com";
-    protected string defaultPassword = "3242f$fDc%dD";
-
-    private IEmployeeService _employeeService;
-    private IEmployeeQueryService _employeeQueryService;
 
     [SetUp]
     public override async Task Setup()
@@ -50,27 +44,15 @@ public class BaseControllerTests : BaseEmployeeIntegrationTests
             });
         });
 
-
-        _employeeService = serviceProvier.GetRequiredService<IEmployeeService>();
-        _employeeQueryService = serviceProvier.GetRequiredService<IEmployeeQueryService>();
-
-        defaultemployeeId = await registerEmployeeAsync(defaultEmail, defaultPassword);
+        defaultemployeeId = await createEmployee(defaultEmail);
     }
 
     [TearDown]
-    public override void TearDown()
+    public override async Task TearDownAsync()
     {
-        base.TearDown();
-
         _webApplicationFactory.Dispose();
-    }
 
-    private async Task<Guid> registerEmployeeAsync(string email, string password)
-    {
-        await _employeeService.Register(email, password);
-        var employee = await _employeeQueryService.GetByEmail(email);
-
-        return employee.Id;
+        await base.TearDownAsync();
     }
 
     protected static string ConvertToQueryParams<T>(T obj) where T : class
