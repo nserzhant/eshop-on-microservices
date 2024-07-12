@@ -12,15 +12,15 @@
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue. Available color palettes: https://material.io/design/color/
-$eshop-ui-client-portal-primary: mat.define-palette(mat.$indigo-palette);
-$eshop-ui-client-portal-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$eshop-ui-client-portal-primary: mat.m2-define-palette(mat.$m2-indigo-palette);
+$eshop-ui-client-portal-accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
 
 // The warn palette is optional (defaults to red).
-$eshop-ui-client-portal-warn: mat.define-palette(mat.$red-palette);
+$eshop-ui-client-portal-warn: mat.m2-define-palette(mat.$m2-red-palette);
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
-$eshop-ui-client-portal-theme: mat.define-light-theme((
+$eshop-ui-client-portal-theme: mat.m2-define-light-theme((
   color: (
     primary: $eshop-ui-client-portal-primary,
     accent: $eshop-ui-client-portal-accent,
@@ -38,11 +38,7 @@ $eshop-ui-client-portal-theme: mat.define-light-theme((
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-mat-sidenav {
-  width: 250px;
-}
-
-.mat-sidenav-container {
+mat-sidenav-content {
   background-color: white;
 }
 
@@ -89,6 +85,7 @@ mat-sidenav {
 
 .filter-container {
   padding: 12px 16px;
+  width: 250px;
 }
 
 .right {

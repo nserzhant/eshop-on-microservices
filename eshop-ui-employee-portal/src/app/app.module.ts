@@ -4,7 +4,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClient, HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { HttpErrorInterceptor } from './services/http-error-interceptor.service';
@@ -22,48 +22,43 @@ export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
 }
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    HomeComponent,
-    HeaderComponent,
-    LoginCallbackComponent
-  ],
-  imports: [
-    MaterialModule,
-    BrowserModule,
-    FormsModule,
-    ReactiveFormsModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
-    CatalogModule,
-    EmployeeManagementModule,
-    TranslateModule.forRoot({
-        loader: {
-            provide: TranslateLoader,
-            useFactory: HttpLoaderFactory,
-            deps: [HttpClient]
-        }
-    })
-  ],
-  providers: [
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthenticationInterceptorService,
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: HttpErrorInterceptor,
-      multi: true
-    },
-    {
-    provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
-    useValue: {
-        diameter: 24,
-      }
-    }],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        HomeComponent,
+        HeaderComponent,
+        LoginCallbackComponent
+    ],
+    bootstrap: [AppComponent], imports: [MaterialModule,
+        BrowserModule,
+        FormsModule,
+        ReactiveFormsModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        CatalogModule,
+        EmployeeManagementModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: HttpLoaderFactory,
+                deps: [HttpClient]
+            }
+        })], providers: [
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthenticationInterceptorService,
+            multi: true
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: HttpErrorInterceptor,
+            multi: true
+        },
+        {
+            provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
+            useValue: {
+                diameter: 24,
+            }
+        },
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule { }

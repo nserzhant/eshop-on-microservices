@@ -1,6 +1,6 @@
-FROM node:16.20-alpine3.17  as development
+FROM node:22.4.0-alpine3.20  as development
 WORKDIR /app
-RUN npm install -g @angular/cli@15.2.0
+RUN npm install -g @angular/cli@18.1.0
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
@@ -18,7 +18,7 @@ WORKDIR /usr/share/nginx/html
 # Remove default nginx static assets
 RUN rm -rf ./*
 # Copy static assets from builder stage
-COPY --from=build /app/dist/eshop-ui-client-portal .
+COPY --from=build /app/dist/eshop-ui-client-portal/browser .
 # Containers run nginx with global directives and daemon off
 EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]

@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HeaderComponent } from './header/header.component';
 import { MaterialModule } from 'src/material.module';
-import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClient, HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { LoginCallbackComponent } from './auth/login-callback.component';
@@ -22,49 +22,43 @@ export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
 }
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    HeaderComponent,
-    CatalogComponent,
-    LoginCallbackComponent
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    MaterialModule,
-    HttpClientModule,
-    FormsModule,
-    ReactiveFormsModule,
-    TranslateModule.forRoot({
-        loader: {
-            provide: TranslateLoader,
-            useFactory: HttpLoaderFactory,
-            deps: [HttpClient]
-        }
-    })
-  ],
-  providers: [
-    CatalogBrandClient,
-    CatalogTypeClient,
-    CatalogItemClient,
-    {
-      provide: CATALOG_API_URL,
-      useValue: environment.catalogApi
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthenticationInterceptorService,
-      multi: true
-    },
-    {
-    provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
-    useValue: {
-        diameter: 24,
-      }
-    }
-  ],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        HeaderComponent,
+        CatalogComponent,
+        LoginCallbackComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        MaterialModule,
+        FormsModule,
+        ReactiveFormsModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: HttpLoaderFactory,
+                deps: [HttpClient]
+            }
+        })], providers: [
+        CatalogBrandClient,
+        CatalogTypeClient,
+        CatalogItemClient,
+        {
+            provide: CATALOG_API_URL,
+            useValue: environment.catalogApi
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthenticationInterceptorService,
+            multi: true
+        },
+        {
+            provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
+            useValue: {
+                diameter: 24,
+            }
+        },
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule { }

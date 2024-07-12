@@ -41,7 +41,7 @@
           <form #editBrandForm="ngForm" (ngSubmit)="saveBrand(editBrandForm)" class="standard-top-indent">
             <mat-form-field appearance="outline"class="card-row">
               <mat-label>{{ 'catalog.brand-name' | translate }}</mat-label>
-              <input matInput name="brand" required [(ngModel)]="selectedBrand && selectedBrand!.brand">
+              <input matInput name="brand" required [ngModel]="selectedBrand && selectedBrand!.brand" (ngModelChange)="selectedBrand && (selectedBrand!.brand = $event)">
               <mat-error>{{ 'catalog.errors.brand-name-required' | translate }}</mat-error>
             </mat-form-field>
             <catalog-api-errors-summary [error]="apiError"></catalog-api-errors-summary>

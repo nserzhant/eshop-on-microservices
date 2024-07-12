@@ -41,7 +41,7 @@
           <form #editTypeForm="ngForm" (ngSubmit)="saveType(editTypeForm)" class="standard-top-indent">
             <mat-form-field appearance="outline"class="card-row">
               <mat-label>{{ 'catalog.type-name' | translate }}</mat-label>
-              <input matInput name="type" required [(ngModel)]="selectedType && selectedType!.type">
+              <input matInput name="type" required [ngModel]="selectedType && selectedType!.type" (ngModelChange)="selectedType && (selectedType!.type = $event)">
               <mat-error>{{ 'catalog.errors.type-name-required' | translate }}</mat-error>
             </mat-form-field>
             <catalog-api-errors-summary [error]="apiError"></catalog-api-errors-summary>
