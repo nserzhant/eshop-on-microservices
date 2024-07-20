@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { User, UserManager, UserManagerSettings } from 'oidc-client-ts';
-import { BehaviorSubject, Observable, tap} from 'rxjs';
+import { BehaviorSubject} from 'rxjs';
 import { environment } from 'src/environments/environment';
 @Injectable({
   providedIn: 'root'

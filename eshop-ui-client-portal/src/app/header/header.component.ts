@@ -4,12 +4,14 @@ import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { Subject, take, takeUntil } from 'rxjs';
 import { AuthenticationService } from '../auth/authentication.service';
+import { OrderingService } from '../services/ordering.service';
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  basketTotal = 0;
   isAuthenticated = false;
   userEmail = '';
   componentDestroyed$ = new Subject<void>();
@@ -18,19 +20,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private translateService: TranslateService,
     private matSnackBar: MatSnackBar,
     private router: Router,
-    private authenticationService: AuthenticationService) { }
+    private authenticationService: AuthenticationService,
+    private orderingService: OrderingService) { }
 
   ngOnInit(): void {
+    this.orderingService.onBasketItemsChanged.pipe(takeUntil(this.componentDestroyed$))
+      .subscribe((items)=> {
+        this.basketTotal = items.length;
+      });
+
     this.authenticationService.authUser.pipe(takeUntil(this.componentDestroyed$))
-      .subscribe((user) => {
+      .subscribe(async (user) => {
         if (user) {
           this.isAuthenticated = true;
           this.userEmail = user.profile.email!;
+          await this.orderingService.initBasket();
         } else {
           this.isAuthenticated = false;
           this.userEmail = '';
         }
-      })
+      });
   }
 
   ngOnDestroy(): void {

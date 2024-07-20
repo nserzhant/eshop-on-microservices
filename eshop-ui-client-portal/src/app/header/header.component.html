@@ -1,9 +1,13 @@
 <mat-toolbar color="primary">
   <button mat-button [routerLink]="''">
     <mat-icon>home</mat-icon>
-    {{ 'catalog' | translate }}
+    {{ 'header.catalog' | translate }}
   </button>
   <span class="spacer"></span>
+  <button  mat-button [routerLink]="'/basket'">
+    <mat-icon>shopping_cart</mat-icon>
+    {{ basketTotal }}
+  </button>
   <button mat-button [matMenuTriggerFor]="userActionsMenu" *ngIf="isAuthenticated">
     <mat-icon>account_box</mat-icon>
       {{ userEmail }}
@@ -11,15 +15,15 @@
   <mat-menu #userActionsMenu="matMenu">
     <button mat-menu-item (click)="logout()">
       <mat-icon>logout</mat-icon>
-      {{'log-out' | translate }}
+      {{'header.log-out' | translate }}
+    </button>
+    <button mat-menu-item [routerLink]="'/orders'">
+      <mat-icon>assignment</mat-icon>
+      {{'header.orders' | translate }}
     </button>
   </mat-menu>
   <button mat-button (click)="login()" *ngIf="!isAuthenticated">
-    {{'log-in' | translate}}
+    {{'header.log-in' | translate}}
     <mat-icon>login</mat-icon>
-  </button>
-  <button mat-button (click)="logout()" *ngIf="isAuthenticated">
-    <mat-icon>logout</mat-icon>
-    {{'log-out' | translate }}
   </button>
 </mat-toolbar>

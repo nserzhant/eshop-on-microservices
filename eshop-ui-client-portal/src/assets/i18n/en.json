@@ -1,5 +1,52 @@
 {
-  "catalog" : "Catalog",
-  "log-in" : "Log In",
-  "log-out" : "Log Out"
+  "header" : {
+    "catalog" : "Catalog",
+    "orders" : "Orders",
+    "log-in" : "Log In",
+    "log-out" : "Log Out"
+  },
+  "basket" : {
+    "name" : "Name",
+    "qty" : "Qty",
+    "price": "Price",
+    "remove": "Remove",
+    "checkout" : "Checkout",
+    "continue-shopping" : "Continue Shopping"
+  },
+  "catalog" : {
+    "name" : "Name",
+    "brand" : "Brand",
+    "type" : "Type",
+    "price" : "Price",
+    "filters" : "Filters",
+    "items-not-found": "Items Not Found"
+  },
+  "checkout" : {
+    "shipping-address" : "Shipping Address",
+    "shipping-address-required" : "Shipping Address Required",
+    "cardholder" : "Cardholder",
+    "card-number" : "Card Number",
+    "expiration-date" : "Expiration Date",
+    "cvv" : "CVV",
+    "total" : "Total",
+    "place-order" : "Place Order",
+    "back" : "Back"
+  },
+  "orders" : {
+    "order-number" : "Order #",
+    "date" : "Date",
+    "name" : "Name",
+    "brand" : "Brand",
+    "type" : "Type",
+    "qty" : "Qty",
+    "price" : "Price"
+  },
+  "errors" : {
+    "unathorized" : "Unathorized",
+    "access-is-denied" : "Access is denied",
+    "internal-server-error" : "Internal server error",
+    "unknown-error" : "Unknown error",
+    "service-unavailable" : "Service unavailable",
+    "checkout-failed": "Checkout failed"
+  }
 }

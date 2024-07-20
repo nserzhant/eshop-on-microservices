@@ -1,0 +1,52 @@
+<div class="content-container">
+  <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()"  class="checkout">
+
+    <!-- Shipping Address  (form field)-->
+    <mat-form-field appearance="outline" style="grid-column-start: span 2;" class="form-item">
+      <mat-label>{{ 'checkout.shipping-address' | translate }}</mat-label>
+      <textarea matInput formControlName="shippingAddress"></textarea>
+      <mat-error *ngIf="checkoutForm.controls['shippingAddress']?.hasError('required')">
+        {{ 'checkout.shipping-address-required' | translate }}
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Cardholder  (fake field) -->
+    <mat-form-field appearance="outline" style="grid-column-start: span 2;" class="form-item">
+      <mat-label>{{ 'checkout.cardholder' | translate }}</mat-label>
+      <input matInput disabled="true" value="Test User">
+    </mat-form-field>
+
+    <!-- Card Number  (fake field) -->
+    <mat-form-field appearance="outline" style="grid-column-start: span 2;" class="form-item">
+      <mat-label>{{ 'checkout.card-number' | translate }}</mat-label>
+      <input matInput disabled="true" value="0000-0000-0000-0000">
+    </mat-form-field>
+
+    <!-- Expiration Date  (fake field) -->
+    <mat-form-field appearance="outline" class="form-item">
+      <mat-label>{{ 'checkout.expiration-date' | translate }}</mat-label>
+      <input matInput disabled="true" value="09/29">
+    </mat-form-field>
+
+    <!-- CVV  (fake field) -->
+    <mat-form-field appearance="outline" class="form-item">
+      <mat-label>{{ 'checkout.cvv' | translate }}</mat-label>
+      <input matInput type="password" disabled="true" value="123">
+    </mat-form-field>
+
+    <!-- Total  (information field) -->
+    <mat-form-field appearance="outline" style="grid-column-start: span 2;" class="form-item">
+      <mat-label>{{ 'checkout.total' | translate }}</mat-label>
+      <input matInput disabled="true" value="{{ total }} $">
+    </mat-form-field>
+    <div  style="grid-column-start: span 2;" class="form-item">
+      <button type="submit" mat-raised-button color="primary" [disabled]="checkoutForm.invalid" style="width: 150px;">
+        {{ 'checkout.place-order' | translate }}
+      </button>
+      <button type="button" mat-raised-button color="primary" style="width: 150px;" class="right" (click)="back()">
+        {{ 'checkout.back' | translate }}
+      </button>
+    </div>
+  </form>
+  <mat-spinner *ngIf="isCheckingOut" class="action-spinner"></mat-spinner>
+</div>

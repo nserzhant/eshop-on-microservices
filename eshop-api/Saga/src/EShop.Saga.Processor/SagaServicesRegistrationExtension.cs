@@ -34,7 +34,7 @@ public static class SagaServicesRegistrationExtension
                     {
                         builder.UseSqlServer(connectionString, m =>
                         {
-                            m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
+                            m.MigrationsAssembly(typeof(EShopSagaDbContext).Assembly.GetName().Name);
                             m.MigrationsHistoryTable("_EFMigrationsHistory", DBConsts.SAGA_DB_SCHEMA_NAME);
                         });
                     });

@@ -3,5 +3,7 @@ export const environment = {
   stsAuthority: '/authorize',
   clientId: 'customer-portal',
   scope: 'openid api offline_access',
-  catalogApi: '/catalog'
+  catalogApi: '/catalog',
+  basketApi: '/basket',
+  orderingApi: '/ordering'
 };

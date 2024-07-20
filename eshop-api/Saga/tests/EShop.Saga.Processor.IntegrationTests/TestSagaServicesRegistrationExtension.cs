@@ -42,7 +42,7 @@ public static class TestSagaServicesRegistrationExtension
                     {
                         builder.UseSqlServer(configuration.GetConnectionString(DBConsts.SAGA_DB_CONNECTION_STRING_NAME), m =>
                         {
-                            m.MigrationsAssembly(Assembly.GetExecutingAssembly().GetName().Name);
+                            m.MigrationsAssembly(typeof(EShopSagaDbContext).Assembly.GetName().Name);
                             m.MigrationsHistoryTable("_EFMigrationsHistory", DBConsts.SAGA_DB_SCHEMA_NAME);
                         });
                     });
@@ -58,12 +58,6 @@ public static class TestSagaServicesRegistrationExtension
 
                 cfg.ConfigureEndpoints(context);
             });
-        });
-
-        services.AddDbContext<EShopSagaDbContext>(options =>
-        {
-            options.UseSqlServer(configuration.GetConnectionString(DBConsts.SAGA_DB_CONNECTION_STRING_NAME)
-                , x => x.MigrationsHistoryTable("_EFMigrationsHistory", DBConsts.SAGA_DB_SCHEMA_NAME));
         });
 
         return services;

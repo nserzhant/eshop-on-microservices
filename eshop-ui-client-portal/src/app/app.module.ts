@@ -16,6 +16,12 @@ import { environment } from 'src/environments/environment';
 import { AuthenticationInterceptorService } from './auth/authentication-interceptor.service';
 import { MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS } from '@angular/material/progress-spinner';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasketComponent } from './basket/basket.component';
+import { CheckoutComponent } from './checkout/checkout.component';
+import { OrdersComponent } from './orders/orders.component';
+import { BASKET_API_URL, BasketClient } from './services/api/basket.api.client';
+import { OrderClient, ORDERING_API_URL } from './services/api/ordering.api.client';
+import { HttpErrorInterceptor } from './services/http-error-interceptor.service';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -26,7 +32,10 @@ export function HttpLoaderFactory(http: HttpClient) {
         AppComponent,
         HeaderComponent,
         CatalogComponent,
-        LoginCallbackComponent
+        LoginCallbackComponent,
+        BasketComponent,
+        CheckoutComponent,
+        OrdersComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         AppRoutingModule,
@@ -44,14 +53,29 @@ export function HttpLoaderFactory(http: HttpClient) {
         CatalogBrandClient,
         CatalogTypeClient,
         CatalogItemClient,
+        BasketClient,
+        OrderClient,
         {
             provide: CATALOG_API_URL,
             useValue: environment.catalogApi
         },
         {
+          provide: BASKET_API_URL,
+          useValue: environment.basketApi
+        },
+        {
+          provide: ORDERING_API_URL,
+          useValue: environment.orderingApi
+        },
+        {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthenticationInterceptorService,
             multi: true
+        },
+        {
+          provide: HTTP_INTERCEPTORS,
+          useClass: HttpErrorInterceptor,
+          multi: true
         },
         {
             provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,

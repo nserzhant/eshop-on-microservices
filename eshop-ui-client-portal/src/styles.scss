@@ -61,17 +61,49 @@ mat-sidenav-content {
   margin: 10px;
 }
 
+.content-container {
+  display: flex;
+  flex-wrap: wrap;
+  flex-basis: 20px;
+  justify-content: center;
+}
+
+.orders-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .catalog-item {
   width: 300px;
   margin: 10px;
   display:flex;
 }
 
-.cards-container {
-  display: flex;
-  flex-wrap: wrap;
-  flex-basis: 20px;
+.checkout {
+  display: grid;
+  align-items: center;
   justify-content: center;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.basket {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.order {
+  width: 100%;
+  max-width: 1000px;
+  margin-top: 10px;
+}
+
+.order-image {
+  width: 50px;
+  height: 50px;
+  margin-top: 2px;
 }
 
 .grid-spinner {
@@ -105,4 +137,20 @@ mat-sidenav-content {
 .subtitle-header {
   width: 70px;
   display: inline-block;
+}
+
+.mat-qty-edit{
+  width:100px !important;
+  margin-top: 10px;
+}
+
+.form-item {
+  margin: 10px 10px 0px 10px;
+}
+
+.error-snack-bar {
+  padding: 16px;
+  --mdc-snackbar-container-color: red;
+  --mdc-snackbar-supporting-text-color: white;
+  --mat-snack-bar-button-color: white;
 }

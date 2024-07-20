@@ -148,7 +148,6 @@ public class BasketControllerTests : BaseBasketIntegrationTests
         var basketCheckedOutEvent = itemPublished?.Context?.Message;
         Assert.That(basketCheckedOutEvent, Is.Not.Null);
         Assert.That(basketCheckedOutEvent.BasketId, Is.EqualTo(basket.Id));
-        Assert.That(basketCheckedOutEvent.CorrelationId, Is.EqualTo(basket.Id));
         Assert.That(basketCheckedOutEvent.CustomerId, Is.EqualTo(customerId));
         Assert.That(basketCheckedOutEvent.ShippingAddress, Is.EqualTo(shippingAddress));
         Assert.That(basketCheckedOutEvent.CustomerEmail, Is.EqualTo(email));

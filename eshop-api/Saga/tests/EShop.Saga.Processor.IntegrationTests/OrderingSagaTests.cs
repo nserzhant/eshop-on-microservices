@@ -12,6 +12,7 @@ using EShop.Saga.Components.Infrastructure;
 using EShop.Saga.Components.StateMachines;
 using MassTransit;
 using MassTransit.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -191,7 +192,7 @@ public class OrderingSagaTests
     {
         var orderDbContext = _serviceProvider.GetRequiredService<OrderingDbContext>();
         var catalogDbContext = _serviceProvider.GetRequiredService<CatalogDbContext>();
-        var eShopSagaDbContext = _serviceProvider.GetRequiredService<EShopSagaDbContext>();
+        var eShopSagaDbContext = _serviceProvider.GetRequiredService<DbContext>();
 
         orderDbContext.Database.EnsureDeleted();
         orderDbContext.Database.EnsureCreated();

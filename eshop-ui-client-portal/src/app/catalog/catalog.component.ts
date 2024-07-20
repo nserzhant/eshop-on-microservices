@@ -4,6 +4,7 @@ import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { BehaviorSubject,  merge, of as observableOf, Subject, takeUntil } from 'rxjs';
 import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
 import { CatalogBrandClient, CatalogBrandReadModel, CatalogItemClient, CatalogItemReadModel, CatalogTypeClient, CatalogTypeReadModel, ListCatalogItemOrderBy, OrderByDirections } from '../services/api/catalog.api.client';
+import { OrderingService } from '../services/ordering.service';
 
 @Component({
   selector: 'catalog',
@@ -38,9 +39,9 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   hidePaginator = false;
 
   constructor(private catalogTypeClient : CatalogTypeClient,
-    private catalogBrandClient : CatalogBrandClient,
-    private catalogItemClient : CatalogItemClient) {
-  }
+              private catalogBrandClient : CatalogBrandClient,
+              private catalogItemClient : CatalogItemClient,
+              private orderingSerivce: OrderingService) {}
 
   ngOnInit(): void {
 
@@ -117,5 +118,9 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   onFilterChange() {
     this.paginator.pageIndex = 0;
     this.filterChangedSubject$.next();
+  }
+
+  addItemToBasket(item: CatalogItemReadModel) {
+    this.orderingSerivce.addItemToBasket(item)
   }
 }

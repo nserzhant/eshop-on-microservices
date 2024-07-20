@@ -66,7 +66,7 @@ public class BasketController : ControllerBase
         var basket = await _basketRepository.GetBasketAsync(customerId);
         var checkoutEvent = new BasketCheckedOutEvent
             (
-                basket.Id,
+                Guid.NewGuid(),
                 customerId,
                 email,
                 checkoutDTO.ShippingAddress,

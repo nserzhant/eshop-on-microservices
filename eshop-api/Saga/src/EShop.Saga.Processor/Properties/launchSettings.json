@@ -5,7 +5,8 @@
       "launchBrowser": false,
       "applicationUrl": "http://localhost:5011",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "initDbOnStartup": "true"
       },
       "dotnetRunMessages": true
     },
@@ -14,6 +15,7 @@
       "httpPort": 5011,
       "environmentVariables": {
         "ASPNETCORE_HTTP_PORTS": "8080",
+        "initDbOnStartup": "true",
         "ConnectionStrings__sagaDbConnectionString": "Server=host.docker.internal,2433;Integrated Security=false;Initial Catalog=eshop.ordering.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true",
         "broker__rabbitMQHost": "host.docker.internal",
         "broker__rabbitMQPort": "5672",

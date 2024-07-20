@@ -1,12 +1,16 @@
 <mat-sidenav-container class="sidenav-container">
   <mat-sidenav #sidenav [opened] = "isSideNavOpened" [mode]="mode">
     <div class="filter-container">
+
+      <!-- Name Filter -->
       <mat-form-field appearance="outline" class="filter-row">
-        <mat-label>Name</mat-label>
+        <mat-label>{{'catalog.name' | translate }}</mat-label>
         <input  matInput name="filter" [(ngModel)] = "nameFilter">
       </mat-form-field>
+
+      <!-- Brand Filter -->
       <mat-form-field appearance="outline" class="filter-row">
-        <mat-label>Brand</mat-label>
+        <mat-label>{{'catalog.brand' | translate }}</mat-label>
         <mat-select  [(ngModel)] = "brandFilter">
           <mat-option></mat-option>
           <mat-option *ngFor="let brand of brands" [value]="brand.brand">
@@ -14,8 +18,10 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+
+      <!-- Type Filter -->
       <mat-form-field appearance="outline" class="filter-row">
-        <mat-label>Type</mat-label>
+        <mat-label>{{'catalog.type' | translate }}</mat-label>
         <mat-select [(ngModel)] = "typeFilter">
           <mat-option></mat-option>
           <mat-option *ngFor="let type of types" [value]="type.type">
@@ -28,19 +34,42 @@
   </mat-sidenav>
   <mat-sidenav-content>
     <button mat-button color='primary' (click) ='sidenav.toggle()' class ='expand-sidenav-button' *ngIf="!isSideNavOpened">
-      <mat-icon>menu</mat-icon> Filters
+      <mat-icon>menu</mat-icon> {{'catalog.filters' | translate }}
     </button>
-    <div class="cards-container">
+    <div class="content-container">
       <mat-card *ngFor="let item of items" class="catalog-item">
         <mat-card-header>
-          <mat-card-title><b>{{ item.name }}</b></mat-card-title>
-          <mat-card-subtitle><b class="subtitle-header">Brand:</b>{{item.catalogBrand?.brand}}</mat-card-subtitle>
-          <mat-card-subtitle><b class="subtitle-header">Type:</b>{{item.catalogType?.type}}</mat-card-subtitle>
-          <mat-card-subtitle><b class="subtitle-header">Price:</b>{{item.price}} $</mat-card-subtitle>
+
+          <!-- Name -->
+          <mat-card-title>
+            <b>{{ item.name }}</b>
+          </mat-card-title>
+
+          <!-- Brand -->
+          <mat-card-subtitle>
+            <b class="subtitle-header">{{'catalog.brand' | translate }}:</b>{{item.catalogBrand?.brand}}
+          </mat-card-subtitle>
+
+          <!-- Type -->
+          <mat-card-subtitle>
+            <b class="subtitle-header">{{'catalog.type' | translate }}:</b>{{item.catalogType?.type}}
+          </mat-card-subtitle>
+
+          <!-- Price -->
+          <mat-card-subtitle>
+            <b class="subtitle-header">{{'catalog.price' | translate }}</b>{{item.price}} $
+          </mat-card-subtitle>
         </mat-card-header>
+
+        <!-- Image -->
         <mat-card-content>
           <img class="catalog-image" src="{{item.pictureUri}}">
         </mat-card-content>
+        <mat-card-footer>
+          <button mat-icon-button class="right" (click)="addItemToBasket(item)">
+            <mat-icon>add_shopping_cart</mat-icon>
+          </button>
+        </mat-card-footer>
       </mat-card>
     </div>
     <div class="right" [hidden] ="hidePaginator">
@@ -51,6 +80,6 @@
                     attr.aria-label="{{'paginator-aria-label' | translate }}">
       </mat-paginator>
     </div>
-    <span *ngIf="hidePaginator" class="not-found-container">Items Not Found</span>
+    <span *ngIf="hidePaginator" class="not-found-container">{{'catalog.items-not-found' | translate }}</span>
   </mat-sidenav-content>
 </mat-sidenav-container>
