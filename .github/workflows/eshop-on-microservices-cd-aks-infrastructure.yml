@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   
 env:
-  dnsLabel: eshop-client-portal-${{ vars.SUFFIX }}
+  dnsLabel: eshop-customer-portal-${{ vars.SUFFIX }}
   clusterName: aks-eshop-${{ vars.SUFFIX }}
   agentCount: 2
   agentVMSize: Standard_B2s

@@ -41,7 +41,7 @@ param sqlEntraIdAdminObjectId string
 
 /*----------------------- AKS Parameters  -------------------- */
 
-@description('The Public IP Label Of The Client Portal Gateway.')
+@description('The Public IP Label Of The Customer Portal Gateway.')
 param dnsLabel string
 
 @description('The Name Of The Managed Cluster Resource.')

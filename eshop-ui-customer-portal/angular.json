@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "eshop-ui-client-portal": {
+    "eshop-ui-customer-portal": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -18,7 +18,7 @@
           "builder": "@angular-devkit/build-angular:application",
           "options": {
             "outputPath": {
-              "base": "dist/eshop-ui-client-portal"
+              "base": "dist/eshop-ui-customer-portal"
             },
             "index": "src/index.html",
             "polyfills": [
@@ -75,10 +75,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "eshop-ui-client-portal:build:production"
+              "buildTarget": "eshop-ui-customer-portal:build:production"
             },
             "development": {
-              "buildTarget": "eshop-ui-client-portal:build:development"
+              "buildTarget": "eshop-ui-customer-portal:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -86,7 +86,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "eshop-ui-client-portal:build"
+            "buildTarget": "eshop-ui-customer-portal:build"
           }
         },
         "test": {

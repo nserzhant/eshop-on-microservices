@@ -1,12 +1,12 @@
-# CLIENT PORTAL RELEASE PIPELINE USING DOCKER IMAGES HOSTED ON APP SERVICE
+# CUSTOMER PORTAL RELEASE PIPELINE USING DOCKER IMAGES HOSTED ON APP SERVICE
 
 resources:
  repositories:
     - repository: self
       trigger: none
  pipelines:
-   - pipeline: client-portal-ci-docker
-     source: client-portal-ci-docker
+   - pipeline: customer-portal-ci-docker
+     source: customer-portal-ci-docker
      trigger: none
 
 variables:
@@ -17,9 +17,9 @@ variables:
 - name: suffix
   value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
 - name: webappname
-  value: 'client-portal-web-app-$(suffix)'
+  value: 'customer-portal-web-app-$(suffix)'
 - name: templateFileName
-  value: 'client-portal-docker.bicep'
+  value: 'customer-portal-docker.bicep'
 - name: repositoryName
   value: 'eshop.ui.clientportal'
 - name: dockerregistryurl
@@ -40,7 +40,7 @@ pool:
 
 steps:
 - checkout: none
-- download: client-portal-ci-docker
+- download: customer-portal-ci-docker
 
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: Deploy Web App Infrastructure
@@ -52,7 +52,7 @@ steps:
     resourceGroupName: '$(resourceGroupName)'
     location: '$(location)'
     templateLocation: 'Linked artifact'
-    csmFile: '$(Pipeline.Workspace)/client-portal-ci-docker/Bicep/$(templateFileName)'
+    csmFile: '$(Pipeline.Workspace)/customer-portal-ci-docker/Bicep/$(templateFileName)'
     overrideParameters: '-webappname $(webappname)'
     deploymentMode: 'Incremental'
 
@@ -66,10 +66,10 @@ steps:
     appName: '$(webappname)'
     resourceGroupName: '$(resourceGroupName)'
     slotName: 'production'
-    containers: '$(userName)/$(repositoryName):$(resources.pipeline.client-portal-ci-docker.runID)'
+    containers: '$(userName)/$(repositoryName):$(resources.pipeline.customer-portal-ci-docker.runID)'
     appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
+      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)"
+      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)"
       -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
 
 - powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net -TimeoutSec 300

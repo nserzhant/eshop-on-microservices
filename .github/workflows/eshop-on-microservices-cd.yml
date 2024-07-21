@@ -11,9 +11,9 @@ env:
   employeeGatewayConfigContainerName: employeegateway
   clientProxyConfigurationFile: nginx-client-azure.conf
   employeeProxyConfigurationFile: nginx-employee-azure.conf
-  clientGatewayAppName: client-portal-gateway-${{ vars.SUFFIX }}
+  clientGatewayAppName: customer-portal-gateway-${{ vars.SUFFIX }}
   employeeGatewayAppName: employee-portal-gateway-${{ vars.SUFFIX }}
-  clientPortalStaticAppName: client-portal-${{ vars.SUFFIX }}
+  clientPortalStaticAppName: customer-portal-${{ vars.SUFFIX }}
   employeePortalStaticAppName: employee-portal-${{ vars.SUFFIX }}
   catalogApiWebAppName: catalog-api-web-app-${{ vars.SUFFIX }}
   clientAuthServerWebAppName: client-auth-web-app-${{ vars.SUFFIX }}
@@ -58,7 +58,7 @@ jobs:
         template: ./artifacts/Bicep/main.bicep
         parameters: employeeGatewayAppName="${{ env.employeeGatewayAppName }}" clientGatewayAppName="${{ env.clientGatewayAppName }}" catalogApiWebAppName="${{ env.catalogApiWebAppName }}" clientAuthServerWebAppName="${{ env.clientAuthServerWebAppName }}" employeeApiWebAppName="${{ env.employeeApiWebAppName }}" employeeAuthServerWebAppName="${{ env.employeeAuthServerWebAppName }}" clientPortalStaticAppName="${{ env.clientPortalStaticAppName }}" employeePortalStaticAppName="${{ env.employeePortalStaticAppName }}" storageAccountName="${{ env.storageAccountName }}" employeeOAuthIssuer=${{ env.employeeOAuthIssuer }} employeeOAuthMetadataEndpoint=${{ env.employeeOAuthMetadataEndpoint}} employeeOAuthAudience=${{ env.employeeOAuthAudience }} location=${{ env.location }} suffix=${{ vars.SUFFIX }}
     
-    - name: Retrieve Client Portal DNS Name
+    - name: Retrieve Customer Portal DNS Name
       run: |
         staticAppDNSNames='${{ steps.deployBicep.outputs.staticAppDNSNames }}'
         echo "clientPortalDNSName="$(echo $staticAppDNSNames | jq -r '.clientPortal')>> $GITHUB_ENV
@@ -103,7 +103,7 @@ jobs:
           echo "::add-mask::$val"
           echo "storageAccountKey="$val >> $GITHUB_ENV
     
-    - name: Upload Client Portal Gateway Configuration To Storage Account
+    - name: Upload Customer Portal Gateway Configuration To Storage Account
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.clientGatewayConfigContainerName }} --name nginx.conf --file '${{ env.clientProxyConfigurationFile }}' --overwrite
@@ -181,7 +181,7 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}    
         
-    - name: Get Client Portal Deployment Key
+    - name: Get Customer Portal Deployment Key
       uses: Azure/cli@v1.0.9
       id: clientPortalApiKey
       with:
@@ -190,7 +190,7 @@ jobs:
           echo "::add-mask::$val"
           echo "apiKey="$val >> $GITHUB_OUTPUT
     
-    - name: Deploy Client Portal Static Web App
+    - name: Deploy Customer Portal Static Web App
       uses: Azure/static-web-apps-deploy@v1
       with:
         action: "upload"

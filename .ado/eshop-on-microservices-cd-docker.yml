@@ -24,11 +24,11 @@ variables:
 - name: employeeProxyConfigurationFile
   value: '$(Pipeline.Workspace)/eshop-on-microservices-ci-docker/NGINX/nginx-employee-azure-docker.conf'
 - name: clientGatewayAppName
-  value: 'client-portal-gateway-$(suffix)'
+  value: 'customer-portal-gateway-$(suffix)'
 - name: employeeGatewayAppName
   value: 'employee-portal-gateway-$(suffix)'
 - name: clientPortalWebAppName
-  value: 'client-portal-$(suffix)'
+  value: 'customer-portal-$(suffix)'
 - name: employeePortalWebAppName
   value: 'employee-portal-$(suffix)'
 - name: catalogApiWebAppName
@@ -99,7 +99,7 @@ steps:
      echo "##vso[task.setvariable variable=storageAccountKey;issecret=true]$ACCOUNT_KEY"
 
 - task: AzureCLI@2
-  displayName: Upload Client Portal Gateway Configuration To Storage Account
+  displayName: Upload Customer Portal Gateway Configuration To Storage Account
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
@@ -159,7 +159,7 @@ steps:
       -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
 
 - task: AzureWebAppContainer@1
-  displayName: Update Client Portal Web App
+  displayName: Update Customer Portal Web App
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     appName: '$(clientPortalWebAppName)'

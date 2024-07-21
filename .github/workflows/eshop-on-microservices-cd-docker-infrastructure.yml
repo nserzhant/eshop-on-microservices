@@ -9,9 +9,9 @@ env:
   employeeGatewayConfigContainerName: employeegateway
   clientProxyConfigurationFile: nginx-client-azure.conf
   employeeProxyConfigurationFile: nginx-employee-azure.conf
-  clientGatewayAppName: client-portal-gateway-${{ vars.SUFFIX }}
+  clientGatewayAppName: customer-portal-gateway-${{ vars.SUFFIX }}
   employeeGatewayAppName: employee-portal-gateway-${{ vars.SUFFIX }}
-  clientPortalWebAppName: client-portal-${{ vars.SUFFIX }}
+  clientPortalWebAppName: customer-portal-${{ vars.SUFFIX }}
   employeePortalWebAppName: employee-portal-${{ vars.SUFFIX }}
   catalogApiWebAppName: catalog-api-web-app-${{ vars.SUFFIX }}
   clientAuthServerWebAppName: client-auth-web-app-${{ vars.SUFFIX }}

@@ -18,27 +18,27 @@ WORKDIR /usr/share/nginx/html
 # Remove default nginx static assets
 RUN rm -rf ./*
 # Copy static assets from builder stage
-COPY --from=build /app/dist/eshop-ui-client-portal/browser .
+COPY --from=build /app/dist/eshop-ui-customer-portal/browser .
 # Containers run nginx with global directives and daemon off
 EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
 
 # For development runtime environment use:
 # Build
-# docker build -t client-portal-development --target development .
+# docker build -t customer-portal-development --target development .
 # Run with browser debugging
-# docker run -p 4201:4201 -p 49153:49153 -d --rm -v .\src:/app/src --name client-portal-dev  client-portal-development
+# docker run -p 4201:4201 -p 49153:49153 -d --rm -v .\src:/app/src --name customer-portal-dev  customer-portal-development
 # Run without browser debugging
-# docker run -p 4201:4201 -d --rm client-portal-development
+# docker run -p 4201:4201 -d --rm customer-portal-development
 # Run with other configuration (production in the example)
-# docker run -p 4201:4201 -d --rm client-portal-development --configuration=production
+# docker run -p 4201:4201 -d --rm customer-portal-development --configuration=production
 
 # For production runtime environment use:
 # Build
-# docker build --target release --no-cache  -t client-portal-release .
+# docker build --target release --no-cache  -t customer-portal-release .
 # Build with other configuration (development in the example)
-# docker build --target release --no-cache  -t client-portal-release --build-arg="CONFIGURATION=development" .
+# docker build --target release --no-cache  -t customer-portal-release --build-arg="CONFIGURATION=development" .
 # Run
-# docker run -d --rm -p 4201:80 client-portal-release
+# docker run -d --rm -p 4201:80 customer-portal-release
 
 

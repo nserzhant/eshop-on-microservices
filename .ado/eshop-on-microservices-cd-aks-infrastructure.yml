@@ -38,7 +38,7 @@ variables:
 - name: catalogSqlServerName
   value: 'catalog-sqlserver-$(suffix)'
 - name: dnsLabel
-  value: 'eshop-client-portal-$(suffix)'
+  value: 'eshop-customer-portal-$(suffix)'
 - name: clusterName
   value: 'aks-eshop-$(suffix)'
 - name: agentCount

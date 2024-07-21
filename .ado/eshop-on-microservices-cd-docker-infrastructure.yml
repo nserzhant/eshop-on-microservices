@@ -26,11 +26,11 @@ variables:
 - name: resourceGroupName
   value: 'eshop-on-microservices-rg'
 - name: clientGatewayAppName
-  value: 'client-portal-gateway-$(suffix)'
+  value: 'customer-portal-gateway-$(suffix)'
 - name: employeeGatewayAppName
   value: 'employee-portal-gateway-$(suffix)'
 - name: clientPortalWebAppName
-  value: 'client-portal-$(suffix)'
+  value: 'customer-portal-$(suffix)'
 - name: employeePortalWebAppName
   value: 'employee-portal-$(suffix)'
 - name: catalogApiWebAppName

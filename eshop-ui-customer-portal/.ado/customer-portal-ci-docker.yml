@@ -1,4 +1,4 @@
-#CLIENT PORTAL BUILD PIPELINE (DOCKER IMAGE)
+#CUSTOMER PORTAL BUILD PIPELINE (DOCKER IMAGE)
 
 resources:
  repositories:
@@ -10,7 +10,7 @@ variables:
 - group: microservices-variable-group
 
 - name: workingDirectory
-  value: '$(System.DefaultWorkingDirectory)/eshop-ui-client-portal'
+  value: '$(System.DefaultWorkingDirectory)/eshop-ui-customer-portal'
 - name: userName
   value: $(docker-registry-username) # From variable group
 - name: imageName

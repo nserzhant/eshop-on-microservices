@@ -76,10 +76,10 @@ jobs:
         name: Ingress
         path: .ingress
 
-  client-portal:
+  customer-portal:
     uses: ./.github/workflows/angular-ci-template.yml
     with:
-      appFolder: eshop-ui-client-portal
+      appFolder: eshop-ui-customer-portal
       buildConfiguration: production
       vmImage: ubuntu-latest
       nodeVersion: 16.x

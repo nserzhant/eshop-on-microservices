@@ -11,9 +11,9 @@ env:
   employeeGatewayConfigContainerName: employeegateway
   clientProxyConfigurationFile: nginx-client-azure-docker.conf
   employeeProxyConfigurationFile: nginx-employee-azure-docker.conf
-  clientGatewayAppName: client-portal-gateway-${{ vars.SUFFIX }}
+  clientGatewayAppName: customer-portal-gateway-${{ vars.SUFFIX }}
   employeeGatewayAppName: employee-portal-gateway-${{ vars.SUFFIX }}
-  clientPortalWebAppName: client-portal-${{ vars.SUFFIX }}
+  clientPortalWebAppName: customer-portal-${{ vars.SUFFIX }}
   employeePortalWebAppName: employee-portal-${{ vars.SUFFIX }}
   catalogApiWebAppName: catalog-api-web-app-${{ vars.SUFFIX }}
   clientAuthServerWebAppName: client-auth-web-app-${{ vars.SUFFIX }}
@@ -105,7 +105,7 @@ jobs:
           echo "::add-mask::$val"
           echo "storageAccountKey="$val >> $GITHUB_ENV
     
-    - name: Upload Client Portal Gateway Configuration To Storage Account
+    - name: Upload Customer Portal Gateway Configuration To Storage Account
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.clientGatewayConfigContainerName }} --name nginx.conf --file '${{ env.clientProxyConfigurationFile }}' --overwrite
@@ -184,7 +184,7 @@ jobs:
     needs: deploy_infrastructure
     uses: ./.github/workflows/webapp-cd-docker-template.yml
     with:
-      serviceName: Client Portal
+      serviceName: Customer Portal
       webAppName: ${{ needs.deploy_infrastructure.outputs.clientPortalWebAppName  }}
       dockerHubUserName: "${{ vars.DOCKERHUB_USERNAME  }}" 
       dockerImageTag: ${{ needs.deploy_infrastructure.outputs.dockerImageTag }} 

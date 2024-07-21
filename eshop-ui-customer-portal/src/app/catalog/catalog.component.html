@@ -36,7 +36,7 @@
     <button mat-button color='primary' (click) ='sidenav.toggle()' class ='expand-sidenav-button' *ngIf="!isSideNavOpened">
       <mat-icon>menu</mat-icon> {{'catalog.filters' | translate }}
     </button>
-    <div class="content-container">
+    <div class="wrap-container">
       <mat-card *ngFor="let item of items" class="catalog-item">
         <mat-card-header>
 

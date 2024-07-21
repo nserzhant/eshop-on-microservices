@@ -1,4 +1,4 @@
-#CLIENT PORTAL BUILD PIPELINE
+#CUSTOMER PORTAL BUILD PIPELINE
 
 resources:
  repositories:
@@ -8,7 +8,7 @@ resources:
 
 variables:
   buildConfiguration: 'production'
-  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-ui-client-portal'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-ui-customer-portal'
 
 pool:
   vmImage: ubuntu-latest
@@ -39,7 +39,7 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Angular Artifacts'
   inputs:
-    targetPath: '$(workingDirectory)/dist/eshop-ui-client-portal'
+    targetPath: '$(workingDirectory)/dist/eshop-ui-customer-portal'
     artifact: 'ClientPortal'
     publishLocation: 'pipeline'
 

@@ -15,7 +15,7 @@ variables:
   acrName: $(acr-name)
   workingDirectory:  $(System.DefaultWorkingDirectory)/.helm/eshop
   aksNamespace: 'eshop'
-  dnsLabel: 'eshop-client-portal-$(suffix)'
+  dnsLabel: 'eshop-customer-portal-$(suffix)'
   akvName: 'akv-eshop-$(suffix)'
   catalogApiSqlServerName: 'catalog-sqlserver-$(suffix)'
   employeeManagementSqlServerName: 'employee-sqlserver-$(suffix)'
@@ -84,7 +84,7 @@ steps:
      echo "##vso[task.setvariable variable=clientAuthserverUmiClientId;issecret=true]$CLIENT_ID"
 
 - task: AzureCLI@2
-  displayName: Get The Client Portal Gateway DNS Name (save result to clientPortalDnsName variable)
+  displayName: Get The Customer Portal Gateway DNS Name (save result to clientPortalDnsName variable)
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'

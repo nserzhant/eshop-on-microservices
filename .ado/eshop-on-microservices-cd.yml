@@ -18,9 +18,9 @@ variables:
   employeeProxyConfigurationFile: '.ingress/nginx-employee-azure.conf'
   resourceGroupName: 'eshop-on-microservices-rg'
 
-  clientGatewayAppName: 'client-portal-gateway-$(suffix)'
+  clientGatewayAppName: 'customer-portal-gateway-$(suffix)'
   employeeGatewayAppName: 'employee-portal-gateway-$(suffix)'
-  clientPortalStaticAppName: 'client-portal-$(suffix)'
+  clientPortalStaticAppName: 'customer-portal-$(suffix)'
   employeePortalStaticAppName: 'employee-portal-$(suffix)'
   catalogApiWebAppName: 'catalog-api-web-app-$(suffix)'
   clientAuthServerWebAppName: 'client-auth-web-app-$(suffix)'
@@ -95,7 +95,7 @@ steps:
      echo "##vso[task.setvariable variable=storageAccountKey;issecret=true]$ACCOUNT_KEY"
 
 - task: AzureCLI@2
-  displayName: Upload Client Portal Gateway Configuration To Storage Account
+  displayName: Upload Customer Portal Gateway Configuration To Storage Account
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
@@ -155,7 +155,7 @@ steps:
     packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Client Authorization Server/*.zip'
 
 - task: AzureCLI@2
-  displayName: Get Client Portal Deployment Key
+  displayName: Get Customer Portal Deployment Key
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
@@ -165,7 +165,7 @@ steps:
       echo "##vso[task.setvariable variable=clientPortalDeploymentToken;issecret=true]$APIKEY"
 
 - task: AzureStaticWebApp@0
-  displayName: Deploy Client Portal Static Web App
+  displayName: Deploy Customer Portal Static Web App
   inputs:
     workingDirectory: '$(Pipeline.Workspace)/eshop-on-microservices-ci'
     app_location: 'ClientPortal'

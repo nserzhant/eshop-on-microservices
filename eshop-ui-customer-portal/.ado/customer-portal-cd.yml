@@ -1,19 +1,19 @@
-# CLIENT PORTAL STATIC APP RELEASE PIPELINE
+# CUSTOMER PORTAL STATIC APP RELEASE PIPELINE
 
 resources:
  repositories:
     - repository: self
       trigger: none
  pipelines:
-   - pipeline: client-portal-ci
-     source: client-portal-ci
+   - pipeline: customer-portal-ci
+     source: customer-portal-ci
      trigger: none
 
 variables:
   suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
   azureserviceconnection: 'azure-spn'
-  staticWebAppName: 'client-portal-$(suffix)'
-  templateFileName: 'client-portal-static.bicep'
+  staticWebAppName: 'customer-portal-$(suffix)'
+  templateFileName: 'customer-portal-static.bicep'
   subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
   resourceGroupName: 'eshop-on-microservices-rg'
   location: 'westeurope'
@@ -25,7 +25,7 @@ pool:
 
 steps:
 - checkout: none
-- download: client-portal-ci
+- download: customer-portal-ci
 
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: Deploy Static Web App Bicep
@@ -37,7 +37,7 @@ steps:
     resourceGroupName: '$(resourceGroupName)'
     location: '$(location)'
     templateLocation: 'Linked artifact'
-    csmFile: '$(Pipeline.Workspace)/client-portal-ci/Bicep/$(templateFileName)'
+    csmFile: '$(Pipeline.Workspace)/customer-portal-ci/Bicep/$(templateFileName)'
     overrideParameters: ' -staticAppSkuName $(staticAppSkuName) -staticAppTier $(staticAppTier) -staticWebAppName $(staticWebAppName)'
     deploymentMode: 'Incremental'
     deploymentOutputs: 'deploymentOutputs'
@@ -64,9 +64,9 @@ steps:
 - task: AzureStaticWebApp@0
   displayName: Deploy Static Web App
   inputs:
-    workingDirectory: '$(Pipeline.Workspace)/client-portal-ci'
+    workingDirectory: '$(Pipeline.Workspace)/customer-portal-ci'
     app_location: 'ClientPortal'
     azure_static_web_apps_api_token:  $(deploymentToken)
 
 - powershell: Invoke-WebRequest -UseBasicParsing https://$(clientAppDomainName) -TimeoutSec 300
-  displayName: Init And Check Client Portal
+  displayName: Init And Check Customer Portal

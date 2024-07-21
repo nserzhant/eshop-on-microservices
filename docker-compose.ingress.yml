@@ -11,6 +11,22 @@ services:
     volumes:
       - eshop-api-data-wproxy:/var/opt/mssql
 
+  redis:
+    image: redis:7.0.15-alpine3.20
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
   catalog-api:
     image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
     build:
@@ -22,60 +38,82 @@ services:
       - ConnectionStrings__catalogDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
       - generatedItemPictureUriHost=/catalog
-      - clients='https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT},https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}'
+      - clientOrigins='https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT},https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}'
       - EmployeeJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}/authorize
       - EmployeeJWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
-      - ClientJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT}/authorize
-      - ClientJWTSettings__MetadataAddress=http://client-authorizationserver/.well-known/openid-configuration
+      - CustomerJWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT}/authorize
+      - CustomerJWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__reserveStockQueueName=reserve-stocks
+      - broker__releaseStockQueueName=release-stocks
     logging:
         driver: gelf
         options:
           gelf-address: "udp://127.0.0.1:12201"
           tag: catalog-api
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
   
-  client-authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver:${TAG:-latest}
+  customer-authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.customer.authorizationserver:${TAG:-latest}
     build:
-      context: eshop-api/Client/
-      dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
+      context: eshop-api/Customer/
+      dockerfile: src/EShop.Customer.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__clientDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - ConnectionStrings__customerDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.customer.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db
       - initDbOnStartup=true
-      - clients__0__clientOrigin=https://${DNS_NAME_OR_IP}:${CLIENT_PORTAL_PORT}
-      - clients__0__clientId=client-portal
+      - clients__0__clientOrigin=https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT}
+      - clients__0__clientId=customer-portal
       - clients__0__displayName="public spa"
       - ASPNETCORE_APPL_PATH=authorize
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: customer-authorizationserver
     depends_on:
       - sqlserver
 
-  client-portal:
-    image: ${DOCKER_REGISTRY-}eshop.ui.clientportal:${TAG:-latest}
+  customer-portal:
+    image: ${DOCKER_REGISTRY-}eshop.ui.customerportal:${TAG:-latest}
     build: 
-      context: eshop-ui-client-portal
+      context: eshop-ui-customer-portal
       dockerfile: Dockerfile
     depends_on:
       - catalog-api
-      - client-authorizationserver
+      - basket-api
+      - ordering-api
+      - customer-authorizationserver
   
-  client-portal-nginx-ingress:
+  customer-portal-nginx-ingress:
     image: nginx:1.25.3
-    container_name: client-portal-nginx-ingress
+    container_name: customer-portal-nginx-ingress
     ports:
-      - "${CLIENT_PORTAL_PORT}:443"
+      - "${CUSTOMER_PORTAL_PORT}:443"
     volumes:
       - ${CERTIFICATES_PATH}:/etc/nginx/certs
-      - ./.ingress/nginx-client-portal.conf:/etc/nginx/nginx.conf
+      - ./.ingress/nginx-customer-portal.conf:/etc/nginx/nginx.conf
     logging:
-        driver: gelf
-        options:
-          gelf-address: "udp://127.0.0.1:12201"
-          tag: client-portal-nginx-ingress
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: customer-portal-nginx-ingress
     depends_on:
-     - client-authorizationserver
+      - customer-portal
+      - customer-authorizationserver
+      - catalog-api
+      - basket-api
+      - ordering-api
 
   employeemanagement-api:
     image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api:${TAG:-latest}
@@ -91,10 +129,10 @@ services:
       - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}/authorize
       - JWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
     logging:
-        driver: gelf
-        options:
-          gelf-address: "udp://127.0.0.1:12201"
-          tag: employeemanagement-api
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: employeemanagement-api
     depends_on:
       - sqlserver
 
@@ -107,13 +145,140 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db
       - clients__0__clientOrigin=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}
       - clients__0__clientId=employee-portal
       - clients__0__displayName="public spa"
       - ASPNETCORE_APPL_PATH=authorize
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: employeemanagement-authorizationserver
     depends_on:
       - sqlserver
       - employeemanagement-api
+
+  basket-api:
+    image: ${DOCKER_REGISTRY-}eshop.basket.api:${TAG:-latest}
+    build:
+      context: eshop-api/Basket/
+      dockerfile: src/EShop.Basket.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__redisConnectionString=redis:6379
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=clear-basket
+      - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT}/authorize
+      - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro    
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: basket-api
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  ordering-api:
+    image: ${DOCKER_REGISTRY-}eshop.ordering.api:${TAG:-latest}
+    build:
+      context: eshop-api/Ordering/
+      dockerfile: src/EShop.Ordering.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__orderingDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=create-order
+      - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT}/authorize
+      - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro    
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: ordering-api
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  payment-processor:
+    image: ${DOCKER_REGISTRY-}eshop.payment.processor:${TAG:-latest}
+    build:
+      context: eshop-api/Payment/
+      dockerfile: src/EShop.Payment.Processor/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - queueName=process-payment
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: payment-processor
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  saga-processor:
+    image: ${DOCKER_REGISTRY-}eshop.saga.processor:${TAG:-latest}
+    build:
+      context: eshop-api/Saga/
+      dockerfile: src/EShop.Saga.Processor/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__sagaDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - ordering__reserveStocksQueueName=reserve-stocks
+      - ordering__processPaymentQueueName=process-payment
+      - ordering__createOrderQueueName=create-order
+      - ordering__releaseStockQueueName=release-stocks
+      - ordering__clearBasketQueueName=clear-basket    
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: saga-processor
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   employee-portal:
     image: ${DOCKER_REGISTRY-}eshop.ui.employeeportal:${TAG:-latest}
@@ -143,7 +308,10 @@ services:
           gelf-address: "udp://127.0.0.1:12201"
           tag: employee-portal-nginx-ingress
     depends_on:
-     - client-authorizationserver
+      - employee-portal
+      - employeemanagement-api
+      - catalog-api
+      - employeemanagement-authorizationserver
 
   grafana:
     image: grafana/grafana:10.4.2

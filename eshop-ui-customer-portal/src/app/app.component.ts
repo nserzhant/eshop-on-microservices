@@ -6,7 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
   templateUrl: './app.component.html'
 })
 export class AppComponent {
-  title = 'eshop-ui-client-portal';
+  title = 'eshop-ui-customer-portal';
 
   constructor(translateService: TranslateService) {
      // this language will be used as a fallback when a translation isn't found in the current language

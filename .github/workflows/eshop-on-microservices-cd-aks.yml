@@ -5,7 +5,7 @@ on:
 
 env:
   clusterName: aks-eshop-${{ vars.SUFFIX }}
-  dnsLabel: eshop-client-portal-${{ vars.SUFFIX }}
+  dnsLabel: eshop-customer-portal-${{ vars.SUFFIX }}
   akvName: akv-eshop-${{ vars.SUFFIX }}
   catalogApiSqlServerName: catalog-sqlserver-${{ vars.SUFFIX }}
   employeeManagementSqlServerName: employee-sqlserver-${{ vars.SUFFIX }}
@@ -80,7 +80,7 @@ jobs:
           echo "::add-mask::$CLIENT_ID"
           echo "client_authserver_umi_client_id="$CLIENT_ID >> $GITHUB_ENV    
           
-    - name: Get The Client Portal Gateway DNS Name (save result to client_portal_dns_name variable)
+    - name: Get The Customer Portal Gateway DNS Name (save result to client_portal_dns_name variable)
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: |

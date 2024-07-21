@@ -10,7 +10,7 @@ param suffix string = uniqueString(resourceGroup().id)
 param webAppName string
 
 @description('The Name Of The Web App Service Plan')
-param webAppServicePlanName string = 'client-portal-server-plan-${suffix}'
+param webAppServicePlanName string = 'customer-portal-server-plan-${suffix}'
 
 @description('The Name Of The Web App SKU')
 param webAppSkuName string = 'B1'

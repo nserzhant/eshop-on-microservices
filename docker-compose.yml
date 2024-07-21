@@ -11,6 +11,22 @@ services:
     volumes:
       - eshop-api-data:/var/opt/mssql
 
+  redis:
+    image: redis:7.0.15-alpine3.20
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
   catalog-api:
     image: ${DOCKER_REGISTRY-}eshop.catalog.api:${TAG:-latest}
     build:
@@ -24,26 +40,37 @@ services:
       - generatedItemPictureUriHost=https://localhost:7208
       - EmployeeJWTSettings__Issuer=https://localhost:7272/
       - EmployeeJWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
-      - ClientJWTSettings__Issuer=https://localhost:7086/
-      - ClientJWTSettings__MetadataAddress=http://client-authorizationserver/.well-known/openid-configuration
-      - clients=http://localhost:4201,http://localhost:4202
+      - CustomerJWTSettings__Issuer=https://localhost:7086/
+      - ClientJWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+      - clientOrigins=http://localhost:4201,http://localhost:4202
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__reserveStockQueueName=reserve-stocks
+      - broker__releaseStockQueueName=release-stocks
     ports:
       - "7208:443"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
-  client-authorizationserver:
-    image: ${DOCKER_REGISTRY-}eshop.client.authorizationserver:${TAG:-latest}
+  customer-authorizationserver:
+    image: ${DOCKER_REGISTRY-}eshop.customer.authorizationserver:${TAG:-latest}
     build:
-      context: eshop-api/Client/
-      dockerfile: src/EShop.Client.AuthorizationServer/Dockerfile
+      context: eshop-api/Customer/
+      dockerfile: src/EShop.Customer.AuthorizationServer/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
-      - ConnectionStrings__clientDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.client.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - ConnectionStrings__customerDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.customer.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db
       - initDbOnStartup=true
       - clients__0__clientOrigin=http://localhost:4201
     ports:
@@ -83,7 +110,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
-      - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true      
+      - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true  
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db    
       - clients__0__clientOrigin=http://localhost:4202
     ports:
       - "7272:443"
@@ -93,6 +121,119 @@ services:
     depends_on:
       - sqlserver
       - employeemanagement-api
+
+  basket-api:
+    image: ${DOCKER_REGISTRY-}eshop.basket.api:${TAG:-latest}
+    build:
+      context: eshop-api/Basket/
+      dockerfile: src/EShop.Basket.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__redisConnectionString=redis:6379
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=clear-basket
+      - JWTSettings__Issuer=https://localhost:7086/
+      - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+    ports:
+      - "7120:8081"
+      - "5008:8080"     
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro  
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  ordering-api:
+    image: ${DOCKER_REGISTRY-}eshop.ordering.api:${TAG:-latest}
+    build:
+      context: eshop-api/Ordering/
+      dockerfile: src/EShop.Ordering.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__orderingDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - broker__queueName=create-order
+      - JWTSettings__Issuer=https://localhost:7086/
+      - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+    ports:
+      - "5009:8080"
+      - "7247:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro    
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  payment-processor:
+    image: ${DOCKER_REGISTRY-}eshop.payment.processor:${TAG:-latest}
+    build:
+      context: eshop-api/Payment/
+      dockerfile: src/EShop.Payment.Processor/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - queueName=process-payment
+    ports:
+      - "5010:8080"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  saga-processor:
+    image: ${DOCKER_REGISTRY-}eshop.saga.processor:${TAG:-latest}
+    build:
+      context: eshop-api/Saga/
+      dockerfile: src/EShop.Saga.Processor/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__sagaDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - initDbOnStartup=true
+      - broker__rabbitMQHost=rabbitmq
+      - broker__rabbitMQPort=5672
+      - broker__rabbitMQVirtualHost=/
+      - broker__rabbitMQUsername=guest
+      - broker__rabbitMQPassword=guest
+      - ordering__reserveStocksQueueName=reserve-stocks
+      - ordering__processPaymentQueueName=process-payment
+      - ordering__createOrderQueueName=create-order
+      - ordering__releaseStockQueueName=release-stocks
+      - ordering__clearBasketQueueName=clear-basket 
+    ports:
+      - "5011:8080"      
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+    depends_on:
+      sqlserver:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   employee-portal:
     image: ${DOCKER_REGISTRY-}eshop.ui.employeeportal:${TAG:-latest}
@@ -111,17 +252,17 @@ services:
       - employeemanagement-authorizationserver
       - catalog-api
 
-  client-portal:
-    image: ${DOCKER_REGISTRY-}eshop.ui.clientportal:${TAG:-latest}
+  customer-portal:
+    image: ${DOCKER_REGISTRY-}eshop.ui.customerportal:${TAG:-latest}
     build: 
-      context: eshop-ui-client-portal
+      context: eshop-ui-customer-portal
       dockerfile: Dockerfile
       args:
         - CONFIGURATION=${ANGULAR_CONFIGURATION:-development}
     ports:
       - '4201:80'    
     depends_on:
-      - client-authorizationserver
+      - customer-authorizationserver
       - catalog-api
 
 volumes:

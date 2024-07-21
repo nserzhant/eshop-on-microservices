@@ -1,15 +1,15 @@
-name: Client Portal CI CD Docker
+name: Customer Portal CI CD Docker
 
 on:
   workflow_dispatch:
   
 env:
   buildConfiguration: production
-  workingDirectory: ./eshop-ui-client-portal  
+  workingDirectory: ./eshop-ui-customer-portal  
   repositoryName: eshop.ui.clientportal
   dockerRegistryUrl: https://index.docker.io/v1/  
-  templateFileName: client-portal-docker.bicep
-  webappname: client-portal-web-app-${{ vars.SUFFIX }}
+  templateFileName: customer-portal-docker.bicep
+  webappname: customer-portal-web-app-${{ vars.SUFFIX }}
   resourceGroupName: eshop-docker-deployment
   location: westeurope
     

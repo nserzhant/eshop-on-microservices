@@ -36,8 +36,8 @@ param employeeApiWebAppName string = 'employee-api-web-app-${suffix}'
 @description('The Name Of The Employee Authorization Server Web App')
 param employeeAuthServerWebAppName string = 'employee-authserver-web-app-${suffix}'
 
-@description('The Name Of The Client Portal Static Web App')
-param clientPortalStaticAppName string = 'client-portal-${suffix}'
+@description('The Name Of The Customer Portal Static Web App')
+param clientPortalStaticAppName string = 'customer-portal-${suffix}'
 
 @description('The Name Of The Employee Portal Static Web App')
 param employeePortalStaticAppName string = 'employee-portal-${suffix}'
@@ -203,7 +203,7 @@ module clientAuthServer 'modules/webapp.bicep' = {
       initDbOnStartup: true
       useEphemeralKeys: true
       clients__0__clientOrigin: 'https://${clientGatewayAppName}.azurewebsites.net'
-      clients__0__clientId: 'client-portal'
+      clients__0__clientId: 'customer-portal'
       clients__0__displayName: 'public spa'
       ASPNETCORE_APPL_PATH: 'authorize'
       ASPNETCORE_ENVIRONMENT: 'Development'

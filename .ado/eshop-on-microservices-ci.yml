@@ -101,7 +101,7 @@ jobs:
   - template: 'templates/angular-ci-template.yml'   # Template reference
     parameters:
       jobName: 'ClientPortal'
-      projectFolder: 'eshop-ui-client-portal'
+      projectFolder: 'eshop-ui-customer-portal'
       vmImage: 'ubuntu-latest'
       nodeVersion: '16.x'
       angularCliVersion: '15.2.0'
