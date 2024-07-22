@@ -1,41 +1,63 @@
-import { AfterViewInit, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { ActivatedRoute, Router } from '@angular/router';
-import { merge, of as observableOf, Subject} from 'rxjs';
+import { BehaviorSubject, merge, of as observableOf, Subject} from 'rxjs';
 import { Location } from '@angular/common';
-import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
+import { catchError, debounceTime, map, startWith, switchMap, takeUntil} from 'rxjs/operators';
 import { CatalogDomainErrorDTO, CatalogItemClient, CatalogItemReadModel, ICatalogItemDTO, ListCatalogItemOrderBy, OrderByDirections } from '../../services/api/catalog.api.client';
 
 @Component({
   selector: 'app-catalog-items-list',
   templateUrl: './catalog-items-list.component.html'
 })
-export class CatalogItemsListComponent implements AfterViewInit {
+export class CatalogItemsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  displayedColumns: string[] = ['Name','Type', 'Brand', 'Edit', 'Delete'];
+  MAX_SMALL_WIDTH = 480;
+
+  componentDestroyed$ = new Subject<void>();
+  screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
   refreshDataSubject$ = new Subject<void>();
-  isLoadingResults = true;
   data: CatalogItemReadModel[] = [];
   resultsLength = 0;
-
   selectedCatalogItem: ICatalogItemDTO | null = null;
   selectedCatalogItemId: string | null = null;
+  apiError : CatalogDomainErrorDTO | null = null;
+  isCatalogItemSaving = false;
+  isLoadingResults = true;
+  isSmallScreen = false;
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  isCatalogItemSaving = false;
-  apiError : CatalogDomainErrorDTO | null = null;
-
-  ngOnInit(): void {
+  @HostListener('window:resize', ['$event'])
+  onResize(event : any) {
+    this.screenWidth$.next(event.target.innerWidth);
   }
 
-  constructor(
-    private catalogItemClient: CatalogItemClient,
-    private router: Router,
-    private route: ActivatedRoute,
-    private location: Location) {}
+  get displayedColumns(): string[] {
+    return this.isSmallScreen ?  ['Name', 'Edit', 'Delete'] :  ['Name','Type', 'Brand', 'Edit', 'Delete'];
+  }
+
+  constructor(private catalogItemClient: CatalogItemClient,
+              private router: Router,
+              private route: ActivatedRoute,
+              private location: Location) {}
+
+  ngOnInit(): void {
+    this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
+         if (width < this.MAX_SMALL_WIDTH) {
+          this.isSmallScreen = true;
+        }
+        else if (width >  this.MAX_SMALL_WIDTH) {
+          this.isSmallScreen = false;
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.componentDestroyed$.next();
+  }
 
   ngAfterViewInit(): void {
 

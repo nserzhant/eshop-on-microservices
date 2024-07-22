@@ -18,11 +18,9 @@ export class EmployeeEditComponent implements OnInit {
   updateRolesApiError : ApiErrorDTO | null = null;
   updatePasswordApiError : ApiErrorDTO | null = null;
 
-  constructor(
-    private employeeManagementClient: EmployeeManagementClient,
-    private route: ActivatedRoute,
-    private location: Location) {
-   }
+  constructor(private employeeManagementClient: EmployeeManagementClient,
+              private route: ActivatedRoute,
+              private location: Location) { }
 
   ngOnInit(): void {
       this.route.params.subscribe((params: Params) => {

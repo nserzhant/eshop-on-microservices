@@ -1,8 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
-import { Subject, take, takeUntil } from 'rxjs';
+import { BehaviorSubject, Subject, take, takeUntil } from 'rxjs';
 import { AuthenticationService } from '../auth/authentication.service';
 
 @Component({
@@ -10,13 +10,21 @@ import { AuthenticationService } from '../auth/authentication.service';
   templateUrl: './header.component.html'
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  MAX_SMALL_WIDTH = 430;
   ADMINISTRATOR_ROLE_NAME = 'Administrator';
   SALES_MANAGER_ROLE_NAME = 'SalesManager';
+
   isAuthenticated = false;
   isAdmin = false;
   isSalesManager = false;
   userEmail = '';
   componentDestroyed$ = new Subject<void>();
+  screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
+  @HostListener('window:resize', ['$event'])
+  onResize(event : any) {
+    this.screenWidth$.next(event.target.innerWidth);
+  }
+  isSmallScreen = false;
 
   constructor(
     private translateService: TranslateService,
@@ -47,7 +55,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.isAdmin = this.isAuthenticated = this.isSalesManager = false;
           this.userEmail = '';
         }
-      })
+      });
+      this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
+         if (width < this.MAX_SMALL_WIDTH) {
+          this.isSmallScreen = true;
+        }
+        else if (width >  this.MAX_SMALL_WIDTH) {
+          this.isSmallScreen = false;
+        }
+      });
   }
 
   ngOnDestroy(): void {

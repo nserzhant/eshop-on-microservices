@@ -6,9 +6,10 @@ html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 main {
-  margin: 20px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
 }
 
 .spacer {
@@ -19,13 +20,14 @@ main {
     width: 100%;
 }
 
-mat-card {
-    width: 432px;
+.email-filter {
+  width: calc(100% - 130px);
 }
 
-
-mat-card.child-card  {
-    width: 402px;
+mat-card {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 10px;
 }
 
 mat-card.child-card:not([class*=mat-elevation-z]) {
@@ -35,6 +37,7 @@ mat-card.child-card:not([class*=mat-elevation-z]) {
 mat-card-title {
     margin-bottom: 12px !important;
 }
+
 div.child-card-spacer {
     margin-top: 15px;
 }
@@ -48,6 +51,8 @@ div.child-card-spacer {
 }
 
 .center {
+    display: flex;
+    flex-direction: column;
     text-align: center;
 }
 
@@ -74,8 +79,8 @@ div.child-card-spacer {
 .error-snack-bar {
   padding: 16px;
   --mdc-snackbar-container-color: red;
-  --mat-mdc-snack-bar-button-color: white;
   --mdc-snackbar-supporting-text-color: white;
+  --mat-snack-bar-button-color: white;
 }
 
 .back-button {
@@ -85,4 +90,8 @@ div.child-card-spacer {
 
 .standard-top-indent {
   margin-top: 4px
+}
+
+mat-paginator {
+  margin-top: 5px;
 }

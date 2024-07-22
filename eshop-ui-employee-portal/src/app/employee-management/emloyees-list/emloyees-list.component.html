@@ -3,8 +3,8 @@
     <mat-card-title>{{ 'employees-list-header' | translate }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <form>      
-      <mat-form-field appearance="outline">
+    <form>
+      <mat-form-field appearance="outline" class="email-filter">
         <mat-label>{{ 'filter-by-email' | translate }}</mat-label>
         <input matInput #emailFilter [ngModel] = "currentEmailFilter" name = "emailFilter">
       </mat-form-field>
@@ -13,19 +13,19 @@
       </button>
     </form>
     <table mat-table [dataSource]="data"  matSort>
-  
+
       <!-- Email Column -->
       <ng-container matColumnDef="Email">
         <th mat-header-cell *matHeaderCellDef  mat-sort-header> {{ 'email' | translate }} </th>
         <td mat-cell *matCellDef="let user"> {{user.email}} </td>
       </ng-container>
-  
+
       <!-- Roles Column -->
       <ng-container matColumnDef="Roles">
         <th mat-header-cell *matHeaderCellDef  style="width: 160px">  {{ 'roles' | translate }} </th>
         <td mat-cell *matCellDef="let user">{{getRoles(user)}}</td>
       </ng-container>
-  
+
       <!-- Edit Column -->
       <ng-container matColumnDef="Edit">
         <th mat-header-cell *matHeaderCellDef   style="width: 40px">
@@ -35,7 +35,7 @@
             <button mat-icon-button color="primary" class="right" (click)="openEditUser(user)"><mat-icon>edit</mat-icon></button>
         </td>
       </ng-container>
-  
+
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
@@ -45,6 +45,6 @@
                    showFirstLastButtons
                    attr.aria-label="{{'paginator-aria-label' | translate }}">
     </mat-paginator>
-  </mat-card-content>  
+  </mat-card-content>
 </mat-card>
-  
+

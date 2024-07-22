@@ -1,36 +1,58 @@
 import { Location } from '@angular/common';
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, merge, of as observableOf} from 'rxjs';
-import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
+import { BehaviorSubject, merge, of as observableOf, Subject} from 'rxjs';
+import { catchError, debounceTime, map, startWith, switchMap, takeUntil} from 'rxjs/operators';
 import { EmployeeManagementClient, EmployeeReadModel, ListEmployeeOrderBy, OrderByDirections } from '../services/api/employee.api.client';
 
 @Component({
   selector: 'app-emloyees-list',
   templateUrl: './emloyees-list.component.html'
 })
-export class EmloyeesListComponent implements OnInit, AfterViewInit {
+export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  displayedColumns: string[] = ['Email', 'Roles', 'Edit'];
+  MAX_SMALL_WIDTH = 430;
+
+  componentDestroyed$ = new Subject<void>();
   currentEmailFilter: string | null = null;
   emailFilterSubject = new BehaviorSubject<string | null>(null);
   resultsLength = 0;
   isLoadingResults = true;
   data: EmployeeReadModel[] = [];
+  isSmallScreen = false;
+  screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
 
+  @HostListener('window:resize', ['$event'])
+  onResize(event : any) {
+    this.screenWidth$.next(event.target.innerWidth);
+  }
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  ngOnInit(): void {
+  get displayedColumns(): string[] {
+    return this.isSmallScreen ? ['Email', 'Edit'] : ['Email', 'Roles', 'Edit'];
   }
 
-  constructor(
-    private employeeManagementClient: EmployeeManagementClient,
-    private router: Router,
-    private route: ActivatedRoute,
-    private location: Location) {
+  constructor(private employeeManagementClient: EmployeeManagementClient,
+              private router: Router,
+              private route: ActivatedRoute,
+              private location: Location) {}
+
+  ngOnInit(): void {
+    this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
+         if (width < this.MAX_SMALL_WIDTH) {
+          this.isSmallScreen = true;
+        }
+        else if (width >  this.MAX_SMALL_WIDTH) {
+          this.isSmallScreen = false;
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.componentDestroyed$.next();
   }
 
   ngAfterViewInit() : void {

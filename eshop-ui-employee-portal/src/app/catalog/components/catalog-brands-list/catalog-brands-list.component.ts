@@ -16,23 +16,19 @@ export class CatalogBrandsListComponent implements AfterViewInit {
   isLoadingResults = true;
   data: CatalogBrandReadModel[] = [];
   resultsLength = 0;
-
   selectedBrand: ICatalogBrandDTO | null = null;
   selectedBrandId: string | null = null;
-
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-
   isBrandSaving = false;
   apiError : CatalogDomainErrorDTO | null = null;
 
-  ngOnInit(): void {
-  }
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(private catalogBrandClient: CatalogBrandClient) {}
 
   ngAfterViewInit(): void {
     this.sort.sortChange.subscribe(() => (this.paginator.pageIndex = 0));
+
     merge(this.sort.sortChange, this.paginator.page, this.refreshDataSubject$)
     .pipe(
       startWith({}),

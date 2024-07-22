@@ -13,21 +13,16 @@ export class CatalogItemEditComponent implements OnInit {
 
   editItemForm!: FormGroup;
   catalogItem: CatalogItemReadModel | null = null;
-
+  catalogTypes: CatalogTypeReadModel[]  = [];
+  catalogBrands: CatalogBrandReadModel[] = [];
   isCatalogItemSaving = false;
   apiError : CatalogDomainErrorDTO | null = null;
 
-  catalogTypes: CatalogTypeReadModel[]  = [];
-  catalogBrands: CatalogBrandReadModel[] = [];
-
-  constructor(
-    private catalogItemClient: CatalogItemClient,
-    private catalogBrandClient: CatalogBrandClient,
-    private catalogTypeClient: CatalogTypeClient,
-    private route : ActivatedRoute,
-    private location: Location
-  ) {
-  }
+  constructor(private catalogItemClient: CatalogItemClient,
+              private catalogBrandClient: CatalogBrandClient,
+              private catalogTypeClient: CatalogTypeClient,
+              private route : ActivatedRoute,
+              private location: Location) { }
 
   ngOnInit(): void {
     this.editItemForm = new FormGroup({
@@ -39,10 +34,12 @@ export class CatalogItemEditComponent implements OnInit {
       pictureUri: new FormControl(''),
       availableQty: new FormControl('',[Validators.pattern(/^([0-9])/)])
     });
+
     this.route.params.subscribe((params: Params) => {
       const id = params['catalogItemId'];
       this.loadItem(id);
     });
+
     this.loadBrands();
     this.loadTypes();
   }

@@ -1,6 +1,6 @@
 {
     "home" : "Home",
-    "home-header" : "This is an Employee Portal. You can view, edit and register employees here.",
+    "home-header" : "This is an Employee Portal.",
     "register-header" : "Register to the portal",
     "login-header" : "Log in to the portal",
     "change-email-header" : "Change the account email",
@@ -33,6 +33,7 @@
     "save" : "Save",
     "cancel" : "Cancel",
     "process-login-callback" : "Processing login callback",
+    "setup" : "Setup",
     "errors" : {
         "invalid-email" : "Invalid email.",
         "email-required" : "Email required.",
@@ -53,6 +54,7 @@
         }
     },
     "catalog" : {
+      "catalog" : "Catalog",
       "brands" : "Brands",
       "brand" : "Brand",
       "add-brand" : "Add Brand",

@@ -16,23 +16,19 @@ export class CatalogTypesListComponent {
   isLoadingResults = true;
   data: CatalogTypeReadModel[] = [];
   resultsLength = 0;
-
   selectedType: ICatalogTypeDTO | null = null;
   selectedTypeId: string | null = null;
+  apiError : CatalogDomainErrorDTO | null = null;
+  isTypeSaving = false;
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-
-  isTypeSaving = false;
-  apiError : CatalogDomainErrorDTO | null = null;
-
-  ngOnInit(): void {
-  }
 
   constructor(private catalogTypeClient: CatalogTypeClient) {}
 
   ngAfterViewInit(): void {
     this.sort.sortChange.subscribe(() => (this.paginator.pageIndex = 0));
+
     merge(this.sort.sortChange, this.paginator.page, this.refreshDataSubject$)
     .pipe(
       startWith({}),

@@ -4,6 +4,8 @@
   </mat-card-header>
   <mat-card-content>
     <form [formGroup]="editItemForm" (ngSubmit)="onSubmit()">
+
+      <!-- Catalog Item Name -->
       <mat-form-field appearance="outline"class="card-row">
         <mat-label>{{ 'catalog.name' | translate }}</mat-label>
         <input matInput formControlName="name">
@@ -11,6 +13,8 @@
           {{ 'catalog.errors.name-required' | translate }}
         </mat-error>
       </mat-form-field>
+
+      <!-- Brand -->
       <mat-form-field appearance="outline" class="card-row">
         <mat-label>{{ 'catalog.brand' | translate }}</mat-label>
         <mat-select formControlName="brandId">
@@ -22,6 +26,8 @@
           {{ 'catalog.errors.brand-required' | translate }}
         </mat-error>
       </mat-form-field>
+
+      <!-- Type -->
       <mat-form-field appearance="outline" class="card-row">
         <mat-label>{{ 'catalog.type' | translate }}</mat-label>
         <mat-select formControlName="typeId">
@@ -33,6 +39,8 @@
           {{ 'catalog.errors.type-required' | translate }}
         </mat-error>
       </mat-form-field>
+
+      <!-- Price -->
       <mat-form-field appearance="outline" class="card-row">
         <mat-label>{{ 'catalog.price' | translate }}</mat-label>
         <input type="nummber" matInput formControlName="price">
@@ -40,6 +48,8 @@
           {{ 'catalog.errors.price-format' | translate }}
         </mat-error>
       </mat-form-field>
+
+      <!-- Description -->
       <mat-form-field appearance="outline"class="card-row">
         <mat-label>{{ 'catalog.description' | translate }}</mat-label>
         <textarea matInput cdkTextareaAutosize
@@ -48,10 +58,14 @@
           formControlName="description">
         </textarea>
       </mat-form-field>
+
+      <!-- Image URL -->
       <mat-form-field appearance="outline" class="card-row">
         <mat-label>{{ 'catalog.picture-uri' | translate }}</mat-label>
         <input matInput formControlName="pictureUri" type="url">
       </mat-form-field>
+
+      <!-- Available Qty -->
       <mat-form-field appearance="outline" class="card-row">
         <mat-label>{{ 'catalog.available-qty' | translate }}</mat-label>
         <input type="nummber" matInput formControlName="availableQty">
@@ -59,10 +73,14 @@
           {{ 'catalog.errors.qty-should-be-number' | translate }}
         </mat-error>
       </mat-form-field>
+
+      <!-- Save Button -->
       <catalog-api-errors-summary [error]="apiError"></catalog-api-errors-summary>
       <button type="submit" mat-raised-button color="primary" [disabled]="editItemForm.invalid || isCatalogItemSaving">
         {{ 'save' | translate }}
       </button>
+
+      <!-- Cancel Button -->
       <button type="button" mat-raised-button color="primary" class="right" (click)="back()">
         {{ 'cancel' | translate }}
       </button>
