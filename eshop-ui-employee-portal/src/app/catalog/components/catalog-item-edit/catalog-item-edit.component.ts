@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { Location } from '@angular/common';
-import { CatalogBrandClient, CatalogBrandReadModel, CatalogDomainErrorDTO, CatalogItemClient, CatalogItemDTO, CatalogItemReadModel, CatalogTypeClient, CatalogTypeReadModel, ICatalogItemDTO } from '../../services/api/catalog.api.client';
+import { CatalogBrandClient, CatalogBrandReadModel, CatalogDomainErrorDTO, CatalogItemClient, CatalogItemDTO, CatalogItemReadModel, CatalogTypeClient, CatalogTypeReadModel, ICatalogItemDTO, OrderByDirections } from '../../services/api/catalog.api.client';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
@@ -45,12 +45,12 @@ export class CatalogItemEditComponent implements OnInit {
   }
 
   async loadTypes() {
-    const items$ = this.catalogTypeClient.getCatalogTypes(undefined, undefined, 1000);
+    const items$ = this.catalogTypeClient.getCatalogTypes(OrderByDirections.ASC);
     this.catalogTypes = (await lastValueFrom(items$)).catalogTypes!;
   }
 
   async loadBrands() {
-    const items$ = this.catalogBrandClient.getCatalogBrands(undefined, undefined, 1000);
+    const items$ = this.catalogBrandClient.getCatalogBrands(OrderByDirections.ASC);
     this.catalogBrands = (await lastValueFrom(items$)).catalogBrands!;
   }
 

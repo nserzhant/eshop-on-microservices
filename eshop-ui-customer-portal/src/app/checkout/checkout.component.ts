@@ -43,7 +43,8 @@ export class CheckoutComponent implements OnInit {
 
     const checkOutDto = new CheckoutDTO({shippingAddress: this.checkoutForm.value['shippingAddress']});
 
-    await lastValueFrom(this.basketClient.checkOut(checkOutDto));
+    const checkOut$ = this.basketClient.checkOut(checkOutDto);
+    await lastValueFrom(checkOut$);
 
     this.orderingService.clearBasket();
 
@@ -55,7 +56,9 @@ export class CheckoutComponent implements OnInit {
 
     while (loop-- > 0) {
       await this.sleep(500);
-      const result = await lastValueFrom(this.basketClient.getBasket());
+
+      const basket$ = this.basketClient.getBasket();
+      const result = await lastValueFrom(basket$);
 
       if ( result.items && result.items?.length === 0 ) {
         orderPlaced = true;
@@ -66,7 +69,8 @@ export class CheckoutComponent implements OnInit {
     this.isCheckingOut = false;
 
     if(!orderPlaced) {
-      const message = await lastValueFrom(this.translateService.get('errors.checkout-failed'));
+      const message$ = this.translateService.get('errors.checkout-failed');
+      const message = await lastValueFrom(message$);
       this.matSnackBar.open(message , 'Close', { duration: 3000, panelClass: ['error-snack-bar'] });
       await this.sleep(3000);
     }

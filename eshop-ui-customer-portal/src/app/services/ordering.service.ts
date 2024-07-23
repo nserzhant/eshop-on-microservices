@@ -60,14 +60,17 @@ export class OrderingService {
   }
 
   async initBasket() {
-    const savedBasket = await lastValueFrom(this.basketClient.getBasket());
+    const basket$ = this.basketClient.getBasket();
+    const savedBasket = await lastValueFrom(basket$);
     let currentBasket = this.basketSubject$.value;
     const doesSavedItemsExists = savedBasket.items !== undefined && savedBasket.items.length > 0;
     const doesCurrentItemsExists = currentBasket.items !== undefined && currentBasket.items.length > 0;
 
     if( doesCurrentItemsExists && !doesSavedItemsExists ) {
       currentBasket.id = savedBasket.id;
-      await lastValueFrom(this.basketClient.saveBasket(currentBasket));
+
+      const saveBasket$ = this.basketClient.saveBasket(currentBasket);
+      await lastValueFrom(saveBasket$);
     } else {
       currentBasket = savedBasket;
     }
@@ -82,7 +85,9 @@ export class OrderingService {
     this.basketSubject$.next(basket);
 
     if (basket.id !== undefined) {
-      await lastValueFrom(this.basketClient.saveBasket(basket));
+      const saveBasket$ = this.basketClient.saveBasket(basket);
+      await lastValueFrom(saveBasket$);
+
       this.storage.removeItem(this.BASKET_STORAGE_KEY);
     } else {
       this.storage.setItem(this.BASKET_STORAGE_KEY, JSON.stringify(basket));

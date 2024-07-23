@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
-import { BehaviorSubject,  merge, of as observableOf, Subject, takeUntil } from 'rxjs';
+import { BehaviorSubject,  lastValueFrom,  merge, of as observableOf, Subject, takeUntil } from 'rxjs';
 import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
 import { CatalogBrandClient, CatalogBrandReadModel, CatalogItemClient, CatalogItemReadModel, CatalogTypeClient, CatalogTypeReadModel, ListCatalogItemOrderBy, OrderByDirections } from '../services/api/catalog.api.client';
 import { OrderingService } from '../services/ordering.service';
@@ -27,8 +27,8 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   items  = new Array<CatalogItemReadModel>();
-  types = new Array<CatalogTypeReadModel>();
-  brands = new Array<CatalogBrandReadModel>();
+  catalogTypes = new Array<CatalogTypeReadModel>();
+  catalogBrands = new Array<CatalogBrandReadModel>();
 
   nameFilter = '';
   brandFilter = '';
@@ -56,23 +56,11 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    this.catalogBrandClient.getCatalogBrands(OrderByDirections.ASC).subscribe(result => {
-      const items = result.catalogBrands;
-
-      if(items)
-        this.brands.push(...items);
-    });
-
-    this.catalogTypeClient.getCatalogTypes(OrderByDirections.ASC).subscribe(result => {
-      const items = result.catalogTypes;
-      if(items)
-        this.types.push(...items);
-    });
+    this.loadBrands();
+    this.loadTypes();
   }
 
   ngAfterViewInit(): void {
-
-
     merge(this.paginator.page, this.filterChangedSubject$)
     .pipe(
       startWith({}),
@@ -113,6 +101,16 @@ export class CatalogComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.componentDestroyed$.next();
+  }
+
+  async loadTypes() {
+    const items$ = this.catalogTypeClient.getCatalogTypes(OrderByDirections.ASC);
+    this.catalogTypes = (await lastValueFrom(items$)).catalogTypes!;
+  }
+
+  async loadBrands() {
+    const items$ = this.catalogBrandClient.getCatalogBrands(OrderByDirections.ASC);
+    this.catalogBrands = (await lastValueFrom(items$)).catalogBrands!;
   }
 
   onFilterChange() {

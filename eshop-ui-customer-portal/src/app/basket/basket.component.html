@@ -7,10 +7,10 @@
         <th mat-header-cell *matHeaderCellDef>{{ 'basket.name' | translate }}</th>
         <td mat-cell *matCellDef="let element"> {{element.itemName}} </td>
         <td mat-footer-cell *matFooterCellDef colspan="4">
-          <a mat-raised-button color="primary" [routerLink]="['','checkout']" [disabled]="!canCheckout"  style="width: 150px;">
+          <a mat-raised-button color="primary" [routerLink]="['','checkout']" [disabled]="!canCheckout"  style="width: 170px;">
             {{ 'basket.checkout' | translate }}
           </a>
-          <a type="button" mat-raised-button color="primary" class="right" [routerLink]="''"  style="width: 150px;">
+          <a type="button" mat-raised-button color="primary" class="right" [routerLink]="''"  style="width: 170px;">
             {{ 'basket.continue-shopping' | translate }}
           </a>
         </td>

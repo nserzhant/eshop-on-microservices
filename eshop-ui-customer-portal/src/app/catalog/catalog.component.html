@@ -13,7 +13,7 @@
         <mat-label>{{'catalog.brand' | translate }}</mat-label>
         <mat-select  [(ngModel)] = "brandFilter">
           <mat-option></mat-option>
-          <mat-option *ngFor="let brand of brands" [value]="brand.brand">
+          <mat-option *ngFor="let brand of catalogBrands" [value]="brand.brand">
             {{ brand.brand }}
           </mat-option>
         </mat-select>
@@ -24,7 +24,7 @@
         <mat-label>{{'catalog.type' | translate }}</mat-label>
         <mat-select [(ngModel)] = "typeFilter">
           <mat-option></mat-option>
-          <mat-option *ngFor="let type of types" [value]="type.type">
+          <mat-option *ngFor="let type of catalogTypes" [value]="type.type">
             {{ type.type }}
           </mat-option>
         </mat-select>
