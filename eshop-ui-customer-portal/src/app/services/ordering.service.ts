@@ -22,10 +22,10 @@ export class OrderingService {
   constructor(private basketClient: BasketClient) {
     this.storage = sessionStorage;
 
-    const storageBasket = this.storage.getItem(this.BASKET_STORAGE_KEY);
+    const storageBasketJSON = this.storage.getItem(this.BASKET_STORAGE_KEY);
 
-    if (storageBasket) {
-        const parsedBasket = JSON.parse(storageBasket) as CustomerBasket;
+    if (storageBasketJSON) {
+        const parsedBasket = JSON.parse(storageBasketJSON) as CustomerBasket;
 
         if(parsedBasket && parsedBasket.items) {
           this.basketSubject$.next(new CustomerBasket({
@@ -36,8 +36,8 @@ export class OrderingService {
   }
 
   addItemToBasket( catalogItem : CatalogItemReadModel) {
-    const currentBasket = this.basketSubject$.value;
-    const existedItem = currentBasket.items?.find((bi)=>bi.catalogItemId === catalogItem.id);
+    const localBasket = this.basketSubject$.value;
+    const existedItem = localBasket.items?.find((bi)=>bi.catalogItemId === catalogItem.id);
 
     if (existedItem !== undefined) {
       existedItem.qty!++;
@@ -53,29 +53,29 @@ export class OrderingService {
         description: catalogItem.description
       });
 
-      currentBasket.items?.push(basketItem);
+      localBasket.items?.push(basketItem);
     }
 
-    this.saveBasket(currentBasket.items!);
+    this.saveBasket(localBasket.items!);
   }
 
   async initBasket() {
     const basket$ = this.basketClient.getBasket();
     const savedBasket = await lastValueFrom(basket$);
-    let currentBasket = this.basketSubject$.value;
-    const doesSavedItemsExists = savedBasket.items !== undefined && savedBasket.items.length > 0;
-    const doesCurrentItemsExists = currentBasket.items !== undefined && currentBasket.items.length > 0;
+    let localBasket = this.basketSubject$.value;
+    const doesSavedBasketItemsExists = savedBasket.items !== undefined && savedBasket.items.length > 0;
+    const doesLocalBasketItemsExists = localBasket.items !== undefined && localBasket.items.length > 0;
 
-    if( doesCurrentItemsExists && !doesSavedItemsExists ) {
-      currentBasket.id = savedBasket.id;
+    if( doesLocalBasketItemsExists && !doesSavedBasketItemsExists ) {
+      localBasket.id = savedBasket.id;
 
-      const saveBasket$ = this.basketClient.saveBasket(currentBasket);
+      const saveBasket$ = this.basketClient.saveBasket(localBasket);
       await lastValueFrom(saveBasket$);
     } else {
-      currentBasket = savedBasket;
+      localBasket = savedBasket;
     }
 
-    this.basketSubject$.next(currentBasket);
+    this.basketSubject$.next(localBasket);
   }
 
   async saveBasket(items: BasketItem[]) {
