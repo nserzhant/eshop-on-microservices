@@ -2,6 +2,7 @@
 
 public class MessageBrockerSettings
 {
+    public string? AzureServiceBusConnectionString { get; set; } = null;
     public string RabbitMQHost { get; set; } = "localhost";
     public ushort RabbitMQPort { get; set; } = 5672;
     public string RabbitMQVirtualHost { get; set; } = "/";

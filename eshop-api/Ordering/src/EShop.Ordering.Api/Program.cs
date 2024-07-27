@@ -86,22 +86,40 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<CreateOrderConsumer>();
 
-    x.UsingRabbitMq((context, cfg) =>
+    if (messageBrokerSettings.AzureServiceBusConnectionString != null)
     {
-        cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+        x.UsingAzureServiceBus((context, cfg) =>
         {
-            h.Username(messageBrokerSettings.RabbitMQUsername);
-            h.Password(messageBrokerSettings.RabbitMQPassword);
-        });
+            cfg.Host(messageBrokerSettings.AzureServiceBusConnectionString);
 
-        cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
+            cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<CreateOrderConsumer>(context);
+                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+            });
+
+            cfg.ConfigureEndpoints(context);
+        });
+    }
+    else
+    {
+        x.UsingRabbitMq((context, cfg) =>
         {
-            configureEndpoint.ConfigureConsumer<CreateOrderConsumer>(context);
-            configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-        });
+            cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+            {
+                h.Username(messageBrokerSettings.RabbitMQUsername);
+                h.Password(messageBrokerSettings.RabbitMQPassword);
+            });
 
-        cfg.ConfigureEndpoints(context);
-    });
+            cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<CreateOrderConsumer>(context);
+                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+            });
+
+            cfg.ConfigureEndpoints(context);
+        });
+    }
 });
 
 var app = builder.Build();

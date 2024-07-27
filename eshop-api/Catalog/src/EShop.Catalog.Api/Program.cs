@@ -115,29 +115,54 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<ReserveStocksConsumer>();
     x.AddConsumer<ReleaseStocksConsumer>();
 
-    x.UsingRabbitMq((context, cfg) =>
+    if(messageBrokerSettings.AzureServiceBusConnectionString != null)
     {
-        cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+        x.UsingAzureServiceBus((context, cfg) =>
         {
-            h.Username(messageBrokerSettings.RabbitMQUsername);
-            h.Password(messageBrokerSettings.RabbitMQPassword);
+            cfg.Host(messageBrokerSettings.AzureServiceBusConnectionString);
+
+            cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
+                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+            });
+
+            cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
+                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+            });
+
+            cfg.ConfigureEndpoints(context);
+        });
+    }
+    else
+    {
+        x.UsingRabbitMq((context, cfg) =>
+        {
+            cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+            {
+                h.Username(messageBrokerSettings.RabbitMQUsername);
+                h.Password(messageBrokerSettings.RabbitMQPassword);
             
-        });
+            });
 
-        cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
-        {
-            configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
-            configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-        });
+            cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
+                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+            });
 
-        cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
-        {
-            configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
-            configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-        });
+            cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
+                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+            });
 
-        cfg.ConfigureEndpoints(context);
-    });
+            cfg.ConfigureEndpoints(context);
+        });
+    }
+
 });
 
 var app = builder.Build();

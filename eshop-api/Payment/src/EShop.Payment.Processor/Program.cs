@@ -20,22 +20,40 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<ProcessPaymentConsumer>();
 
-    x.UsingRabbitMq((context, cfg) =>
+    if (messageBrokerSettings.AzureServiceBusConnectionString != null)
     {
-        cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+        x.UsingAzureServiceBus((context, cfg) =>
         {
-            h.Username(messageBrokerSettings.RabbitMQUsername);
-            h.Password(messageBrokerSettings.RabbitMQPassword);
-        });
+            cfg.Host(messageBrokerSettings.AzureServiceBusConnectionString);
 
-        cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
+            cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<ProcessPaymentConsumer>(context);
+            });
+
+            cfg.ConfigureEndpoints(context);
+        });
+    }
+    else
+    {
+        x.UsingRabbitMq((context, cfg) =>
         {
-            configureEndpoint.ConfigureConsumer<ProcessPaymentConsumer>(context);
-        });
+            cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+            {
+                h.Username(messageBrokerSettings.RabbitMQUsername);
+                h.Password(messageBrokerSettings.RabbitMQPassword);
+            });
 
-        cfg.ConfigureEndpoints(context);
-    });
-});  
+            cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
+            {
+                configureEndpoint.ConfigureConsumer<ProcessPaymentConsumer>(context);
+            });
+
+            cfg.ConfigureEndpoints(context);
+        });
+    }
+
+});
 
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy());

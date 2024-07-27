@@ -48,16 +48,28 @@ public static class TestSagaServicesRegistrationExtension
                     });
                 });
 
-            x.UsingRabbitMq((context, cfg) =>
+            if (messageBrokerSettings.AzureServiceBusConnectionString != null)
             {
-                cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+                x.UsingAzureServiceBus((context, cfg) =>
                 {
-                    h.Username(messageBrokerSettings.RabbitMQUsername);
-                    h.Password(messageBrokerSettings.RabbitMQPassword);
-                });
+                    cfg.Host(messageBrokerSettings.AzureServiceBusConnectionString);
 
-                cfg.ConfigureEndpoints(context);
-            });
+                    cfg.ConfigureEndpoints(context);
+                });
+            }
+            else
+            {
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
+                    {
+                        h.Username(messageBrokerSettings.RabbitMQUsername);
+                        h.Password(messageBrokerSettings.RabbitMQPassword);
+                    });
+
+                    cfg.ConfigureEndpoints(context);
+                });
+            }
         });
 
         return services;
