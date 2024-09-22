@@ -9,19 +9,30 @@ param suffix string = uniqueString(resourceGroup().id)
 @description('The Name Of The Virtual Network (vNet).')
 param vnetName string = 'vnet-${suffix}'
 
+/*----------------------- Log Analytics Workspace Parameters -------- */
+
+@description('The Name Of The Log Analytics Workspace')
+param logAnalyticsName string = 'eshop-logs-workspace-${suffix}'
+
 /*----------------------- SQL Server  Parameters -------------------- */
 
-@description('The Name Of The Employees Database Server')
-param employeesSqlServerName string
+@description('The Name Of The Employee Database Server')
+param employeeSqlServerName string = 'employee-sqlserver-${suffix}'
 
-@description('The Name Of The Clients Database Server')
-param clientsSqlServerName string
+@description('The Name Of The Customer Database Server')
+param customerSqlServerName string = 'customer-sqlserver-${suffix}'
 
 @description('The Name Of The Catalog Database Server')
-param catalogSqlServerName string
+param catalogSqlServerName string = 'catalog-sqlserver-${suffix}'
+
+@description('The Name Of The Ordering Database Server')
+param orderingSqlServerName string = 'ordering-sqlserver-${suffix}'
+
+@description('The Name Of The Saga Database Server')
+param sagaSqlServerName string = 'saga-sqlserver-${suffix}'
 
 @description('The Name Of The Database')
-param dbName string = 'eshop-on-microservices.Db'
+param dbName string = 'eshop.Db'
 
 @description('The Id Of The Database Server User Assigned Identity. The Identity Should Have A Directory Readers Role')
 param sqlUserAssignedIdentity string
@@ -32,84 +43,115 @@ param sqlEntraIdAdminLogin string
 @description('The Administrator Microsoft Entra Object Id Of The SQL Server')
 param sqlEntraIdAdminObjectId string
 
-/*----------------------- Web Apps Parameters          -------------*/
+/*---------------- Container Apps Parameters ----------------------*/
 
-@description('The Name Of The Client Apps Service Plan')
-param clientAppsServicePlanName string = 'client-apps-splan-${suffix}'
+@description('The Docker Registry Server')
+param registryServer string
 
-@description('The Name Of The Employee Apps Service Plan')
-param employeeAppsServicePlanName string = 'employee-apps-splan-${suffix}'
+@description('The Docker Registry User Name')
+param registryUserName string
 
-@description('The Name Of The Shared Services Service Plan')
-param sharedServicesServicePlanName string = 'shared-services-splan-${suffix}'
+@description('The Password Of The Container Registry Account')
+@secure()
+param registryPassword string
 
-@description('The Name Of The Catalog Api Web App')
-param catalogApiWebAppName string = 'catalog-api-web-app-${suffix}'
+@description('Revision Suffix')
+param revisionSuffix string
 
-@description('The Name Of The Client Authorization Server Web App')
-param clientAuthServerWebAppName string = 'client-auth-web-app-${suffix}'
+@description('The Name Of The Eshop Web App')
+param eshopAppName string = 'eshop-${suffix}'
 
-@description('The Name Of The Employee Api Web App')
-param employeeApiWebAppName string = 'employee-api-web-app-${suffix}'
+@description('The Name Of The Eshop Employee Portal Web App')
+param eshopEmployeePortalAppName string = 'eshop-employee-portal-${suffix}'
 
-@description('The Name Of The Employee Authorization Server Web App')
-param employeeAuthServerWebAppName string = 'employee-authserver-web-app-${suffix}'
+@description('The Name Of The Container App Environment.')
+param containerAppEnvironmentName string = 'eshop-app-environment-${suffix}'
 
-@description('The Name Of The Customer Portal Static Web App')
-param clientPortalWebAppName string = 'customer-portal-${suffix}'
+@description('The Name Of The Customer Portal Container App.')
+param customerPortalContainerAppName string = 'customer-portal-static-${suffix}'
 
-@description('The Name Of The Employee Portal Static Web App')
-param employeePortalWebAppName string = 'employee-portal-${suffix}'
+@description('The Name Of The Employee Portal Container App')
+param employeePortalContainerAppName string = 'employee-portal-static-${suffix}'
+
+@description('The Name Of The Catalog Api Container App')
+param catalogApiContainerAppName string = 'catalog-api-${suffix}'
+
+@description('The Name Of The Customer Authorization Server Container App')
+param customerAuthServerContainerAppName string = 'customer-authserver-${suffix}'
+
+@description('The Name Of The Employee Api Container App')
+param employeeApiContainerAppName string = 'employee-api-${suffix}'
+
+@description('The Name Of The Employee Authorization Server Container App')
+param employeeAuthServerContainerAppName string = 'employee-authserver-${suffix}'
+
+@description('The Name Of The Basket Api Container App')
+param basketApiContainerAppName string = 'basket-api-${suffix}'
+
+@description('The Name Of The Ordering Api Container App')
+param orderingApiContainerAppName string = 'ordering-api-${suffix}'
+
+@description('The Name Of The Payment Processor Container App')
+param paymentProcessorContainerAppName string = 'payment-processor-${suffix}'
+
+@description('The Name Of The Saga Processor Container App')
+param sagaProcessorContainerAppName string = 'saga-processor-${suffix}'
 
 @description('The Issuer Of The Employee Identity Server')
-param employeeOAuthIssuer string = 'https://${employeeGatewayAppName}.azurewebsites.net/authorize'
+param employeeOAuthIssuer string = ''
 
 @description('The Metadata Endpoint Of The Employee Identity Server')
-param employeeOAuthMetadataEndpoint string = 'https://${employeeGatewayAppName}.azurewebsites.net/authorize/.well-known/openid-configuration'
+param employeeOAuthMetadataEndpoint string = ''
 
 @description('The Audience Of The Employee Identity Server Token')
 param employeeOAuthAudience string = ''
 
+/*----------------------- Redis Cache  Parameters ---------------- */
+
+@description('The Name Of The Azure Redis Cache')
+param redisCacheName string = 'basket-rediscache-${suffix}'
+
+/*----------------------- Service Bus Parameters ---------------- */
+
+@description('The Name of the Service Bus namespace')
+param serviceBusNamespaceName string = 'eshop-sb-${suffix}'
+
 /*----------------------- Storage Account Parameters  -------------*/
 
-@description('The Name Of The Client Gateway Configuration Container')
-param clientGatewayConfigContainerName string = 'clientgateway'
+@description('The Name Of The Eshop Web App Configuration Container')
+param eshopProxyConfigFileShareName string = 'eshopproxy'
 
-@description('The Name Of The Employee Gateway Configuration Container')
-param employeeGatewayConfigContainerName string = 'employeegateway'
+@description('The Name Of The Eshop Employee Portal Web App Configuration Container')
+param eshopEmployeePortalProxyConfigFileShareName string = 'eshopemployeeportalproxy'
 
 @description('The Name Of The Storage Account')
 param storageAccountName string = 'storageacc${suffix}'
 
-@description('Names Of The Containers.')
-param containerNames string[] = [
-  clientGatewayConfigContainerName
-  employeeGatewayConfigContainerName
-]
-
-/*----------------------- NGINX Gateway Parameters    -------------*/
-
-@description('The Name Of The Client Gateway App')
-param clientGatewayAppName string = 'client-gateway-${suffix}'
-
-@description('The Name Of The Employee Gateway App')
-param employeeGatewayAppName string = 'employee-gateway-${suffix}'
-
 /*------------------------- Variables  ----------------------------*/
 
-var catalogApiConnectionStringName = 'catalogDbConnectionString'
-var clientAuthServerConnectionString = 'clientDbConnectionString'
-var employeeManagementConnectionString = 'employeeDbConnectionString'
-var storageAccountSubNetName = '${storageAccountName}-subnet'
-var clientsSqlServerSubNetName = '${clientsSqlServerName}-subnet'
-var employeesSqlServerSubNetName = '${employeesSqlServerName}-subnet'
-var catalogSqlServerSubNetName = '${catalogSqlServerName}-subnet'
-var clientAppsSubnetName = 'client-apps-subnet'
-var employeeAppsSubnetName = 'employee-apps-subnet'
-var sharedServicesSubnetName = 'shared-services-subnet'
-var clientAppsPrivateEndpointsSubnetName = 'client-apps-pe-subnet'
-var employeeAppsPrivateEndpointsSubnetName = 'employee-apps-pe-subnet'
-var sharedServicesPrivateEndpointsSubnetName = 'shared-services-pe-subnet'
+var fileShareNames  = [
+  eshopProxyConfigFileShareName
+  eshopEmployeePortalProxyConfigFileShareName
+]
+
+var sqlServerNames = [
+  customerSqlServerName
+  employeeSqlServerName
+  catalogSqlServerName
+  orderingSqlServerName
+  sagaSqlServerName
+]
+
+var catalogAppiImageName =  '${registryServer}/${registryUserName}/eshop.catalog.api:latest'
+var customerPortalImageName =  '${registryServer}/${registryUserName}/eshop.ui.customerportal:latest'
+var customerAuthServerImageName =  '${registryServer}/${registryUserName}/eshop.customer.authorizationserver:latest'
+var employeeAuthServerImageName =  '${registryServer}/${registryUserName}/eshop.employeemanagement.authorizationserver:latest'
+var employeeApiImageName =  '${registryServer}/${registryUserName}/eshop.employeemanagement.api:latest'
+var employeePortalImageName =  '${registryServer}/${registryUserName}/eshop.ui.employeeportal:latest'
+var basketApiImageName = '${registryServer}/${registryUserName}/eshop.basket.api:latest'
+var orderingApiImageName = '${registryServer}/${registryUserName}/eshop.ordering.api:latest'
+var paymentProcessorImageName = '${registryServer}/${registryUserName}/eshop.payment.processor:latest'
+var sagaProcessorImageName = '${registryServer}/${registryUserName}/eshop.saga.processor:latest'
 
 /*----------------------- RESOURCES    --------------------------- */
 
@@ -118,296 +160,365 @@ module vnet 'modules-docker/vnet.bicep' = {
   params: {
     location: location
     vnetName: vnetName 
-    subnets: [
-      { name: clientsSqlServerSubNetName }
-      { name: employeesSqlServerSubNetName }
-      { name: catalogSqlServerSubNetName }
-      { name: storageAccountSubNetName }
-      { name: clientAppsPrivateEndpointsSubnetName }
-      { name: employeeAppsPrivateEndpointsSubnetName }
-      { name: sharedServicesPrivateEndpointsSubnetName }
-      {
-         name: clientAppsSubnetName
-         delegation: 'Microsoft.Web/serverFarms'
-      }
-      {
-         name: employeeAppsSubnetName
-         delegation: 'Microsoft.Web/serverFarms'
-      }
-      {
-         name: sharedServicesSubnetName
-         delegation: 'Microsoft.Web/serverFarms'
-      }
-    ]
   }
 }
 
-module sqlClient 'modules-docker/sql.bicep' = {
- name: 'sqlClient'
- params: {
-   location: location
-   dbName: dbName
-   sqlServerName: clientsSqlServerName 
-   vnetName: vnetName
-   subNetName: clientsSqlServerSubNetName
-   sqlEntraIdAdminLogin: sqlEntraIdAdminLogin
-   sqlEntraIdAdminObjectId: sqlEntraIdAdminObjectId
-   sqlUserAssignedIdentity: sqlUserAssignedIdentity
- }
- dependsOn: [
-   vnet
- ]
+module logAnalyticsWorkspace 'modules-docker/workspace.bicep' = {
+  name: 'logAnalyticsWorkspace'
+  params: {
+    location: location
+    logAnalyticsName: logAnalyticsName 
+  }    
 }
 
-module sqlEmployee 'modules-docker/sql.bicep' = {
- name: 'sqlEmployee'
- params: {
-   location: location
-   dbName: dbName
-   sqlServerName: employeesSqlServerName 
-   vnetName: vnetName
-   subNetName: employeesSqlServerSubNetName
-   sqlEntraIdAdminLogin: sqlEntraIdAdminLogin
-   sqlEntraIdAdminObjectId: sqlEntraIdAdminObjectId
-   sqlUserAssignedIdentity: sqlUserAssignedIdentity
- }
- dependsOn: [
-   vnet
- ]
+module redisCache 'modules-docker/redis.bicep' = {
+  name: redisCacheName
+  params: {
+    location: location
+    redisCacheName: redisCacheName
+    subNetId: vnet.outputs.privateEndpointsSubnetId
+  }
 }
 
-module sqlCatalog 'modules-docker/sql.bicep' = {
- name: 'sqlCatalog'
- params: {
-   location: location
-   dbName: dbName
-   sqlServerName: catalogSqlServerName 
-   vnetName: vnetName
-   subNetName: catalogSqlServerSubNetName
-   sqlEntraIdAdminLogin: sqlEntraIdAdminLogin
-   sqlEntraIdAdminObjectId: sqlEntraIdAdminObjectId
-   sqlUserAssignedIdentity: sqlUserAssignedIdentity
- }
- dependsOn: [
-   vnet
- ]
+module servicebus 'modules-docker/servicebus.bicep' = {
+  name: 'servicebus'
+  params: {
+    location: location
+    serviceBusNamespaceName: serviceBusNamespaceName 
+  }
 }
+
+module containerAppEnv 'modules-docker/containerAppEnv.bicep' = {
+  name: 'containerAppEnv'
+  params: {
+    location: location
+    containerAppEnvironmentName: containerAppEnvironmentName
+    logAnalyticsName: logAnalyticsName
+    fileShareNames: fileShareNames
+    storageAccountName: storageAccountName
+    subNetId: vnet.outputs.containerAppEnvSubnetId
+  }
+  dependsOn: [
+    logAnalyticsWorkspace
+    storageAccount
+  ]
+}
+
+module sqlServers 'modules-docker/sql.bicep' = [for sqlServerName in sqlServerNames: {
+    name: sqlServerName
+
+    params: {
+      location: location
+      sqlEntraIdAdminLogin: sqlEntraIdAdminLogin
+      sqlEntraIdAdminObjectId: sqlEntraIdAdminObjectId
+      sqlUserAssignedIdentity: sqlUserAssignedIdentity
+      dbName: dbName
+      sqlServerName: sqlServerName 
+      subNetId: vnet.outputs.privateEndpointsSubnetId
+    }
+  }
+]
 
 module storageAccount 'modules-docker/storage.bicep' = {
   name: 'storageAccount'
   params: {
     location: location
-    containerNames: containerNames
+    fileShareNames: fileShareNames
     storageAccountName: storageAccountName
-    vnetName: vnetName
-    subNetName: storageAccountSubNetName
+    subNetId: vnet.outputs.privateEndpointsSubnetId
+  }
+}
+
+module eshopReverseProxy 'modules-docker/envoy.bicep' = {
+  name: 'eshopReverseProxy'
+  params: {
+    location: location
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: eshopAppName
+    revisionSuffix: revisionSuffix
+    fileShareName: eshopProxyConfigFileShareName
   }
   dependsOn: [
-    vnet
-  ]
-}
-
-module clientAppsSplan 'modules-docker/webappsplan.bicep' = {
-  name: 'clientAppsSplan'
-  params: {
-    location: location
-    webAppServicePlanName: clientAppsServicePlanName 
-  }  
-}
-
-module employeeAppsSplan 'modules-docker/webappsplan.bicep' = {
-  name: 'employeeAppsSplan'
-  params: {
-    location: location
-    webAppServicePlanName: employeeAppsServicePlanName 
-  }  
-}
-
-module sharedAppsSplan 'modules-docker/webappsplan.bicep' = {
-  name: 'sharedAppsSplan'
-  params: {
-    location: location
-    webAppServicePlanName: sharedServicesServicePlanName 
-  }  
-}
-
-module clientGateway 'modules-docker/nginxGateway.bicep' = {
-  name: 'clientGateway'
-  params: {
-    location: location
-    gatewayAppName: clientGatewayAppName
-    storageAccountContainerName: clientGatewayConfigContainerName
-    storageAccountName: storageAccountName
-    webAppServicePlanId: clientAppsSplan.outputs.servicePlanId 
-    vnetName: vnetName
-    subNetName: clientAppsSubnetName
-  }
-  dependsOn: [
-    clientAppsSplan
     storageAccount
   ]
 }
 
-module employeeGateway 'modules-docker/nginxGateway.bicep' = {
-  name: 'employeeGateway'
+module eshopEmployeePortalReverseProxy 'modules-docker/envoy.bicep' = {
+  name: 'eshopEmployeePortalReverseProxy'
   params: {
     location: location
-    gatewayAppName: employeeGatewayAppName
-    storageAccountContainerName: employeeGatewayConfigContainerName
-    storageAccountName: storageAccountName
-    webAppServicePlanId: employeeAppsSplan.outputs.servicePlanId   
-    vnetName: vnetName
-    subNetName: employeeAppsSubnetName
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: eshopEmployeePortalAppName
+    revisionSuffix: revisionSuffix
+    fileShareName: eshopEmployeePortalProxyConfigFileShareName
   }
   dependsOn: [
-    employeeAppsSplan
     storageAccount
   ]
 }
 
-module clientPortal 'modules-docker/webappAngular.bicep' = {
-  name: 'clientPortal'
+module customerPortal 'modules-docker/containerApp.bicep' = {
+  name: 'customerPortal'
   params: {
     location: location
-    vnetName: vnetName
-    webAppServicePlanId: clientAppsSplan.outputs.servicePlanId 
-    webAppName: clientPortalWebAppName
-    webAppPrivateEndpointSubnetName: clientAppsPrivateEndpointsSubnetName
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: customerPortalContainerAppName
+    containerImage: customerPortalImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    external: false
   }
-  dependsOn: [
-    vnet
-  ]
 }
 
-module employeePortal 'modules-docker/webappAngular.bicep' = {
+module employeePortal 'modules-docker/containerApp.bicep' = {
   name: 'employeePortal'
   params: {
     location: location
-    vnetName: vnetName
-    webAppServicePlanId: employeeAppsSplan.outputs.servicePlanId 
-    webAppName: employeePortalWebAppName
-    webAppPrivateEndpointSubnetName: employeeAppsPrivateEndpointsSubnetName
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: employeePortalContainerAppName
+    containerImage: employeePortalImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    external: false
   }
-  dependsOn: [
-    vnet
-  ]
 }
 
-module catalogApi 'modules-docker/webapp.bicep' = {
- name: 'catalogApi'
- params: {
-   location: location
-   vnetName: vnetName
-   webAppPrivateEndpointSubnetName: sharedServicesPrivateEndpointsSubnetName
-   webAppSubnetName: sharedServicesSubnetName
-   connectionStringName: catalogApiConnectionStringName
-   dbName: dbName
-   sqlServerName: catalogSqlServerName 
-   webAppName: catalogApiWebAppName
-   webAppServicePlanId: sharedAppsSplan.outputs.servicePlanId 
-   appConfiguration: {
-    initDbOnStartup: true
-    generatedItemPictureUriHost: '/catalog'
-    clients: 'https://${clientGatewayAppName}.azurewebsites.net,https://${employeeGatewayAppName}.azurewebsites.net'
-    EmployeeJWTSettings__Issuer: employeeOAuthIssuer
-    EmployeeJWTSettings__MetadataAddress: employeeOAuthMetadataEndpoint
-    EmployeeJWTSettings__Audience: employeeOAuthAudience
-    ClientJWTSettings__Issuer: 'https://${clientGatewayAppName}.azurewebsites.net/authorize'
-    ClientJWTSettings__MetadataAddress: 'https://${clientGatewayAppName}.azurewebsites.net/authorize/.well-known/openid-configuration'
-    ASPNETCORE_ENVIRONMENT: 'Development'
-   }
- }
- dependsOn: [
-   sqlCatalog
-   sharedAppsSplan
-   clientPortal
-   employeePortal
- ]
-}
-
-module clientAuthServer 'modules-docker/webapp.bicep' = {
-  name: 'clientAuthServer'
+module catalogApi 'modules-docker/containerApp.bicep' = {
+  name: 'catalogApi'
   params: {
     location: location
-    vnetName: vnetName
-    webAppPrivateEndpointSubnetName: clientAppsPrivateEndpointsSubnetName
-    webAppSubnetName: clientAppsSubnetName 
-    connectionStringName: clientAuthServerConnectionString
-    dbName: dbName
-    sqlServerName: clientsSqlServerName 
-    webAppName: clientAuthServerWebAppName
-    webAppServicePlanId: clientAppsSplan.outputs.servicePlanId  
-    appConfiguration: {
-      initDbOnStartup: true
-      useEphemeralKeys: true
-      clients__0__clientOrigin: 'https://${clientGatewayAppName}.azurewebsites.net'
-      clients__0__clientId: 'customer-portal'
-      clients__0__displayName: 'public spa'
-      ASPNETCORE_APPL_PATH: 'authorize'
+    serviceBusNamespaceName: serviceBusNamespaceName
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: catalogApiContainerAppName
+    containerImage: catalogAppiImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    healthCheckPath: '/hc'
+    env: {      
+      initDbOnStartup: 'true'
       ASPNETCORE_ENVIRONMENT: 'Development'
+      generatedItemPictureUriHost: '/catalog'
+      clients: 'https://${eshopReverseProxy.outputs.fqdn},https://${ eshopEmployeePortalReverseProxy.outputs.fqdn}'
+      EmployeeJWTSettings__Issuer: employeeOAuthIssuer == '' ? 'https://${ eshopEmployeePortalReverseProxy.outputs.fqdn}/authorize' : employeeOAuthIssuer
+      EmployeeJWTSettings__MetadataAddress: employeeOAuthMetadataEndpoint == '' ? 'https://${eshopEmployeePortalReverseProxy.outputs.fqdn}/authorize/.well-known/openid-configuration' : employeeOAuthMetadataEndpoint
+      EmployeeJWTSettings__Audience : employeeOAuthAudience
+      CustomerJWTSettings__Issuer: 'https://${eshopReverseProxy.outputs.fqdn}/authorize'
+      CustomerJWTSettings__MetadataAddress: 'https://${eshopReverseProxy.outputs.fqdn}/authorize/.well-known/openid-configuration'
+      ConnectionStrings__catalogDbConnectionString: 'Server=tcp:${catalogSqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+      broker__azureServiceBusConnectionString: 'sb://${serviceBusNamespaceName}.servicebus.windows.net'
     }
+    external: false
   }
   dependsOn: [
-    sqlClient
-    clientAppsSplan
-    clientPortal
-    employeePortal
+    sqlServers
+    servicebus
   ]
 }
 
-module employeeApi 'modules-docker/webapp.bicep' = {
+module customerAuthServer 'modules-docker/containerApp.bicep' = {
+  name: 'customerAuthServer'
+  params: {
+    location: location
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: customerAuthServerContainerAppName
+    containerImage: customerAuthServerImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    healthCheckPath: '/hc'
+    env: {
+      initDbOnStartup: 'true'
+      ASPNETCORE_APPL_PATH: 'authorize'
+      ASPNETCORE_ENVIRONMENT: 'Development'
+      useEphemeralKeys: 'true'
+      clients__0__clientOrigin: 'https://${eshopReverseProxy.outputs.fqdn}'
+      clients__0__clientId: 'customer-portal'
+      clients__0__displayName: 'public spa'
+      ConnectionStrings__openIddictDbConnectionString: 'DataSource=customer.openiddict.db'
+      ConnectionStrings__customerDbConnectionString: 'Server=tcp:${customerSqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+    }
+    external: false
+  }
+  dependsOn: [
+    sqlServers
+  ]
+}
+
+module employeeApi 'modules-docker/containerApp.bicep' = {
   name: 'employeeApi'
   params: {
     location: location
-    vnetName: vnetName
-    webAppPrivateEndpointSubnetName: employeeAppsPrivateEndpointsSubnetName
-    webAppSubnetName: employeeAppsSubnetName 
-    connectionStringName: employeeManagementConnectionString
-    dbName: dbName
-    sqlServerName: employeesSqlServerName 
-    webAppName: employeeApiWebAppName
-    webAppServicePlanId: employeeAppsSplan.outputs.servicePlanId  
-    appConfiguration: {
-      initDbOnStartup: true
-      clientOrigin: 'https://${employeeGatewayAppName}.azurewebsites.net'
-      JWTSettings__Issuer: employeeOAuthIssuer
-      JWTSettings__MetadataAddress: employeeOAuthMetadataEndpoint
-      ASPNETCORE_ENVIRONMENT: 'Development'
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: employeeApiContainerAppName
+    containerImage: employeeApiImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    healthCheckPath: '/hc'
+    env: {
+      initDbOnStartup: 'true'
+      clientOrigin: 'https://${eshopEmployeePortalReverseProxy.outputs.fqdn}'
+      JWTSettings__Issuer: employeeOAuthIssuer == '' ? 'https://${ eshopEmployeePortalReverseProxy.outputs.fqdn}/authorize' : employeeOAuthIssuer
+      JWTSettings__MetadataAddress: employeeOAuthMetadataEndpoint == '' ? 'https://${eshopEmployeePortalReverseProxy.outputs.fqdn}/authorize/.well-known/openid-configuration' : employeeOAuthMetadataEndpoint
+      JWTSettings__Audience: employeeOAuthAudience
+      ConnectionStrings__employeeDbConnectionString: 'Server=tcp:${employeeSqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
     }
+    external: false
   }
   dependsOn: [
-    sqlEmployee
-    employeeAppsSplan
-    clientPortal
-    employeePortal
+    sqlServers
   ]
 }
 
-module employeeAuthServer 'modules-docker/webapp.bicep' = {
+module employeeAuthServer 'modules-docker/containerApp.bicep' = {
   name: 'employeeAuthServer'
   params: {
-    location: location
-    vnetName: vnetName
-    webAppPrivateEndpointSubnetName: employeeAppsPrivateEndpointsSubnetName
-    webAppSubnetName: employeeAppsSubnetName 
-    connectionStringName: employeeManagementConnectionString
-    dbName: dbName
-    sqlServerName: employeesSqlServerName 
-    webAppName: employeeAuthServerWebAppName
-    webAppServicePlanId: employeeAppsSplan.outputs.servicePlanId
-    appConfiguration: {
-      useEphemeralKeys: true
-      clients__0__clientOrigin: 'https://${employeeGatewayAppName}.azurewebsites.net'
+    location: location  
+    containerAppEnvironmentId: containerAppEnv.outputs.Id
+    containerAppName: employeeAuthServerContainerAppName
+    containerImage: employeeAuthServerImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    healthCheckPath: '/hc'
+    env: {
+      useEphemeralKeys: 'true'
+      clients__0__clientOrigin: 'https://${eshopEmployeePortalReverseProxy.outputs.fqdn}'
       clients__0__clientId: 'employee-portal'
       clients__0__displayName: 'public spa'
       ASPNETCORE_APPL_PATH: 'authorize'
       ASPNETCORE_ENVIRONMENT: 'Development'
-    }  
+      ConnectionStrings__employeeDbConnectionString: 'Server=tcp:${employeeSqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+      ConnectionStrings__openIddictDbConnectionString: 'DataSource=employee.openiddict.db'
+    }
+    external: false
   }
   dependsOn: [
-    sqlEmployee
-    employeeAppsSplan
-    clientPortal
-    employeePortal
+    sqlServers
+  ]
+}
+
+module basketApi 'modules-docker/containerApp.bicep' = {
+  name: 'basketApi'
+  params: {
+    location: location
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: basketApiContainerAppName
+    containerImage: basketApiImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    redisCacheName: redisCacheName
+    serviceBusNamespaceName: serviceBusNamespaceName
+    healthCheckPath: '/hc'
+    targetPort: 8080
+    env: {
+      JWTSettings__Issuer: 'https://${eshopReverseProxy.outputs.fqdn}/authorize'
+      JWTSettings__MetadataAddress: 'https://${eshopReverseProxy.outputs.fqdn}/authorize/.well-known/openid-configuration'
+      ASPNETCORE_ENVIRONMENT: 'Development'
+      ASPNETCORE_HTTP_PORTS: '8080'
+      ConnectionStrings__entraIdRedisConnectionString: '${redisCacheName}.redis.cache.windows.net:6380'
+      broker__azureServiceBusConnectionString: 'sb://${serviceBusNamespaceName}.servicebus.windows.net'
+    }
+    external: false
+  }
+  dependsOn: [
+    servicebus
+    redisCache
+  ]
+}
+
+module orderingApi 'modules-docker/containerApp.bicep' = {
+  name: 'orderingApi'
+  params: {
+    location: location
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: orderingApiContainerAppName
+    containerImage: orderingApiImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    serviceBusNamespaceName: serviceBusNamespaceName
+    healthCheckPath: '/hc'
+    targetPort: 8080
+    env: {
+      initDbOnStartup: 'true'
+      JWTSettings__Issuer: 'https://${eshopReverseProxy.outputs.fqdn}/authorize'
+      JWTSettings__MetadataAddress: 'https://${eshopReverseProxy.outputs.fqdn}/authorize/.well-known/openid-configuration'
+      ASPNETCORE_ENVIRONMENT: 'Development'
+      ASPNETCORE_HTTP_PORTS: '8080'
+      ConnectionStrings__orderingDbConnectionString: 'Server=tcp:${orderingSqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+      broker__azureServiceBusConnectionString: 'sb://${serviceBusNamespaceName}.servicebus.windows.net'
+    }
+    external: false
+  }
+  dependsOn: [
+    sqlServers
+    servicebus
+  ]
+}
+
+module paymentProcessor 'modules-docker/containerApp.bicep' = {
+  name: 'paymentProcessor'
+  params: {
+    location: location
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: paymentProcessorContainerAppName
+    containerImage: paymentProcessorImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    serviceBusNamespaceName: serviceBusNamespaceName
+    healthCheckPath: '/hc'
+    targetPort: 8080
+    env: {
+      payment__processPayment: 'True'
+      ASPNETCORE_ENVIRONMENT: 'Development'
+      broker__azureServiceBusConnectionString: 'sb://${serviceBusNamespaceName}.servicebus.windows.net'
+    }
+    external: false
+  }
+  dependsOn: [
+    servicebus
+  ]
+}
+
+module sagaProcessor 'modules-docker/containerApp.bicep' = {
+  name: 'sagaProcessor'
+  params: {
+    location: location
+    containerAppEnvironmentId: containerAppEnv.outputs.Id 
+    containerAppName: sagaProcessorContainerAppName
+    containerImage: sagaProcessorImageName
+    registryPassword: registryPassword
+    registryServer: registryServer
+    registryUserName: registryUserName
+    revisionSuffix: revisionSuffix
+    serviceBusNamespaceName: serviceBusNamespaceName
+    healthCheckPath: '/hc'
+    targetPort: 8080
+    env: {
+      initDbOnStartup: 'true'
+      ASPNETCORE_ENVIRONMENT: 'Development'
+      ConnectionStrings__sagaDbConnectionString: 'Server=tcp:${sagaSqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+      broker__azureServiceBusConnectionString: 'sb://${serviceBusNamespaceName}.servicebus.windows.net'
+    }
+    external: false
+  }
+  dependsOn: [
+    sqlServers
+    servicebus
   ]
 }

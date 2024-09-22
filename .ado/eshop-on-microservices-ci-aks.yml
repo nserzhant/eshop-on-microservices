@@ -1,22 +1,29 @@
-#BUILD PIPELINE (USES CONTAINER JOBS)
+# BUILD PIPELINE (USES CONTAINER JOBS)
 
 resources:   
- repositories:
-    - repository: self
-      trigger: none
- containers:
+  repositories:
+  - repository: self
+    trigger: none
+
+  containers:
   - container: dotnetsdk
     image: mcr.microsoft.com/dotnet/sdk:8.0.203
     env:
-      ConnectionStrings__employeeDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
-      ConnectionStrings__catalogDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.catalog.Db;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+      ConnectionStrings__employeeDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.employee.testDb;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+      ConnectionStrings__catalogDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.catalog.testDb;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+      ConnectionStrings__orderingDbConnectionString: Server=tcp:mssql;Integrated Security=false;Initial Catalog=eshop.ordering.testDb;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+      ConnectionStrings__redisConnectionString: redis:6379
   - container: mssql
     image: mcr.microsoft.com/mssql/server:2022-latest
     env:
       MSSQL_SA_PASSWORD: $(sqlPassword)
       ACCEPT_EULA: Y
     ports:
-      - 1433
+    - 1433
+  - container: redis
+    image: redis:7.0.15-alpine3.20
+    ports:
+    - 6379
 
 variables:
   buildConfiguration: 'Release'
@@ -29,90 +36,93 @@ variables:
   employeeOAuthScope: 'openid roles api offline_access'
 
 jobs:
-  - job: test_api
-    displayName: Test Api
-    pool:
-      vmImage: ubuntu-latest
-    services:
-      mssql: mssql
-    container: dotnetsdk
-    steps:
-      - task: DotNetCoreCLI@2
-        name: Restore
-        inputs:
-          command: 'restore'
-          projects: '$(apiWorkingDirectory)/*.sln'
-      - task: DotNetCoreCLI@2          
-        displayName: Build
-        inputs:
-          command: 'build'
-          arguments: '--configuration $(buildConfiguration)'
-          projects: '$(apiWorkingDirectory)/*.sln'
-      - task: DotNetCoreCLI@2
-        displayName: Run Tests
-        inputs:
-            command: 'test'
-            arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
-            projects: '$(apiWorkingDirectory)/*.sln'
+- job: test_api
+  displayName: Test Api
+  pool:
+    vmImage: ubuntu-latest
+  services:
+    mssql: mssql
+    redis: redis
+  container: dotnetsdk
+  steps:
+  - task: DotNetCoreCLI@2
+    name: Restore
+    inputs:
+      command: 'restore'
+      projects: '$(apiWorkingDirectory)/*.sln'
 
-  - job: build_and_publish
-    displayName: Build And Publish (Docker Images And Artifacts)
-    dependsOn: test_api
-    condition: succeeded()
-    pool: 
-      vmImage: ubuntu-latest
+  - task: DotNetCoreCLI@2          
+    displayName: Build
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '$(apiWorkingDirectory)/*.sln'
 
-    steps:            
-      - task: DockerCompose@0
-        displayName: Build Docker Images
-        inputs:
-          containerregistrytype: 'Container Registry'
-          dockerRegistryEndpoint: '$(dockerRegistryConnection)'
-          dockerComposeFile: '$(System.DefaultWorkingDirectory)/docker-compose.yml'
-          dockerComposeFileArgs: |
-            TAG=kube-$(Build.BuildId)
-            ANGULAR_CONFIGURATION=production
-            APPDATA=
-            OAUTH_AUTH_EMPOYEE_ENDPOINT_PATH=$(employeeOAuthAuthorizationEndpoint)
-            OAUTH_EMPOYEE_APP_CLIENT_ID=$(employeeOAuthClientId)
-            OAUTH_EMPOYEE_SCOPE=$(employeeOAuthScope)
-          action: 'Build services'
-          includeSourceTags: true
-          includeLatestTag: true
+  - task: DotNetCoreCLI@2
+    displayName: Run Tests
+    inputs:
+        command: 'test'
+        arguments: '--configuration $(buildConfiguration) --filter TestCategory!=MicroservicesIntegration --collect "Code coverage"'
+        projects: '$(apiWorkingDirectory)/*.sln'
 
-      - task: DockerCompose@0
-        displayName: Push Docker Images
-        inputs:
-          containerregistrytype: 'Container Registry'
-          dockerRegistryEndpoint: '$(dockerRegistryConnection)'
-          dockerComposeFile: '$(System.DefaultWorkingDirectory)/docker-compose.yml'
-          dockerComposeFileArgs: |
-            TAG=kube-$(Build.BuildId)
-            ANGULAR_CONFIGURATION=production
-            APPDATA=
-          action: 'Push services'
-          includeSourceTags: true
-          includeLatestTag: true
+- job: build_and_publish
+  displayName: Build And Publish (Docker Images And Artifacts)
+  dependsOn: test_api
+  condition: succeeded()
+  pool: 
+    vmImage: ubuntu-latest
 
-      - task: HelmDeploy@0
-        displayName: Build Helm Package
-        inputs:
-          command: 'package'
-          chartPath: '$(System.DefaultWorkingDirectory)/.helm/eshop'
-          chartVersion: '$(Build.BuildId)'
-          destination: '$(Build.ArtifactStagingDirectory)'
+  steps:            
+  - task: DockerCompose@1
+    displayName: Build Docker Images
+    inputs:
+      containerregistrytype: 'Container Registry'
+      dockerRegistryEndpoint: '$(dockerRegistryConnection)'
+      dockerComposeFile: '$(System.DefaultWorkingDirectory)/docker-compose.yml'
+      dockerComposeFileArgs: |
+        TAG=kube-$(Build.BuildId)
+        ANGULAR_CONFIGURATION=production
+        APPDATA=
+        OAUTH_AUTH_EMPOYEE_ENDPOINT_PATH=$(employeeOAuthAuthorizationEndpoint)
+        OAUTH_EMPOYEE_APP_CLIENT_ID=$(employeeOAuthClientId)
+        OAUTH_EMPOYEE_SCOPE=$(employeeOAuthScope)
+      action: 'Build services'
+      includeSourceTags: true
+      includeLatestTag: true
 
-      - task: PublishPipelineArtifact@1
-        displayName: Publish Pipepile Artifact -  Helm
-        inputs:
-          targetPath: '$(Build.ArtifactStagingDirectory)/eshop-$(Build.BuildId).tgz'
-          artifact: 'Helm'
-          publishLocation: 'pipeline'
+  - task: DockerCompose@1
+    displayName: Push Docker Images
+    inputs:
+      containerregistrytype: 'Container Registry'
+      dockerRegistryEndpoint: '$(dockerRegistryConnection)'
+      dockerComposeFile: '$(System.DefaultWorkingDirectory)/docker-compose.yml'
+      dockerComposeFileArgs: |
+        TAG=kube-$(Build.BuildId)
+        ANGULAR_CONFIGURATION=production
+        APPDATA=
+      action: 'Push services'
+      includeSourceTags: true
+      includeLatestTag: true
+
+  - task: HelmDeploy@0
+    displayName: Build Helm Package
+    inputs:
+      command: 'package'
+      chartPath: '$(System.DefaultWorkingDirectory)/.helm/eshop'
+      chartVersion: '$(Build.BuildId)'
+      destination: '$(Build.ArtifactStagingDirectory)'
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact -  Helm
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/eshop-$(Build.BuildId).tgz'
+      artifact: 'Helm'
+      publishLocation: 'pipeline'
       
-      - task: PublishPipelineArtifact@1
-        displayName: Publish Pipepile Artifact -  Bicep
-        inputs:
-          targetPath: '$(System.DefaultWorkingDirectory)/.azure/'
-          artifact: 'Bicep'
-          publishLocation: 'pipeline'
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact -  Bicep
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/.azure/'
+      artifact: 'Bicep'
+      publishLocation: 'pipeline'
 

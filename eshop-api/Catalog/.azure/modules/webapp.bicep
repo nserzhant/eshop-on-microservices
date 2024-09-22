@@ -79,6 +79,7 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
     properties: {
       initDbOnStartup:'true'
       ASPNETCORE_ENVIRONMENT: 'Development'      
+      broker__rabbitMQHost: ''    
     }
   }
 

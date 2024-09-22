@@ -1,28 +1,37 @@
+# RELEASE PIPELINE (Deploy Helm Chart)
+
 resources:
- repositories:
-   - repository: self
-     trigger: none
- pipelines:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
   - pipeline: eshop-on-microservices-ci-aks
     source: eshop-on-microservices-ci-aks
 
 variables:
-  azureserviceconnection: 'azure-spn'
+  azureserviceconnection: 'azure-aks-spn'
   suffix:  ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
   resourceGroupName: 'eshop-aks'
   clusterName: 'aks-eshop-$(suffix)'
   acrConnection: 'acr-docker-connection'
-  acrName: $(acr-name)
+  acrName: '$(acr-name)'
   workingDirectory:  $(System.DefaultWorkingDirectory)/.helm/eshop
   aksNamespace: 'eshop'
-  dnsLabel: 'eshop-customer-portal-$(suffix)'
-  akvName: 'akv-eshop-$(suffix)'
-  catalogApiSqlServerName: 'catalog-sqlserver-$(suffix)'
-  employeeManagementSqlServerName: 'employee-sqlserver-$(suffix)'
-  clientAuthserverSqlServerName: 'client-sqlserver-$(suffix)'
+  dnsLabel: 'eshop-$(suffix)'
+  catalogSqlServerName: 'catalog-sqlserver-$(suffix)2'
+  employeeSqlServerName: 'employee-sqlserver-$(suffix)'
+  customerSqlServerName: 'customer-sqlserver-$(suffix)'
+  orderingSqlServerName: 'ordering-sqlserver-$(suffix)'
+  sagaSqlServerName: 'saga-sqlserver-$(suffix)'
+  redisCacheName: 'basket-rediscache-$(suffix)'
+  serviceBusNamespaceName: 'eshop-sb-$(suffix)'
   catalogApiUMIName: 'catalog-api-identity'
   employeeManagementUMIName: 'employee-management-identity'
-  clientAuthServerUMIName: 'client-authserver-identity'  
+  customerAuthServerUMIName: 'customer-authserver-identity'  
+  basketApiUMIName: 'basket-api-identity'
+  orderingApiUMIName: 'ordering-api-identity'
+  paymentProcessorUMIName: 'payment-processor-identity'
+  sagaProcessorUMIName: 'saga-processor-identity'
   employeeExternalOAuthIssuer: '' # When Empty Default Identity Server Will Be Used
   employeeExternalOAuthMetadataEndpoint: ''
   employeeExternalOAuthAudience: ''
@@ -44,17 +53,7 @@ steps:
      echo "##vso[task.setvariable variable=tenantId;issecret=true]$TENNANT_ID"
 
 - task: AzureCLI@2
-  displayName: Get The ClientId Of The UMI That Have Access To Key Vault (save result to aksUmiClientId variable)
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-     CLIENT_ID=$(az aks show --name $(clusterName) --resource-group $(resourceGroupName) --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
-     echo "##vso[task.setvariable variable=aksUmiClientId;issecret=true]$CLIENT_ID"
-
-- task: AzureCLI@2
-  displayName: Get The ClientId Of The UMI That Have Access To The Catalog Api Db (save result to catalogApiUmiClientId variable)
+  displayName: Get The ClientId Of The Catalog API UMI (save result to catalogApiUmiClientId variable)
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
@@ -64,7 +63,7 @@ steps:
      echo "##vso[task.setvariable variable=catalogApiUmiClientId;issecret=true]$CLIENT_ID"
 
 - task: AzureCLI@2
-  displayName: Get The ClientId Of The UMI That Have Access To The Employee Management Db (save result to employeeManagementUmiClientId variable)
+  displayName: Get The ClientId Of The Employee Management UMI (save result to employeeManagementUmiClientId variable)
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
@@ -74,24 +73,64 @@ steps:
      echo "##vso[task.setvariable variable=employeeManagementUmiClientId;issecret=true]$CLIENT_ID"
 
 - task: AzureCLI@2
-  displayName: Get The ClientId Of The UMI That Have Access To The Client Authorization Server Db (save result to clientAuthserverUmiClientId variable)
+  displayName: Get The ClientId Of The Customer Authorization Server UMI (save result to customerAuthserverUmiClientId variable)
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-     CLIENT_ID=$(az identity show --resource-group $(resourceGroupName) --name $(clientAuthServerUMIName) --query "clientId" -o tsv)
-     echo "##vso[task.setvariable variable=clientAuthserverUmiClientId;issecret=true]$CLIENT_ID"
+     CLIENT_ID=$(az identity show --resource-group $(resourceGroupName) --name $(customerAuthServerUMIName) --query "clientId" -o tsv)
+     echo "##vso[task.setvariable variable=customerAuthserverUmiClientId;issecret=true]$CLIENT_ID"
 
 - task: AzureCLI@2
-  displayName: Get The Customer Portal Gateway DNS Name (save result to clientPortalDnsName variable)
+  displayName: Get The ClientId Of The Basket API UMI (save result to basketApiUmiClientId variable)
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+     CLIENT_ID=$(az identity show --resource-group $(resourceGroupName) --name $(basketApiUMIName) --query "clientId" -o tsv)
+     echo "##vso[task.setvariable variable=basketApiUmiClientId;issecret=true]$CLIENT_ID"
+
+- task: AzureCLI@2
+  displayName: Get The ClientId Of The Ordering API UMI (save result to orderingApiUmiClientId variable)
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+     CLIENT_ID=$(az identity show --resource-group $(resourceGroupName) --name $(orderingApiUMIName) --query "clientId" -o tsv)
+     echo "##vso[task.setvariable variable=orderingApiUmiClientId;issecret=true]$CLIENT_ID"
+
+- task: AzureCLI@2
+  displayName: Get The ClientId Of The Payment Processor UMI (save result to paymentProcessorUmiClientId variable)
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+     CLIENT_ID=$(az identity show --resource-group $(resourceGroupName) --name $(paymentProcessorUMIName) --query "clientId" -o tsv)
+     echo "##vso[task.setvariable variable=paymentProcessorUmiClientId;issecret=true]$CLIENT_ID"
+
+- task: AzureCLI@2
+  displayName: Get The ClientId Of The Saga Processor UMI (save result to sagaProcessorUmiClientId variable)
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+     CLIENT_ID=$(az identity show --resource-group $(resourceGroupName) --name $(sagaProcessorUMIName) --query "clientId" -o tsv)
+     echo "##vso[task.setvariable variable=sagaProcessorUmiClientId;issecret=true]$CLIENT_ID"
+
+- task: AzureCLI@2
+  displayName: Get The Eshop DNS Name (save result to eshopDnsName variable)
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
      DNS_NAME=$(dnsLabel).$(az aks show --name $(clusterName) --resource-group $(resourceGroupName) --query location -otsv).cloudapp.azure.com
-     echo "##vso[task.setvariable variable=clientPortalDnsName;issecret=false]$DNS_NAME"
+     echo "##vso[task.setvariable variable=eshopDnsName;issecret=false]$DNS_NAME"
 
 - task: Kubernetes@1
   name: getLoadBalancerIP
@@ -107,8 +146,8 @@ steps:
     outputFormat: none
 
 - powershell: |
-    echo "##vso[task.setvariable variable=empoyeePortalDnsName;issecret=false]$(getLoadBalancerIP.KUBECTLOUTPUT).nip.io"
-  displayName: Save result to empoyeePortalDnsName variable
+    echo "##vso[task.setvariable variable=eshopEmployeePortalDnsName;issecret=false]$(getLoadBalancerIP.KUBECTLOUTPUT).nip.io"
+  displayName: Save result to eshopEmployeePortalDnsName variable
 
 - task: HelmDeploy@0
   displayName: Deploy Helm Package
@@ -125,6 +164,11 @@ steps:
     chartType: 'FilePath'
     chartPath: '$(Pipeline.Workspace)/eshop-on-microservices-ci-aks/Helm/eshop-$(resources.pipeline.eshop-on-microservices-ci-aks.runID).tgz'
     releaseName: 'eshop'
-    overrideValues: 'useAks=true,imagesTag=kube-$(resources.pipeline.eshop-on-microservices-ci-aks.runID),dockerRegistry=$(acrName).azurecr.io,azure.tenantId=$(tenantId),azure.aksUmiClientId=$(aksUmiClientId),azure.akvName=$(akvName),azure.catalogApiUmiClientId=$(catalogApiUmiClientId),azure.employeeManagementUmiClientId=$(employeeManagementUmiClientId),azure.clientAuthserverUmiClientId=$(clientAuthserverUmiClientId),azure.catalogApiSqlServerName=$(catalogApiSqlServerName),azure.employeeManagementSqlServerName=$(employeeManagementSqlServerName),azure.clientAuthserverSqlServerName=$(clientAuthserverSqlServerName),eshop_ingress.clientPortalDnsName=$(clientPortalDnsName),eshop_ingress.empoyeePortalDnsName=$(empoyeePortalDnsName),employee_external_authserver.issuer=$(employeeExternalOAuthIssuer),employee_external_authserver.metadataAddress=$(employeeExternalOAuthMetadataEndpoint),employee_external_authserver.audience=$(employeeExternalOAuthAudience)'
-    arguments: '--timeout 2m --debug --create-namespace'
-  
+    overrideValues: 'useAks=true,imagesTag=kube-$(resources.pipeline.eshop-on-microservices-ci-aks.runID),dockerRegistry=$(acrName).azurecr.io,azure.tenantId=$(tenantId),azure.catalogApiUmiClientId=$(catalogApiUmiClientId),azure.employeeManagementUmiClientId=$(employeeManagementUmiClientId),azure.customerAuthserverUmiClientId=$(customerAuthserverUmiClientId),azure.basketApiUmiClientId=$(basketApiUmiClientId),azure.orderingApiUmiClientId=$(orderingApiUmiClientId),azure.paymentProcessorUmiClientId=$(paymentProcessorUmiClientId),azure.sagaProcessorUmiClientId=$(sagaProcessorUmiClientId),azure.catalogSqlServerName=$(catalogSqlServerName),azure.employeeSqlServerName=$(employeeSqlServerName),azure.customerSqlServerName=$(customerSqlServerName),azure.orderingSqlServerName=$(orderingSqlServerName),azure.sagaSqlServerName=$(sagaSqlServerName),azure.serviceBusNamespaceName=$(serviceBusNamespaceName),azure.redisCacheName=$(redisCacheName),eshop_ingress.eshopDnsName=$(eshopDnsName),eshop_ingress.eshopEmployeePortalDnsName=$(eshopEmployeePortalDnsName),employee_external_authserver.issuer=$(employeeExternalOAuthIssuer),employee_external_authserver.metadataAddress=$(employeeExternalOAuthMetadataEndpoint),employee_external_authserver.audience=$(employeeExternalOAuthAudience)'
+    arguments: '--timeout 2m --debug --create-namespace'  
+
+- pwsh:  Invoke-WebRequest -UseBasicParsing -SkipCertificateCheck https://$(eshopDnsName)/ -TimeoutSec 300
+  displayName: Check Eshop App
+
+- pwsh:  Invoke-WebRequest -UseBasicParsing -SkipCertificateCheck https://$(eshopEmployeePortalDnsName)/ -TimeoutSec 300
+  displayName: Check Eshop Employee Portal App

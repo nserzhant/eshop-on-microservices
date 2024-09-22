@@ -7,10 +7,10 @@ param suffix string = uniqueString(resourceGroup().id)
 /*----------------------- SQL Server  Parameters -------------------- */
 
 @description('The Name Of The Database Server')
-param sqlServerName string = 'client-sqlserver-${suffix}'
+param sqlServerName string = 'customer-sqlserver-${suffix}'
 
 @description('The Name Of The Database')
-param dbName string = 'eshop.client.Db'
+param dbName string = 'eshop.customer.Db'
 
 @description('The Name Of The SKU')
 param dbSkuName string = 'Basic'
@@ -22,7 +22,7 @@ param dbSkuTier string = 'Basic'
 param dbSkuCapacity int = 5
 
 @description('The Administrator Login Of The SQL Server')
-param administratorLogin string = 'clientauthserverlogin'
+param administratorLogin string = 'customerauthserverlogin'
 
 @description('The Administrator Password Of The SQL Server')
 @secure()
@@ -31,7 +31,7 @@ param administratorLoginPassword string
 /*----------------------- Web App Parameters -------------------- */
 
 @description('The Name Of The Web App Service Plan')
-param webAppServicePlanName string = 'client-authserver-splan-${suffix}'
+param webAppServicePlanName string = 'customer-authserver-splan-${suffix}'
 
 @description('The Name Of The Web App SKU')
 param webAppSkuName string = 'B1'
@@ -41,6 +41,12 @@ param webAppName string
 
 @description('The Linux Version Of The Web App')
 param webappLinuxVersion string = 'DOTNETCORE|8.0'
+
+@description('The Client Application Id')
+param clientAppId string = ''
+
+@description('The Client Application Origin')
+param clientAppOrigin string = ''
 
 /*----------------------- RESOURCES  --------------------------- */
 /*----------------------- SQL Server --------------------------- */
@@ -109,6 +115,8 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
     serverFarmId: webAppServicePlan.id
     siteConfig: {
       linuxFxVersion: webappLinuxVersion
+      healthCheckPath: '/hc'
+      alwaysOn: true
     } 
   }
   
@@ -119,6 +127,9 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
       initDbOnStartup:'true'
       useEphemeralKeys: 'true'
       ASPNETCORE_ENVIRONMENT: 'Development'      
+      clients__0__clientOrigin: clientAppOrigin
+      clients__0__clientId: clientAppId
+      clients__0__displayName: clientAppId
     }
   }
 
@@ -126,9 +137,13 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
     name: 'connectionstrings'
 
     properties: {
-      clientDbConnectionString: {
+      customerDbConnectionString: {
         type: 'SQLAzure'
         value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};User Id=${administratorLogin};Password=${administratorLoginPassword};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+      }
+      openIddictDbConnectionString: {
+        type: 'Custom'
+        value: 'DataSource=/home/site/customer.openiddict.db'
       }
     }
   }

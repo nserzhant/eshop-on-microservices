@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
-import { User, UserManager, UserManagerSettings } from 'oidc-client-ts';
-import { BehaviorSubject} from 'rxjs';
+import { User, UserManager, UserManagerSettings, WebStorageStateStore } from 'oidc-client-ts';
+import { BehaviorSubject, ReplaySubject} from 'rxjs';
 import { environment } from 'src/environments/environment';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-  authUser = new BehaviorSubject<User | null>(null);
+  initCompleted$ = new ReplaySubject<void>(1);
+  authUser$ = new BehaviorSubject<User | null>(null);
   userManager: UserManager;
 
   constructor() {
@@ -16,7 +18,8 @@ export class AuthenticationService {
       redirect_uri : `${location.origin}/login-callback`,
       post_logout_redirect_uri: `${location.origin}/`,
       response_type : 'code',
-      scope : environment.scope
+      scope : environment.scope,
+      userStore: new WebStorageStateStore({store: window.localStorage})
     };
 
     this.userManager = new UserManager(userManagerSettings);
@@ -27,8 +30,10 @@ export class AuthenticationService {
       if(user?.expired) {
         this.userManager.removeUser();
       } else {
-        this.authUser.next(user);
+        this.authUser$.next(user);
       }
+
+      this.initCompleted$.next()
     });
   }
 
@@ -42,11 +47,11 @@ export class AuthenticationService {
 
   async handleUserLoggedOut() {
     await this.userManager!.removeUser();
-    this.authUser.next(null);
+    this.authUser$.next(null);
   }
 
   async handleUserLoggedIn() {
     const user = await this.userManager.getUser();
-    this.authUser.next(user);
+    this.authUser$.next(user);
   }
 }

@@ -27,7 +27,7 @@ spec:
           - name: MSSQL_PID
             value: Express
         ports:
-          - containerPort: 1433
+        - containerPort: 1433
         resources:
           limits:
             memory:  {{ .Values.sql_db.resources.memory }}
@@ -80,18 +80,24 @@ spec:
     matchLabels:
       app: {{ .Values.sql_db.appName }}
   ingress: 
-    - from:
-      - podSelector:
-          matchLabels:
-            app: {{ .Values.catalog_api.appName }}
-      - podSelector:
-          matchLabels:
-            app: {{ .Values.client_authserver.appName }}
-      - podSelector:
-          matchLabels:
-            app: {{ .Values.employeemanagement_api.appName }}
-      - podSelector:
-          matchLabels:
-            app: {{ .Values.employeemanagement_authserver.appName }}
+  - from:
+    - podSelector:
+        matchLabels:
+          app: {{ .Values.catalog_api.appName }}
+    - podSelector:
+        matchLabels:
+          app: {{ .Values.customer_authserver.appName }}
+    - podSelector:
+        matchLabels:
+          app: {{ .Values.employeemanagement_api.appName }}
+    - podSelector:
+        matchLabels:
+          app: {{ .Values.employeemanagement_authserver.appName }}
+    - podSelector:
+        matchLabels:
+          app: {{ .Values.ordering_api.appName }}
+    - podSelector:
+        matchLabels:
+          app: {{ .Values.saga_processor.appName }}
 
 {{- end }}

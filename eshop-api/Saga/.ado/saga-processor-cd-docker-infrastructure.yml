@@ -1,0 +1,92 @@
+# SAGA PROCESSOR RELEASE PIPELINE (Infrastructure Deployment)
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: saga-processor-ci-docker
+    source: saga-processor-ci-docker
+    trigger: none
+
+variables: 
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-docker-infrastructure-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: templateFileName
+  value: 'main-docker.bicep'
+- name: containerAppName
+  value: 'saga-processor-$(suffix)'
+- name: containerAppEnvironmentName
+  value: 'saga-processor-env-$(suffix)'
+- name: repositoryName
+  value: 'eshop.saga.processor'
+- name: registryServer
+  value: 'index.docker.io'
+- name: registryUserName
+  value: '$(docker-registry-username)'   # From variable group
+- name: registryPassword
+  value: '$(docker-registry-read-token)' # From variable group
+- name: containerImage
+  value: '$(registryServer)/$(registryUserName)/$(repositoryName):$(resources.pipeline.saga-processor-ci-docker.runID)'
+- name: sqlServerName
+  value: 'saga-processor-server-$(suffix)'
+- name: sqlDbName
+  value: 'eshop.saga.Db'
+- name: serviceBusNamespaceName
+  value: 'eshop-sb-$(suffix)'
+- name: sqlEntraIdAdminLogin
+  value: '$(ado-service-principal-id)' # azureserviceconnection  service principal login (will be assigned as administrator)
+- name: sqlEntraIdAdminObjectId
+  value: '$(ado-service-principal-object-id)' # azureserviceconnection service principal Object Id (will be assigned as administrator)
+- name: sqlUserAssignedIdentity
+  value: '$(sql-umi-id)' # Identity with directory reader role
+- name: subscriptionid
+  value: '$(subscription-id)' # From variable group
+- name: resourceGroupName
+  value: 'eshop-docker'
+- name: location
+  value: 'westeurope'
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- download: saga-processor-ci-docker
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Infrastructure
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/saga-processor-ci-docker/Bicep/$(templateFileName)'
+    overrideParameters: '-containerAppName $(containerAppName) -containerAppEnvironmentName $(containerAppEnvironmentName) -serviceBusNamespaceName $(serviceBusNamespaceName) -registryServer $(registryServer) -registryUserName $(registryUserName) -registryPassword $(registryPassword) -containerImage $(containerImage) -sqlServerName $(sqlServerName) -sqlDbName $(sqlDbName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity) -revisionSuffix $(Build.BuildId) -location $(location) -suffix $(suffix)'
+    deploymentMode: 'Incremental'
+
+- task: SqlAzureDacpacDeployment@1
+  displayName: Add Application User To The SQL Server
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    AuthenticationType: 'servicePrincipal'
+    ServerName: '$(sqlServerName).database.windows.net'
+    DatabaseName: '$(sqlDbName)'
+    deployType: 'InlineSqlTask'
+    SqlInline: |
+      IF DATABASE_PRINCIPAL_ID('$(containerAppName)') IS NULL
+      BEGIN
+        CREATE USER [$(containerAppName)] FROM EXTERNAL PROVIDER;
+        ALTER ROLE db_datareader ADD MEMBER [$(containerAppName)];
+        ALTER ROLE db_datawriter ADD MEMBER [$(containerAppName)];
+        ALTER ROLE db_ddladmin ADD MEMBER [$(containerAppName)];
+      END
+      GO
+    IpDetectionMethod: 'AutoDetect'

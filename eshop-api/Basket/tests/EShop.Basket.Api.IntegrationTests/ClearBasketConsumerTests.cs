@@ -34,9 +34,9 @@ public class ClearBasketConsumerTests : BaseBasketIntegrationTests
         await base.TearDownAsync();
     }
 
-    protected override void AddServices(ServiceCollection sc)
+    protected override async Task AddServicesAsync(ServiceCollection sc)
     {
-        base.AddServices(sc);
+        await base.AddServicesAsync(sc);
 
         sc.AddMassTransitTestHarness(cfg =>
             {

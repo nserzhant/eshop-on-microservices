@@ -12,7 +12,7 @@ env:
   sqlDbName: eshop.catalog.Db
   administratorLogin: catalogapilogin
   templateFileName: webapp-with-sql.bicep
-  resourceGroupName: eshop-zip-deployment
+  resourceGroupName: eshop
   location: westeurope
   
 jobs:
@@ -57,7 +57,7 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}          
     
-    - name: Deploy Bicep Template
+    - name: Deploy Infrastructure
       uses: Azure/arm-deploy@v2
       id: deployBicep
       with:
@@ -75,19 +75,22 @@ jobs:
         connection-string: Server=tcp:${{ env.sqlServerName }}.database.windows.net,1433;Initial Catalog=${{ env.sqlDbName }};User Id=${{ env.administratorLogin }};Password=${{ secrets.SQL_DB_PASSWORD}};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
         path: ./artifacts/migrations/${{ env.migrationsFileName }}
     
-    - name: Get WebApp Publish Profile
+    - name: Get Web Application Publish Profile
       id: webAppPublishpPofile
       run: |
           publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.webappname }}" --resource-group "${{ env.resourceGroupName }}"  --subscription "${{ secrets.AZURE_SUBSCRIPTION }}" --xml)
           echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT
       shell: bash
                     
-    - name: Deploy Azure WebApp
+    - name: Deploy Azure Web Application
       uses: Azure/webapps-deploy@v3.0.0
       with:
         app-name: ${{ env.webappname }}
         package: ./artifacts/bin
         resource-group-name: ${{ env.resourceGroupName }}
         publish-profile: ${{ steps.webAppPublishpPofile.outputs.publishProfile}}
-        restart: true
-    
+        restart: true 
+
+    - name: Health Check
+      run: timeout 300s sh -c ' until curl https://${{ env.webappname }}.azurewebsites.net/hc -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh

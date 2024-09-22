@@ -1,118 +1,220 @@
-#BUILD PIPELINE 
+# BUILD PIPELINE 
 
 resources:
- repositories:
-   - repository: self
-     trigger: none
+  repositories:
+  - repository: self
+    trigger: none
+     
+  containers:  
+  - container: mssql
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    env:
+      MSSQL_SA_PASSWORD: $(sqlPassword)
+      ACCEPT_EULA: Y
+    ports:
+    - 1433:1433
+  - container: redis
+    image: redis:7.0.15-alpine3.20
+    ports:
+    - 6379:6379
 
 variables:
   employeeOAuthAuthorizationEndpoint: '/authorize'
   employeeOAuthClientId: 'employee-portal'
   employeeOAuthScope: 'openid roles api offline_access'
+  sqlPassword: 'sqlP@ssw0rd'
 
 jobs:
-  - job: Api
-    pool:
-      vmImage: windows-latest   
-    variables:
-      buildConfiguration: 'Release'
-      workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api'
-    steps:
-    - task: DotNetCoreCLI@2
-      name: Restore
-      inputs:
-        command: 'restore'
-        projects: '$(workingDirectory)/*.sln'
+- job: Api
+  displayName: Build, Test And Publish Api
+  pool:
+    vmImage: ubuntu-latest
+  services:
+    mssql: mssql
+    redis: redis
+  variables:
+    buildConfiguration: 'Release'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api'
+    ConnectionStrings__employeeDbConnectionString: Server=tcp:localhost;Integrated Security=false;Initial Catalog=eshop.employee.testDb;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+    ConnectionStrings__catalogDbConnectionString: Server=tcp:localhost;Integrated Security=false;Initial Catalog=eshop.catalog.testDb;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+    ConnectionStrings__orderingDbConnectionString: Server=tcp:localhost;Integrated Security=false;Initial Catalog=eshop.ordering.testDb;User Id=sa;password=$(sqlPassword);TrustServerCertificate=true
+    ConnectionStrings__redisConnectionString: localhost:6379
+  steps:
+  - task: DotNetCoreCLI@2
+    name: Restore
+    inputs:
+      command: 'restore'
+      projects: '$(workingDirectory)/*.sln'
         
-    - task: DotNetCoreCLI@2          
-      displayName: Build
-      inputs:
-        command: 'build'
-        arguments: '--configuration $(buildConfiguration)'
-        projects: '$(workingDirectory)/*.sln'
+  - task: DotNetCoreCLI@2          
+    displayName: Build
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '$(workingDirectory)/*.sln'
     
-    - task: DotNetCoreCLI@2
-      displayName: Run Tests
-      inputs:
-        command: 'test'
-        arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
-        projects: '$(workingDirectory)/*.sln'
+  - task: DotNetCoreCLI@2
+    displayName: Run Tests  
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration) --filter TestCategory!=MicroservicesIntegration --collect "Code coverage"'
+      projects: '$(workingDirectory)/*.sln'
     
-    - task: DotNetCoreCLI@2
-      displayName: Publish Catalog Api
-      inputs:
-        command: 'publish'
-        publishWebProjects: false
-        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Catalog'
-        projects: '$(workingDirectory)/Catalog/src/EShop.Catalog.Api/EShop.Catalog.Api.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: Publish Catalog Api
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Catalog'
+      projects: '$(workingDirectory)/Catalog/src/EShop.Catalog.Api/EShop.Catalog.Api.csproj'
     
-    - task: PublishPipelineArtifact@1
-      displayName: Publish Pipepile Artifact - Catalog Api
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/Catalog'
-        artifact: 'Catalog Api'
-        publishLocation: 'pipeline'
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Catalog Api
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/Catalog'
+      artifact: 'Catalog Api'
+      publishLocation: 'pipeline'
     
-    - task: DotNetCoreCLI@2
-      displayName: Publish EmployeeManagement Api
-      inputs:
-        command: 'publish'
-        publishWebProjects: false
-        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/EmployeeManagementApi'
-        projects: '$(workingDirectory)/EmployeeManagement/src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: Publish EmployeeManagement Api
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/EmployeeManagementApi'
+      projects: '$(workingDirectory)/EmployeeManagement/src/EShop.EmployeeManagement.Api/EShop.EmployeeManagement.Api.csproj'
     
-    - task: PublishPipelineArtifact@1
-      displayName: Publish Pipepile Artifact - EmployeeManagement Api
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/EmployeeManagementApi'
-        artifact: 'EmployeeManagement Api'
-        publishLocation: 'pipeline'
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - EmployeeManagement Api
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/EmployeeManagementApi'
+      artifact: 'EmployeeManagement Api'
+      publishLocation: 'pipeline'
     
-    - task: DotNetCoreCLI@2
-      displayName: Publish EmployeeManagement Authorization Server
-      inputs:
-        command: 'publish'
-        publishWebProjects: false
-        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/EmployeeManagement.AuthorizationServer'
-        projects: '$(workingDirectory)/EmployeeManagement/src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: Publish EmployeeManagement Authorization Server
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/EmployeeManagement.AuthorizationServer'
+      projects: '$(workingDirectory)/EmployeeManagement/src/EShop.EmployeeManagement.AuthorizationServer/EShop.EmployeeManagement.AuthorizationServer.csproj'
     
-    - task: PublishPipelineArtifact@1
-      displayName: Publish Pipepile Artifact - EmployeeManagement Authorization Server
-      inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/EmployeeManagement.AuthorizationServer'
-        artifact: 'Employee Authorization Server'
-        publishLocation: 'pipeline'
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - EmployeeManagement Authorization Server
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/EmployeeManagement.AuthorizationServer'
+      artifact: 'Employee Authorization Server'
+      publishLocation: 'pipeline'
     
-    - task: DotNetCoreCLI@2
-      displayName: Publish Client Authorization Server
-      inputs:
-        command: 'publish'
-        publishWebProjects: false
-        arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Client'
-        projects: '$(workingDirectory)/Client/src/EShop.Client.AuthorizationServer/EShop.Client.AuthorizationServer.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: Publish Customer Authorization Server
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Customer'
+      projects: '$(workingDirectory)/Customer/src/EShop.Customer.AuthorizationServer/EShop.Customer.AuthorizationServer.csproj'
         
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Customer Authorization Server
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/Customer'
+      artifact: 'Customer Authorization Server'
+      publishLocation: 'pipeline'
+    
+  - task: DotNetCoreCLI@2
+    displayName: Publish Basket Api
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Basket'
+      projects: '$(workingDirectory)/Basket/src/EShop.Basket.Api/EShop.Basket.Api.csproj'
+    
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Basket Api
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/Basket'
+      artifact: 'Basket Api'
+      publishLocation: 'pipeline'
+    
+  - task: DotNetCoreCLI@2
+    displayName: Publish Ordering Api
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Ordering'
+      projects: '$(workingDirectory)/Ordering/src/EShop.Ordering.Api/EShop.Ordering.Api.csproj'
+    
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Ordering Api
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/Ordering'
+      artifact: 'Ordering Api'
+      publishLocation: 'pipeline'
+    
+  - task: DotNetCoreCLI@2
+    displayName: Publish Payment Processor
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Payment'
+      projects: '$(workingDirectory)/Payment/src/EShop.Payment.Processor/EShop.Payment.Processor.csproj'
+    
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Payment Processor
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/Payment'
+      artifact: 'Payment Processor'
+      publishLocation: 'pipeline'
+    
+  - task: DotNetCoreCLI@2
+    displayName: Publish Saga Processor
+    inputs:
+      command: 'publish'
+      publishWebProjects: false
+      arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/Saga'
+      projects: '$(workingDirectory)/Saga/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj'
+    
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Saga Processor
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/Saga'
+      artifact: 'Saga Processor'
+      publishLocation: 'pipeline'
+
+- template: 'templates/angular-ci-template.yml'   # Template reference
+  parameters:
+    jobName: 'CustomerPortal'
+    projectFolder: 'eshop-ui-customer-portal'
+    vmImage: 'ubuntu-latest'
+    nodeVersion: '22.x'
+    angularCliVersion: '18.1.0'
+
+- template: 'templates/angular-ci-template.yml'   # Template reference
+  parameters:
+    jobName: 'EmployeePortal'
+    projectFolder: 'eshop-ui-employee-portal'
+    vmImage: 'ubuntu-latest'
+    nodeVersion: '22.x'
+    angularCliVersion: '18.1.0'
+    oauthAuthorizationEndpointPath: $(employeeOAuthAuthorizationEndpoint)
+    oauthClientId: $(employeeOAuthClientId)
+    oauthScope: $(employeeOAuthScope)
+      
+
+- job: publish_infrastructure_resources
+  displayName: Publish Infrastructure Resources
+  pool: 
+    vmImage: ubuntu-latest
+  steps:                  
     - task: PublishPipelineArtifact@1
-      displayName: Publish Pipepile Artifact - Client Authorization Server
+      displayName: Publish Pipepile Artifact -  Bicep
       inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)/Client'
-        artifact: 'Client Authorization Server'
+        targetPath: '$(System.DefaultWorkingDirectory)/.azure/'
+        artifact: 'Bicep'
         publishLocation: 'pipeline'
 
-  - template: 'templates/angular-ci-template.yml'   # Template reference
-    parameters:
-      jobName: 'ClientPortal'
-      projectFolder: 'eshop-ui-customer-portal'
-      vmImage: 'ubuntu-latest'
-      nodeVersion: '16.x'
-      angularCliVersion: '15.2.0'
-
-  - template: 'templates/angular-ci-template.yml'   # Template reference
-    parameters:
-      jobName: 'EmployeePortal'
-      projectFolder: 'eshop-ui-employee-portal'
-      vmImage: 'ubuntu-latest'
-      nodeVersion: '16.x'
-      angularCliVersion: '15.2.0'
-      oauthAuthorizationEndpointPath: $(employeeOAuthAuthorizationEndpoint)
-      oauthClientId: $(employeeOAuthClientId)
-      oauthScope: $(employeeOAuthScope)
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Pipepile Artifact -  Envoy configuration
+      inputs:
+        targetPath: '$(System.DefaultWorkingDirectory)/.config/envoy/'
+        artifact: 'Envoy'
+        publishLocation: 'pipeline'

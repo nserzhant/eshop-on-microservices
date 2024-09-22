@@ -61,7 +61,7 @@ public class OrderingStateMachine : MassTransitStateMachine<OrderingStateMachine
                     context.Saga.BasketId = context.Message.BasketId;
 
                 })
-                .Then(context => _logger.LogInformation($"  Processing Stocks Reservation: {context.Message.CorrelationId}"))
+                .Then(context => _logger.LogInformation($"Processing BasketCheckedOutEvent, CorrelationId: {context.Message.CorrelationId}"))
                 .Send(new Uri($"queue:{_orderingStateMachineSettings.Value.ReserveStocksQueueName}"), context =>
                     new ReserveStocksCommand
                     (
@@ -72,23 +72,22 @@ public class OrderingStateMachine : MassTransitStateMachine<OrderingStateMachine
 
         During(ReservingStocks,
             When(StocksReservedEvent)
-                .Then(context => _logger.LogInformation($"  Processing Payment: {context.Message.CorrelationId}"))
-                .TransitionTo(StocksReserved)
+                .Then(context => _logger.LogInformation($"Processing StocksReservedEvent, CorrelationId: {context.Message.CorrelationId}"))
                 .Send(new Uri($"queue:{_orderingStateMachineSettings.Value.ProcessPaymentQueueName}"), context =>
                     new ProcessPaymentCommand
                     (
                         context.Message.CorrelationId,
                         context.Saga.CustomerId,
                         context.Message.TotalPrice
-                    )),
+                    ))
+                .TransitionTo(StocksReserved),
             When(StocksReservationFailedEvent)
-                .Then(context => _logger.LogInformation($"  Stocks Reservation Failed: {context.Message.CorrelationId}"))
+                .Then(context => _logger.LogInformation($"Processing StocksReservationFailedEvent, CorrelationId: {context.Message.CorrelationId}"))
                 .TransitionTo(CheckoutFailed));
 
         During(StocksReserved,
             When(PaymentProcessedEvent)
-                .Then(context => _logger.LogInformation($"  Processing Creating Order: {context.Message.CorrelationId}"))
-                .TransitionTo(PaymentProcessed)
+                .Then(context => _logger.LogInformation($"Processing PaymentProcessedEvent, CorrelationId: {context.Message.CorrelationId}"))
                 .Send(new Uri($"queue:{_orderingStateMachineSettings.Value.CreateOrderQueueName}"), context =>
                     new CreateOrderCommand
                     (
@@ -107,37 +106,38 @@ public class OrderingStateMachine : MassTransitStateMachine<OrderingStateMachine
                             itm.BrandName,
                             itm.PictureUri
                         )).ToList()
-                    )),
+                    ))
+                .TransitionTo(PaymentProcessed),
             When(PaymentFailedEvent)
-                .Then(context => _logger.LogInformation($"  Processing Release Stocks: {context.Message.CorrelationId}"))
-                .TransitionTo(PaymentFailed)
+                .Then(context => _logger.LogInformation($"Processing PaymentFailedEvent, CorrelationId: {context.Message.CorrelationId}"))
                 .Send(new Uri($"queue:{_orderingStateMachineSettings.Value.ReleaseStockQueueName}"), context =>
                     new ReleaseStocksCommand
                     (
                         context.Message.CorrelationId,
                         context.Saga.Items.Select(itm => new ReleaseStockItem(itm.CatalogItemId, itm.Qty)).ToList()
-                    )));
+                    ))
+                .TransitionTo(PaymentFailed));
 
         During(PaymentProcessed,
             When(OrderCreatedEvent)
-                .Then(context => _logger.LogInformation($"  Processing Clear Basket: {context.Message.CorrelationId}"))
-                .TransitionTo(OrderCreated)
+                .Then(context => _logger.LogInformation($"Processing OrderCreatedEvent, CorrelationId: {context.Message.CorrelationId}"))
                 .Send(new Uri($"queue:{_orderingStateMachineSettings.Value.ClearBasketQueueName}"), context =>
                     new ClearBasketCommand
                     (
                         context.Message.CorrelationId,
                         context.Saga.CustomerId,
                         context.Saga.BasketId
-                    )));
+                    ))
+                .TransitionTo(OrderCreated));
 
         During(OrderCreated,
             When(BasketClearedEvent)
-                .Then(context => _logger.LogInformation($"  Finalizing: {context.Message.CorrelationId}"))
+                .Then(context => _logger.LogInformation($"Processing BasketClearedEvent, Finalizing, CorrelationId: {context.Message.CorrelationId}"))
                 .Finalize());
 
         During(PaymentFailed,
             When(StocksReleasedEvent)
-                .Then(context => _logger.LogInformation($"  CheckOut is Failed: {context.Message.CorrelationId}"))
+                .Then(context => _logger.LogInformation($"Processing StocksReleasedEvent, CorrelationId: {context.Message.CorrelationId}"))
                 .TransitionTo(CheckoutFailed));
     }
 }

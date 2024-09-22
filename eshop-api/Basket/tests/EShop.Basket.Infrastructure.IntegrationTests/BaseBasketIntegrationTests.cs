@@ -11,7 +11,7 @@ public class BaseBasketIntegrationTests
     {
         var sc = new ServiceCollection();
 
-        AddServices(sc);
+        await AddServicesAsync(sc);
 
         serviceProvider = sc.BuildServiceProvider();
 
@@ -20,9 +20,9 @@ public class BaseBasketIntegrationTests
         database.Execute("FLUSHDB");
     }
 
-    protected virtual void AddServices(ServiceCollection sc)
+    protected virtual async Task AddServicesAsync(ServiceCollection sc)
     {
-        sc.AddTestBasketServices();
+        await sc.AddTestBasketServicesAsync();
     }
 
     [TearDown]

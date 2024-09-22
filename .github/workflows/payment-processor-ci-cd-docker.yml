@@ -1,0 +1,62 @@
+name: Payment Processor CI CD Docker
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/Payment
+  containerInstanceGroupName: payment-processor-${{ vars.SUFFIX }}
+  repositoryName: eshop.payment.processor
+  registryServer: index.docker.io
+  serviceBusNamespaceName: eshop-sb-${{ vars.SUFFIX }}
+  templateFileName: aci-with-servicebus.bicep
+  resourceGroupName: eshop-docker
+  location: westeurope
+  
+jobs:
+  build_deploy:
+    runs-on: ubuntu-latest
+
+    steps:    
+    - uses: actions/checkout@v4
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Build and push
+      uses: docker/build-push-action@v6.7.0
+      with:
+        context: ${{ env.workingDirectory }}
+        file: ${{ env.workingDirectory }}/src/EShop.Payment.Processor/Dockerfile
+        push: true
+        tags: ${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:run_id-${{github.run_id}}, ${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:latest
+         
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_INFRASTRUCTURE_DEPLOYMENT_CREDENTIALS }}
+
+    - name: Deploy Infrastructure With Application
+      uses: Azure/arm-deploy@v2
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: containerInstanceGroupName="${{ env.containerInstanceGroupName }}" containerInstanceName="${{ env.containerInstanceGroupName }}" containerImage=${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:run_id-${{github.run_id}} serviceBusNamespaceName="${{ env.serviceBusNamespaceName }}" registryServer="${{ env.registryServer }}" registryUserName="${{ vars.DOCKERHUB_USERNAME }}" registryPassword="${{ secrets.DOCKERHUB_TOKEN }}" location="${{ env.location }}" suffix="${{ vars.SUFFIX }}"
+
+    - name: Wait 1m
+      run: sleep 1m
+      shell: sh
+      
+    - name: Restart Application
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: az container restart --name ${{ env.containerInstanceGroupName }} --resource-group ${{ env.resourceGroupName }}
+        
+    - name: Health Check
+      run: timeout 300s sh -c ' until curl http://${{ env.containerInstanceGroupName }}.${{ env.location }}.azurecontainer.io:8080/hc -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh

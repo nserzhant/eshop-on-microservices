@@ -10,7 +10,9 @@ builder.Services
 
 var messageBrokerSettings = builder.Configuration.GetSection(Consts.MESSAGE_BROKER_CONFIG_NAME).Get<MessageBrockerSettings>();
 
-if (messageBrokerSettings == null)
+if (messageBrokerSettings == null ||
+            (string.IsNullOrEmpty(messageBrokerSettings.AzureServiceBusConnectionString) &&
+            string.IsNullOrEmpty(messageBrokerSettings.RabbitMQHost)))
 {
     throw new ConfigurationException("Message broker configuration not found");
 }
@@ -52,11 +54,13 @@ builder.Services.AddMassTransit(x =>
             cfg.ConfigureEndpoints(context);
         });
     }
-
 });
 
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy());
+
+// The following line enables Application Insights telemetry collection.
+builder.Services.AddApplicationInsightsTelemetry();
 
 var host = builder.Build();
 

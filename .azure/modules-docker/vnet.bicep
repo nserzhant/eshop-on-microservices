@@ -1,30 +1,20 @@
-
-type Subnet = {
-  name: string
-  delegation: string?
-}
-
 @description('Location for all resources.')
 param location string = resourceGroup().location
-
-/*----------------------- Virtual Network Parameters  -------------------- */
 
 @description('The Name Of The Virtual Network (vNet).')
 param vnetName string
 
-@description('The List Of Subnets To Create.')
-param subnets Subnet[]
+/*-----------------------     Variables           ----------------------- */
 
-/*----------------------- Variables           --------------------------- */
-
+var containerAppEnvironmentSubnetName = 'conainerAppEnvSubnet'
+var privateEndpointsSubnetName = 'privateEndpointsSubnet'
 var privateDnsZoneNames = [
-  'privatelink.azurewebsites.net'
-  'privatelink.blob.${environment().suffixes.storage}'
   'privatelink${environment().suffixes.sqlServerHostname}'
+  'privatelink.blob.${environment().suffixes.storage}'
+  'privatelink.redis.cache.windows.net'
 ]
 
 /*----------------------- RESOURCES           --------------------------- */
-/*----------------------- Virtual Network     --------------------------- */
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   name: vnetName
@@ -32,23 +22,24 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.3.0.0/16'
+        '10.1.0.0/16'
       ]
     }    
-    subnets: [for (subnet,index) in subnets: {
-      name: subnet.name
-      properties: {
-        addressPrefix: '10.3.${index + 1}.0/24'
-        delegations: contains(subnet, 'delegation') ? [
-          {
-            name: subnet.name
-            properties: {
-              serviceName: subnet.delegation
-            }
-          }
-        ] : []
+
+    subnets : [
+      {
+        name: containerAppEnvironmentSubnetName
+        properties: {
+          addressPrefix: '10.1.0.0/23'
+        }
       }
-    }]    
+      {
+        name: privateEndpointsSubnetName
+        properties: {
+          addressPrefix: '10.1.2.0/24'
+        }
+      }
+    ]    
   }
 }
 
@@ -75,3 +66,6 @@ resource virtualNetworkLinks 'Microsoft.Network/privateDnsZones/virtualNetworkLi
     privateDNSZones
   ]
 }]
+
+output containerAppEnvSubnetId string = virtualNetwork.properties.subnets[0].id
+output privateEndpointsSubnetId string = virtualNetwork.properties.subnets[1].id

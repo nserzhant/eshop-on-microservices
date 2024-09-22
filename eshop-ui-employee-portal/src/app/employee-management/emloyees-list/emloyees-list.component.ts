@@ -17,7 +17,7 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   componentDestroyed$ = new Subject<void>();
   currentEmailFilter: string | null = null;
-  emailFilterSubject = new BehaviorSubject<string | null>(null);
+  emailFilterSubject$ = new BehaviorSubject<string | null>(null);
   resultsLength = 0;
   isLoadingResults = true;
   data: EmployeeReadModel[] = [];
@@ -64,12 +64,12 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.sort.active =  paramsMap.get('orderBy') ?? '';
       this.sort.direction = paramsMap.get('orderByDirection') as SortDirection ?? '';
       this.currentEmailFilter = paramsMap.get('emailFilter');
-      this.emailFilterSubject.next(this.currentEmailFilter);
+      this.emailFilterSubject$.next(this.currentEmailFilter);
     }, 0);
 
     this.sort.sortChange.subscribe(() => (this.paginator.pageIndex = 0));
 
-    merge(this.sort.sortChange, this.paginator.page, this.emailFilterSubject)
+    merge(this.sort.sortChange, this.paginator.page, this.emailFilterSubject$)
     .pipe(
       startWith({}),
       debounceTime(0),
@@ -83,7 +83,7 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
           orderByDirection,
           this.paginator.pageSize,
           this.paginator.pageIndex,
-          this.emailFilterSubject.value
+          this.emailFilterSubject$.value
         ).pipe(catchError(() => observableOf(null)));
       }),
       map(data => {
@@ -114,7 +114,7 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
     } else {
       this.currentEmailFilter = emailFilter;
     }
-    this.emailFilterSubject.next(this.currentEmailFilter);
+    this.emailFilterSubject$.next(this.currentEmailFilter);
   }
 
   getRoles(employee: EmployeeReadModel) {
@@ -129,7 +129,7 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
       pageSize : this.paginator.pageSize,
       orderBy : this.sort.direction.valueOf() === '' ? null : this.sort.active,
       orderByDirection : this.sort.direction.valueOf() === '' ? null : this.sort.direction,
-      emailFilter : this.emailFilterSubject.value
+      emailFilter : this.emailFilterSubject$.value
     };
 
     const urlTree = this.router.createUrlTree([], {

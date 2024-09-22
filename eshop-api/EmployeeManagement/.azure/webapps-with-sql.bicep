@@ -168,6 +168,10 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
         type: 'SQLAzure'
         value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};User Id=${administratorLogin};Password=${administratorLoginPassword};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
       }
+      openIddictDbConnectionString: {
+        type: 'Custom'
+        value: 'DataSource=/home/site/employee.openiddict.db'
+      }
     }
   }
 }

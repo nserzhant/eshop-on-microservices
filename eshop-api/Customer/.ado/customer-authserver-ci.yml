@@ -1,13 +1,13 @@
-#CLIENT AUTHORIZATION SERVER BUILD PIPELINE
+# CUSTOMER AUTHORIZATION SERVER BUILD PIPELINE
+
 resources:
- repositories:
-    - repository: self
-      trigger: none
-      # - master
+  repositories:
+  - repository: self
+    trigger: none
 
 variables:
   buildConfiguration: 'Release'
-  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api/Client'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api/Customer'
 
 pool:
   vmImage: ubuntu-latest
@@ -32,13 +32,13 @@ steps:
     command: 'publish'
     publishWebProjects: false
     arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)'
-    projects: '$(workingDirectory)/src/EShop.Client.AuthorizationServer/EShop.Client.AuthorizationServer.csproj'
+    projects: '$(workingDirectory)/src/EShop.Customer.AuthorizationServer/EShop.Customer.AuthorizationServer.csproj'
     
 - task: PublishPipelineArtifact@1
   displayName: Publish Pipepile Artifact - Auth Server
   inputs:
     targetPath: '$(Build.ArtifactStagingDirectory)'
-    artifact: 'Client Authorization Server'
+    artifact: 'Customer Authorization Server'
     publishLocation: 'pipeline'
     
 - task: PublishPipelineArtifact@1

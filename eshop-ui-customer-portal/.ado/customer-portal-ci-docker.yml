@@ -1,10 +1,9 @@
-#CUSTOMER PORTAL BUILD PIPELINE (DOCKER IMAGE)
+# CUSTOMER PORTAL BUILD PIPELINE (DOCKER IMAGE)
 
 resources:
- repositories:
-    - repository: self
-      trigger: none
-      # - master
+  repositories:
+  - repository: self
+    trigger: none
 
 variables:
 - group: microservices-variable-group
@@ -12,9 +11,9 @@ variables:
 - name: workingDirectory
   value: '$(System.DefaultWorkingDirectory)/eshop-ui-customer-portal'
 - name: userName
-  value: $(docker-registry-username) # From variable group
+  value: '$(docker-registry-username)' # From variable group
 - name: imageName
-  value: '$(username)/eshop.ui.clientportal'
+  value: '$(username)/eshop.ui.customerportal'
 - name: dockerRegistryConnection
   value: 'docker-connection'
 
@@ -22,31 +21,31 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
- - task: Docker@2
-   displayName: 'Build The Docker Image'
-   inputs:
-     containerRegistry: '$(dockerRegistryConnection)'
-     repository: '$(imageName)'
-     command: 'build'
-     Dockerfile: '$(workingDirectory)/Dockerfile'
-     buildContext: '$(workingDirectory)'
-     tags: |
-      $(Build.BuildId)
-      latest
-
- - task: Docker@2
-   displayName: 'Push The Docker Image'
-   inputs:
+- task: Docker@2
+  displayName: 'Build The Docker Image'
+  inputs:
     containerRegistry: '$(dockerRegistryConnection)'
     repository: '$(imageName)'
-    command: 'push'
+    command: 'build'
+    Dockerfile: '$(workingDirectory)/Dockerfile'
+    buildContext: '$(workingDirectory)'
     tags: |
-      $(Build.BuildId)
-      latest
+     $(Build.BuildId)
+     latest
 
- - task: PublishPipelineArtifact@1
-   displayName: Publish Pipepile Artifact -  Bicep
-   inputs:
-     targetPath: '$(workingDirectory)/.azure'
-     artifact: 'Bicep'
-     publishLocation: 'pipeline'
+- task: Docker@2
+  displayName: 'Push The Docker Image'
+  inputs:
+   containerRegistry: '$(dockerRegistryConnection)'
+   repository: '$(imageName)'
+   command: 'push'
+   tags: |
+     $(Build.BuildId)
+     latest
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Bicep
+  inputs:
+    targetPath: '$(workingDirectory)/.azure'
+    artifact: 'Bicep'
+    publishLocation: 'pipeline'

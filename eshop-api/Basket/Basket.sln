@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34714.143
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Api", "src\Eshop.Basket.Api\EShop.Basket.Api.csproj", "{99A702BA-4242-4919-8CA4-4A3CED2671C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Api", "src\EShop.Basket.Api\EShop.Basket.Api.csproj", "{99A702BA-4242-4919-8CA4-4A3CED2671C0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FBA2DF00-DCDF-4658-B104-80AC71CC5513}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{30BCF40D-90AA-431C-84B7-B71F0A9A81DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Api.IntegrationTests", "tests\Eshop.Basket.Api.IntegrationTests\EShop.Basket.Api.IntegrationTests.csproj", "{89045313-644B-4655-AD82-6D3C87D4333D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Api.IntegrationTests", "tests\EShop.Basket.Api.IntegrationTests\EShop.Basket.Api.IntegrationTests.csproj", "{89045313-644B-4655-AD82-6D3C87D4333D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Core", "src\Eshop.Basket.Core\EShop.Basket.Core.csproj", "{F34C644B-07D3-4CDD-BDD9-062D0EB652AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Core", "src\EShop.Basket.Core\EShop.Basket.Core.csproj", "{F34C644B-07D3-4CDD-BDD9-062D0EB652AE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Infrastructure", "src\Eshop.Basket.Infrastructure\EShop.Basket.Infrastructure.csproj", "{FA653556-C2FB-4EDA-80F3-638FDA2366DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Infrastructure", "src\EShop.Basket.Infrastructure\EShop.Basket.Infrastructure.csproj", "{FA653556-C2FB-4EDA-80F3-638FDA2366DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EShop.Basket.Infrastructure.IntegrationTests", "tests\EShop.Basket.Infrastructure.IntegrationTests\EShop.Basket.Infrastructure.IntegrationTests.csproj", "{2EE919DA-638A-4575-A7DD-5BB072118D41}"
 EndProject

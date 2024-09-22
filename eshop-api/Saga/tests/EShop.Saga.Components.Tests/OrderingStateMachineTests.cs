@@ -58,7 +58,7 @@ public class OrderingStateMachineTests
     {
         var correlationId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
 
         var catalogUpdatedSagaId = await _sagaHarness.Exists(correlationId, x => x.StocksReserved, TimeSpan.FromSeconds(10));
@@ -72,7 +72,7 @@ public class OrderingStateMachineTests
     {
         var correlationId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservationFailedEvent(correlationId));
 
         var catalogUpdatedSagaId = await _sagaHarness.Exists(correlationId, x => x.CheckoutFailed, TimeSpan.FromSeconds(10));
@@ -87,9 +87,9 @@ public class OrderingStateMachineTests
         var correlationId = Guid.NewGuid();
         var orderId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<StocksReservedEvent>();
         await _harness.Bus.Publish(new PaymentProcessedEvent(correlationId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.PaymentProcessed, TimeSpan.FromSeconds(10));
@@ -105,9 +105,9 @@ public class OrderingStateMachineTests
         var correlationId = Guid.NewGuid();
         var orderId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<StocksReservedEvent>();
         await _harness.Bus.Publish(new PaymentFailedEvent(correlationId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.PaymentFailed, TimeSpan.FromSeconds(10));
@@ -122,11 +122,11 @@ public class OrderingStateMachineTests
         var correlationId = Guid.NewGuid();
         var orderId = 3;
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<StocksReservedEvent>();
         await _harness.Bus.Publish(new PaymentProcessedEvent(correlationId));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<PaymentProcessedEvent>();
         await _harness.Bus.Publish(new OrderCreatedEvent(correlationId, orderId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.OrderCreated, TimeSpan.FromSeconds(10));
@@ -142,11 +142,11 @@ public class OrderingStateMachineTests
         var correlationId = Guid.NewGuid();
         var orderId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<StocksReservedEvent>();
         await _harness.Bus.Publish(new PaymentFailedEvent(correlationId));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<PaymentProcessedEvent>();
         await _harness.Bus.Publish(new StocksReleasedEvent(correlationId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.CheckoutFailed, TimeSpan.FromSeconds(10));
@@ -160,13 +160,13 @@ public class OrderingStateMachineTests
     {
         var correlationId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<StocksReservedEvent>();
         await _harness.Bus.Publish(new PaymentProcessedEvent(correlationId));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<PaymentProcessedEvent>();
         await _harness.Bus.Publish(new OrderCreatedEvent(correlationId, 6));
-        await _sagaHarness.Consumed.Any();
+        await _sagaHarness.Consumed.Any<OrderCreatedEvent>();
         await _harness.Bus.Publish(new BasketClearedEvent(correlationId));
 
         var finalizedSagaId = await _sagaHarness.Exists(correlationId, x => x.Final, TimeSpan.FromSeconds(10));

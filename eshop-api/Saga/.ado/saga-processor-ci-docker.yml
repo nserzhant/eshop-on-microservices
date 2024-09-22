@@ -1,0 +1,84 @@
+# SAGA PROCESSOR BUILD PIPELINE
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+
+variables:
+- group: microservices-variable-group
+
+- name: buildConfiguration
+  value: 'Release'
+- name: workingDirectory
+  value: '$(System.DefaultWorkingDirectory)/eshop-api/Saga'
+- name: userName
+  value: $(docker-registry-username) # From variable group
+- name: imageName
+  value: '$(username)/eshop.saga.processor'
+- name: dockerRegistryConnection
+  value: 'docker-connection'
+
+jobs:
+- job: build_and_test
+  displayName: Build And Test
+  pool:
+    vmImage: windows-latest
+
+  steps:
+  - task: DotNetCoreCLI@2
+    name: Restore
+    inputs:
+      command: 'restore'
+      projects: '$(workingDirectory)/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj'
+
+  - task: DotNetCoreCLI@2          
+    displayName: Build
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '$(workingDirectory)/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj'
+
+  - task: DotNetCoreCLI@2
+    displayName: Components Tests
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/EShop.Saga.Components.Tests/EShop.Saga.Components.Tests.csproj'
+
+- job: build_and_push_docker_images
+  displayName: Build And Push Docker Images
+  dependsOn: build_and_test
+  condition: succeeded()
+  pool:
+    vmImage: ubuntu-latest
+
+  steps:
+  - task: Docker@2
+    displayName: 'Build The Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(imageName)'
+      command: 'build'
+      Dockerfile: '$(workingDirectory)/src/EShop.Saga.Processor/Dockerfile'
+      buildContext: '$(workingDirectory)'
+      tags: |
+        $(Build.BuildId)
+        latest
+
+  - task: Docker@2
+    displayName: 'Push The Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(imageName)'
+      command: 'push'
+      tags: |
+        $(Build.BuildId)
+        latest
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Bicep
+    inputs:
+      targetPath: '$(workingDirectory)/.azure/'
+      artifact: 'Bicep'
+      publishLocation: 'pipeline'

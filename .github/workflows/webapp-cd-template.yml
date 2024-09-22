@@ -58,8 +58,7 @@ jobs:
         resource-group-name: ${{ inputs.resourceGroupName }}
         publish-profile: ${{ steps.webAppPubProfile.outputs.publishProfile}}
         restart: true 
-
-    - name: Init And Check ${{ inputs.serviceName }} App
-      run: Invoke-WebRequest -UseBasicParsing ${{ inputs.healthCheckUri }} -TimeoutSec 300
-      shell: pwsh
-      
+        
+    - name: Health Check ${{ inputs.serviceName }}
+      run: timeout 300s sh -c ' until curl ${{ inputs.healthCheckUri }} -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh

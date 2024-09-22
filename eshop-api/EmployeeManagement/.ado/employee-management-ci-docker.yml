@@ -1,11 +1,10 @@
-#EMPLOYEE AUTHORIZATION SERVER AND API DOCKER IMAGES BUILD PIPELINE (USES CONTAINER JOBS)
+# EMPLOYEE MANAGEMENT DOCKER IMAGES BUILD PIPELINE (USES CONTAINER JOBS)
 
 resources:   
- repositories:
-    - repository: self
-      trigger: none
-      # - master 
- containers:
+  repositories:
+  - repository: self
+    trigger: none
+  containers:
   - container: dotnetsdk
     image: mcr.microsoft.com/dotnet/sdk:8.0.203
     env:
@@ -16,7 +15,7 @@ resources:
       MSSQL_SA_PASSWORD: $(sqlPassword)
       ACCEPT_EULA: Y
     ports:
-      - 1433
+    - 1433
 
 variables:
 - group: microservices-variable-group
@@ -28,7 +27,7 @@ variables:
 - name: sqlPassword
   value: 'sqlP@ssw0rd'
 - name: userName
-  value: $(docker-registry-username) # From variable group
+  value: '$(docker-registry-username)' # From variable group
 - name: apiImageName
   value: '$(username)/eshop.employeemanagement.api'
 - name: authServerImageName
@@ -37,98 +36,98 @@ variables:
   value: 'docker-connection'
 
 jobs:
-  - job: build_and_test
-    displayName: Build And Test
-    pool:
-      vmImage: ubuntu-latest
-    services:
-      mssql: mssql
-    container: dotnetsdk
+- job: build_and_test
+  displayName: Build And Test
+  pool:
+    vmImage: ubuntu-latest
+  services:
+    mssql: mssql
+  container: dotnetsdk
 
-    steps:
-      - task: DotNetCoreCLI@2
-        name: Restore
-        inputs:
-          command: 'restore'
-          projects: '$(workingDirectory)/*.sln'
+  steps:
+  - task: DotNetCoreCLI@2
+    name: Restore
+    inputs:
+      command: 'restore'
+      projects: '$(workingDirectory)/*.sln'
 
-      - task: DotNetCoreCLI@2          
-        displayName: Build
-        inputs:
-          command: 'build'
-          arguments: '--configuration $(buildConfiguration)'
-          projects: '$(workingDirectory)/*.sln'
+  - task: DotNetCoreCLI@2          
+    displayName: Build
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '$(workingDirectory)/*.sln'
 
-      - task: DotNetCoreCLI@2
-        displayName: Integration Tests
-        inputs:
-          command: 'test'
-          arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
-          projects: '$(workingDirectory)/tests/Eshop.EmployeeManagement.IntegrationTests/Eshop.EmployeeManagement.Core.IntegrationTests.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: Integration Tests
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/Eshop.EmployeeManagement.IntegrationTests/Eshop.EmployeeManagement.Core.IntegrationTests.csproj'
 
-      - task: DotNetCoreCLI@2
-        displayName: Api Integration Tests
-        inputs:
-          command: 'test'
-          arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
-          projects: '$(workingDirectory)/tests/EShop.EmployeeManagement.Api.IntegrationTests/EShop.EmployeeManagement.Api.IntegrationTests.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: Api Integration Tests
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/EShop.EmployeeManagement.Api.IntegrationTests/EShop.EmployeeManagement.Api.IntegrationTests.csproj'
 
 
-  - job: build_and_push_docker_images
-    displayName: Build And Push Docker Images
-    dependsOn: build_and_test
-    condition: succeeded()
-    pool: 
-      vmImage: ubuntu-latest
+- job: build_and_push_docker_images
+  displayName: Build And Push Docker Images
+  dependsOn: build_and_test
+  condition: succeeded()
+  pool: 
+    vmImage: ubuntu-latest
 
-    steps:
-      - task: Docker@2
-        displayName: 'Build The Api Docker Image'
-        inputs:
-          containerRegistry: '$(dockerRegistryConnection)'
-          repository: '$(apiImageName)'
-          command: 'build'
-          Dockerfile: '$(workingDirectory)/src/EShop.EmployeeManagement.Api/Dockerfile'
-          buildContext: '$(workingDirectory)'
-          tags: |
-            $(Build.BuildId)
-            latest
+  steps:
+  - task: Docker@2
+    displayName: 'Build The Api Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(apiImageName)'
+      command: 'build'
+      Dockerfile: '$(workingDirectory)/src/EShop.EmployeeManagement.Api/Dockerfile'
+      buildContext: '$(workingDirectory)'
+      tags: |
+        $(Build.BuildId)
+        latest
 
-      - task: Docker@2
-        displayName: 'Build The Authorization Server Docker Image'
-        inputs:
-          containerRegistry: '$(dockerRegistryConnection)'
-          repository: '$(authServerImageName)'
-          command: 'build'
-          Dockerfile: '$(workingDirectory)/src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile'
-          buildContext: '$(workingDirectory)'
-          tags: |
-            $(Build.BuildId)
-            latest
+  - task: Docker@2
+    displayName: 'Build The Authorization Server Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(authServerImageName)'
+      command: 'build'
+      Dockerfile: '$(workingDirectory)/src/EShop.EmployeeManagement.AuthorizationServer/Dockerfile'
+      buildContext: '$(workingDirectory)'
+      tags: |
+        $(Build.BuildId)
+        latest
 
-      - task: Docker@2
-        displayName: 'Push The Api Docker Image'
-        inputs:
-          containerRegistry: '$(dockerRegistryConnection)'
-          repository: '$(apiImageName)'
-          command: 'push'
-          tags: |
-            $(Build.BuildId)
-            latest
+  - task: Docker@2
+    displayName: 'Push The Api Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(apiImageName)'
+      command: 'push'
+      tags: |
+        $(Build.BuildId)
+        latest
 
-      - task: Docker@2
-        displayName: 'Push The Authorization Server Docker Image'
-        inputs:
-          containerRegistry: '$(dockerRegistryConnection)'
-          repository: '$(authServerImageName)'
-          command: 'push'
-          tags: |
-            $(Build.BuildId)
-            latest
+  - task: Docker@2
+    displayName: 'Push The Authorization Server Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(authServerImageName)'
+      command: 'push'
+      tags: |
+        $(Build.BuildId)
+        latest
             
-      - task: PublishPipelineArtifact@1
-        displayName: Publish Pipepile Artifact - Bicep
-        inputs:
-          targetPath: '$(workingDirectory)/.azure/'
-          artifact: 'Bicep'
-          publishLocation: 'pipeline'
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Bicep
+    inputs:
+      targetPath: '$(workingDirectory)/.azure/'
+      artifact: 'Bicep'
+      publishLocation: 'pipeline'

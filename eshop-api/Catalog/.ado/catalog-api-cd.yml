@@ -1,16 +1,17 @@
-#CATALOG API RELEASE PIPELINE
+# CATALOG API RELEASE PIPELINE
+
 resources:
- repositories:
-    - repository: self
-      trigger: none
- pipelines:
-   - pipeline: catalog-api-ci
-     source: catalog-api-ci    
-     trigger: none
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: catalog-api-ci
+    source: catalog-api-ci    
+    trigger: none
 
 variables:
-  suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
-  azureserviceconnection: 'azure-spn'
+  suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}}3 # Pseudo - random string based on project Id
+  azureserviceconnection: 'azure-docker-spn'
   webappname: 'catalog-api-web-app-$(suffix)'
   sqlServerName: 'catalog-sqlserver-$(suffix)'
   sqlDbName: 'eshop.catalog.Db'
@@ -19,7 +20,7 @@ variables:
   templateFileName: 'webapp-with-sql.bicep'
   migrationsFileName: 'migrations.sql' 
   subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
-  resourceGroupName: 'eshop-on-microservices-rg'
+  resourceGroupName: 'eshop-docker'
   location: 'westeurope'
 
 pool:
@@ -41,7 +42,7 @@ steps:
     location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: '$(Pipeline.Workspace)/catalog-api-ci/Bicep/$(templateFileName)'
-    overrideParameters: '-webAppName $(webappname) -sqlServerName $(sqlServerName) -dbName $(sqlDbName) -administratorLogin $(administratorLogin) -administratorLoginPassword $(administratorLoginPassword)'
+    overrideParameters: '-webAppName $(webappname) -sqlServerName $(sqlServerName) -dbName $(sqlDbName) -administratorLogin $(administratorLogin) -administratorLoginPassword $(administratorLoginPassword) -location $(location) -suffix $(suffix)'
     deploymentMode: 'Incremental'
 
 - task: SqlAzureDacpacDeployment@1
@@ -73,5 +74,5 @@ steps:
     enableCustomDeployment: true
     DeploymentType: 'runFromZip'
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net/swagger/index.html -TimeoutSec 300
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net/hc -TimeoutSec 300
   displayName: Init And Check Web App

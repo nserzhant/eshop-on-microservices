@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  {{ if .Values.useAks -}}
+  annotations:
+    azure.workload.identity/client-id: "{{ .Values.azure.sagaProcessorUmiClientId }}"
+  labels:
+    azure.workload.identity/use:  "true"
+{{- end }}        
+  name: {{ .Values.saga_processor.serviceAccountName }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.saga_processor.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.saga_processor.appName }}
+  replicas: {{ .Values.saga_processor.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.saga_processor.appName }}
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Values.saga_processor.serviceAccountName }}
+      containers:
+      - name: {{ .Values.saga_processor.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.saga_processor.image.repository }}:{{ .Values.imagesTag }}"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.saga_processor.env.ASPNETCORE_ENVIRONMENT }}
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+        - name: initDbOnStartup
+          value: "{{ .Values.saga_processor.env.initDbOnStartup }}"
+        {{ if .Values.useAks -}}
+        - name: broker__AzureServiceBusConnectionString
+          value: sb://{{ .Values.azure.serviceBusNamespaceName }}.servicebus.windows.net      
+        {{- else -}}
+        - name: broker__rabbitMQHost
+          value: {{ .Values.rabbitmq.appName }}
+        {{- end }} 
+        - name: ConnectionStrings__sagaDbConnectionString
+          value: {{ template "saga-processor.connectionString" . }}
+        resources:
+          limits:
+            memory: {{ .Values.saga_processor.resources.memory }}
+            cpu: {{ .Values.saga_processor.resources.cpu }}
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 8080
+          initialDelaySeconds: 30  
+          periodSeconds: 10        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 8080
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
+
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName }}
+      {{- end }}
+        
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.saga_processor.appName }}
+spec:
+  selector:
+    app: {{ .Values.saga_processor.appName }}
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

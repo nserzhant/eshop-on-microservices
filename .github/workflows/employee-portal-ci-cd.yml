@@ -6,15 +6,15 @@ on:
 env:
   buildConfiguration: production
   workingDirectory: ./eshop-ui-employee-portal
-  nodeVersion: 16.x
-  angularCliVersion: 15.2.0
+  nodeVersion: 22.x
+  angularCliVersion: 18.1.0
   staticAppSku: Free
   staticAppTier: Free
-  staticWebAppName: employee-portal-${{ vars.SUFFIX }}
-  resourceGroupName: eshop-zip-deployment
-  employeeOAuthAuthorizationEndpoint: '/authorize'
-  employeeOAuthClientId: 'employee-portal'
-  employeeOAuthScope: 'openid roles api offline_access'
+  staticWebAppName: employee-portal-static-${{ vars.SUFFIX }}
+  resourceGroupName: eshop
+  employeeOAuthAuthorizationEndpoint: /authorize
+  employeeOAuthClientId: employee-portal
+  employeeOAuthScope: openid roles api offline_access
   location: westeurope
       
 jobs:
@@ -23,7 +23,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    - name: Install Node.js 16.x
+    - name: Install Node.js 22.x
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.nodeVersion }}
@@ -55,7 +55,7 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}          
     
-    - name: Deploy Azure Resource Manager (ARM) Template
+    - name: Deploy Infrastructure
       uses: Azure/arm-deploy@v2
       id: deployBicep
       with:
@@ -72,11 +72,15 @@ jobs:
         inlineScript: |
           val=$(az staticwebapp secrets list --n "${{ env.staticWebAppName }}"  --resource-group "${{ env.resourceGroupName }}" --subscription "${{ secrets.AZURE_SUBSCRIPTION }}" --query "properties.apiKey" -otsv)
           echo "::add-mask::$val"
-          echo "API_KEY="$val >> $GITHUB_OUTPUT
+          echo "apiKey="$val >> $GITHUB_OUTPUT
       
     - name: Azure Static Web Apps Deploy
       uses: Azure/static-web-apps-deploy@v1
       with:
         action: upload
-        app_location: ${{ env.workingDirectory }}/dist/eshop-ui-employee-portal
-        azure_static_web_apps_api_token: ${{ steps.apiKey.outputs.API_KEY }}
+        app_location: ${{ env.workingDirectory }}/dist/eshop-ui-employee-portal/browser
+        azure_static_web_apps_api_token: ${{ steps.apiKey.outputs.apiKey }}
+
+    - name: Check Web App
+      run: Invoke-WebRequest -UseBasicParsing https://${{ steps.deployBicep.outputs.staticAppDNSName }} -TimeoutSec 300
+      shell: pwsh  

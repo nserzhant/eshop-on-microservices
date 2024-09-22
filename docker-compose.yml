@@ -1,4 +1,4 @@
-version: '3.8'
+name: 'eshop'
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -70,7 +70,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__customerDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.customer.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
-      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customer.openiddict.db
       - initDbOnStartup=true
       - clients__0__clientOrigin=http://localhost:4201
     ports:
@@ -111,7 +111,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true  
-      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db    
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customer.openiddict.db    
       - clients__0__clientOrigin=http://localhost:4202
     ports:
       - "7272:443"
@@ -213,7 +213,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ConnectionStrings__sagaDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - ConnectionStrings__sagaDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
       - broker__rabbitMQHost=rabbitmq
       - broker__rabbitMQPort=5672
@@ -242,9 +242,6 @@ services:
       dockerfile: Dockerfile
       args:
         - CONFIGURATION=${ANGULAR_CONFIGURATION:-development}
-        - OAUTH_AUTHORIZATION_ENDPOINT_PATH=${OAUTH_AUTH_EMPOYEE_ENDPOINT_PATH}
-        - OAUTH_CLIENT_ID=${OAUTH_EMPOYEE_APP_CLIENT_ID}
-        - OAUTH_SCOPE=${OAUTH_EMPOYEE_SCOPE}
     ports:
       - '4202:80'
     depends_on:

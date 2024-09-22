@@ -1,0 +1,85 @@
+name: Basket Api CI CD
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/Basket
+  webAppName: basket-api-web-app-${{ vars.SUFFIX }}
+  redisCacheName: basket-rediscache-${{ vars.SUFFIX }}
+  templateFileName: webapp-with-redis.bicep
+  resourceGroupName: eshop  
+  location: westeurope
+  
+jobs:
+  build_test_deploy:
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7.0.15-alpine3.20
+        ports:
+        - 6379:6379
+            
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 8.0.x
+                    
+    - name: Restore
+      run: dotnet restore ${{ env.workingDirectory }}/*.sln
+      
+    - name: Build
+      run: dotnet build ${{ env.workingDirectory }}/*.sln -c ${{ env.buildConfiguration }} --no-restore
+      
+    - name: Redis Integration Test
+      run: dotnet test ${{ env.workingDirectory }}/tests/EShop.Basket.Infrastructure.IntegrationTests/EShop.Basket.Infrastructure.IntegrationTests.csproj --verbosity normal
+      
+    - name: API Integration Test
+      run: dotnet test ${{ env.workingDirectory }}/tests/EShop.Basket.Infrastructure.IntegrationTests/EShop.Basket.Infrastructure.IntegrationTests.csproj --verbosity normal
+
+    - name: Dotnet Publish Api
+      run: dotnet publish ${{ env.workingDirectory }}/src/EShop.Basket.Api/EShop.Basket.Api.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/api
+      
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}    
+        
+    - name: Deploy Infrastructure
+      uses: Azure/arm-deploy@v2
+      id: deployBicep
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: webAppName="${{ env.webAppName }}" redisCacheName="${{ env.redisCacheName }}" location="${{ env.location }}"  suffix="${{ vars.SUFFIX }}"
+
+    - name: Clear Azure Cache
+      run: az cache purge
+        
+    - name: Get WebApp Publish Profile
+      id: webAppPublishpPofile
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.webAppName }}" --resource-group "${{ env.resourceGroupName }}"  --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --xml)
+          echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT
+                      
+    - name: Deploy Azure WebApp
+      uses: Azure/webapps-deploy@v3.0.0
+      with:
+        app-name: ${{ env.webAppName }}
+        package: ./artifacts/api
+        resource-group-name: ${{ env.resourceGroupName }}
+        publish-profile: ${{ steps.webAppPublishpPofile.outputs.publishProfile}}
+        restart: true
+   
+    - name: Check Web App
+      run: timeout 300s sh -c ' until curl https://${{ env.webAppName }}.azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh
+  

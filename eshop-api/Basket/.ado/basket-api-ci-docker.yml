@@ -1,0 +1,102 @@
+# BASKET API BUILD PIPELINE (DOCKER) 
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+
+  containers:  
+  - container: redis
+    image: redis:7.0.15-alpine3.20
+    ports:
+      - 6379:6379
+
+variables:
+- group: microservices-variable-group
+
+- name: buildConfiguration
+  value: 'Release'
+- name: workingDirectory
+  value: '$(System.DefaultWorkingDirectory)/eshop-api/Basket'
+- name: publishFolder
+  value: 'publish'
+- name: userName
+  value: '$(docker-registry-username)' # From variable group
+- name: imageName
+  value: '$(userName)/eshop.basket.api'
+- name: dockerRegistryConnection
+  value: 'docker-connection'
+
+jobs:
+- job: build_and_test
+  displayName: Build And Test
+  pool:
+    vmImage: ubuntu-latest
+  services:
+    redis: redis
+
+  steps:
+  - task: DotNetCoreCLI@2
+    name: Restore
+    inputs:
+      command: 'restore'
+      projects: '$(workingDirectory)/*.sln'
+      
+  - task: DotNetCoreCLI@2          
+    displayName: Build
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '$(workingDirectory)/*.sln'  
+
+  - task: DotNetCoreCLI@2
+    displayName: Redis Integration Test
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/EShop.Basket.Infrastructure.IntegrationTests/EShop.Basket.Infrastructure.IntegrationTests.csproj'
+
+  - task: DotNetCoreCLI@2
+    displayName: API Integration Test
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/EShop.Basket.Api.IntegrationTests/EShop.Basket.Api.IntegrationTests.csproj'
+  
+- job: build_and_push_the_docker_image
+  displayName: Build And Push The Docker Image
+  dependsOn: build_and_test
+  condition: succeeded()
+  pool:
+    vmImage: ubuntu-latest
+
+  steps:
+  - task: Docker@2
+    displayName: 'Build The Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(imageName)'
+      command: 'build'
+      Dockerfile: '$(workingDirectory)/src/EShop.Basket.Api/Dockerfile'
+      buildContext: '$(workingDirectory)'
+      tags: |
+        $(Build.BuildId)
+        latest
+
+  - task: Docker@2
+    displayName: 'Push The Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(imageName)'
+      command: 'push'
+      tags: |
+        $(Build.BuildId)
+        latest     
+
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Bicep
+    inputs:
+      targetPath: '$(workingDirectory)/.azure'
+      artifact: 'Bicep'
+      publishLocation: 'pipeline'
+

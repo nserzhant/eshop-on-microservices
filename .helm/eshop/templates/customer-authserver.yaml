@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  {{ if .Values.useAks -}}
+  annotations:
+    azure.workload.identity/client-id: "{{ .Values.azure.customerAuthserverUmiClientId }}"
+  labels:
+    azure.workload.identity/use:  "true"
+{{- end }}        
+  name: {{ .Values.customer_authserver.serviceAccountName }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.customer_authserver.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.customer_authserver.appName }}
+  replicas: {{ .Values.customer_authserver.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.customer_authserver.appName }}  
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Values.customer_authserver.serviceAccountName }}
+      containers:
+      - name: {{ .Values.customer_authserver.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.customer_authserver.image.repository }}:{{ .Values.imagesTag }}" 
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.customer_authserver.env.ASPNETCORE_ENVIRONMENT }}
+        - name: ASPNETCORE_URLS
+          value: http://+:80
+        - name: ConnectionStrings__customerDbConnectionString      
+          value: {{ template "customer-authserver.connectionString" . }}
+        - name: ConnectionStrings__openIddictDbConnectionString      
+          value: DataSource=customer.openiddict.db
+        - name: initDbOnStartup
+          value: "{{ .Values.customer_authserver.env.initDbOnStartup }}"
+        - name: clients__0__clientOrigin
+          value: "https://{{ .Values.eshop_ingress.eshopDnsName }}"
+        - name: clients__0__clientId
+          value: "{{ .Values.customer_authserver.env.clientId }}"
+        - name: clients__0__displayName
+          value: "{{ .Values.customer_authserver.env.displayName }}"
+        - name: ASPNETCORE_APPL_PATH
+          value: authorize 
+        resources:
+          limits:
+            memory:  {{ .Values.customer_authserver.resources.memory }}
+            cpu:  {{ .Values.customer_authserver.resources.cpu }}
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
+  
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecretName }}
+      {{- end }}    
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.customer_authserver.appName }}
+spec:
+  selector:
+    app:  {{ .Values.customer_authserver.appName }}
+  type:  ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port: 80 

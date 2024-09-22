@@ -84,6 +84,8 @@ public class BasketController : ControllerBase
                 )).ToList()
             );
 
+        _logger.LogInformation($"Starting CheckOut, CorrelationId: {checkoutEvent.CorrelationId}");
+
         await _publishEndpoint.Publish(checkoutEvent);
 
         return Ok();

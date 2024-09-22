@@ -3,7 +3,6 @@ using EShop.Saga.Components.Infrastructure;
 using EShop.Saga.Components.StateMachines;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace EShop.Saga.Processor;
 
@@ -14,7 +13,9 @@ public static class SagaServicesRegistrationExtension
         var messageBrokerSettings = configuration.GetSection(Consts.MESSAGE_BROKER_CONFIG_NAME)
             .Get<MessageBrockerSettings>();
 
-        if (messageBrokerSettings == null)
+        if (messageBrokerSettings == null ||
+            (string.IsNullOrEmpty(messageBrokerSettings.AzureServiceBusConnectionString) &&
+            string.IsNullOrEmpty(messageBrokerSettings.RabbitMQHost)))
         {
             throw new ConfigurationException("Message broker configuration not found");
         }

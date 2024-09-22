@@ -5,14 +5,21 @@ on:
 
 env:
   clusterName: aks-eshop-${{ vars.SUFFIX }}
-  dnsLabel: eshop-customer-portal-${{ vars.SUFFIX }}
-  akvName: akv-eshop-${{ vars.SUFFIX }}
-  catalogApiSqlServerName: catalog-sqlserver-${{ vars.SUFFIX }}
-  employeeManagementSqlServerName: employee-sqlserver-${{ vars.SUFFIX }}
-  clientAuthserverSqlServerName: client-sqlserver-${{ vars.SUFFIX }}
+  dnsLabel: eshop-${{ vars.SUFFIX }}
+  catalogSqlServerName: catalog-sqlserver-${{ vars.SUFFIX }}
+  employeeSqlServerName: employee-sqlserver-${{ vars.SUFFIX }}
+  customerSqlServerName: customer-sqlserver-${{ vars.SUFFIX }}
+  orderingSqlServerName: ordering-sqlserver-${{ vars.SUFFIX }}   
+  sagaSqlServerName: saga-sqlserver-${{ vars.SUFFIX }}   
+  redisCacheName: basket-rediscache-${{ vars.SUFFIX }}  
+  serviceBusNamespaceName: eshop-sb-${{ vars.SUFFIX }}  
   catalogApiUMIName: catalog-api-identity
   employeeManagementUMIName: employee-management-identity
-  clientAuthServerUMIName: client-authserver-identity  
+  customerAuthServerUMIName: customer-authserver-identity  
+  basketApiUMIName: basket-api-identity
+  orderingApiUMIName: ordering-api-identity
+  paymentProcessorUMIName: payment-processor-identity
+  sagaProcessorUMIName: saga-processor-identity
   employeeExternalOAuthIssuer: '' # When Empty Default Identity Server Will Be Used
   employeeExternalOAuthMetadataEndpoint: ''
   employeeExternalOAuthAudience: ''
@@ -33,12 +40,12 @@ jobs:
     - name: Retrieve Web App Docker Tag
       run: |
         artifacts='${{ steps.downloadArtifacts.outputs.artifacts }}'          
-        echo "BUILD_PIPELINE_ID="$(echo $artifacts | jq -r '.[0].workflow_run.id')>> $GITHUB_ENV
+        echo "buildPipelineId="$(echo $artifacts | jq -r '.[0].workflow_run.id')>> $GITHUB_ENV
     
     - name: Azure Login
       uses: Azure/login@v1.6.1
       with:
-        creds: ${{ secrets.AZURE_RG_OWNER_CREDENTIALS }}  
+        creds: ${{ secrets.AZURE_CREDENTIALS }}  
     
     - name:  Get The Tenant Id (save result to tenantId variable)
       uses: Azure/cli@v1.0.9
@@ -47,52 +54,76 @@ jobs:
           TENNANT_ID=$(az account show --query tenantId -o tsv)
           echo "::add-mask::$TENNANT_ID"
           echo "tenantId="$TENNANT_ID >> $GITHUB_ENV
-    
-    - name: Get The ClientId Of The UMI That Have Access To Key Vault (save result to aks_umi_client_id variable)
-      uses: Azure/cli@v1.0.9
-      with:
-        inlineScript: |
-          CLIENT_ID=$(az aks show --name "${{ env.clusterName }}" --resource-group "${{ env.resourceGroupName }}" --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId -o tsv)
-          echo "::add-mask::$CLIENT_ID"
-          echo "aks_umi_client_id="$CLIENT_ID >> $GITHUB_ENV
           
-    - name: Get The ClientId Of The UMI That Have Access To The Catalog Api Db (save result to catalog_api_umi_client_id variable)
+    - name: Get The ClientId Of The Catalog API UMI (save result to catalogApiUmiClientId variable)
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: |
           CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.catalogApiUMIName }}" --query "clientId" -o tsv)
           echo "::add-mask::$CLIENT_ID"
-          echo "catalog_api_umi_client_id="$CLIENT_ID >> $GITHUB_ENV
+          echo "catalogApiUmiClientId="$CLIENT_ID >> $GITHUB_ENV
           
-    - name: Get The ClientId Of The UMI That Have Access To The Employee Management Db (save result to employee_management_umi_client_id variable)
+    - name: Get The ClientId Of The Employee Management UMI (save result to employeeManagementUmiClientId variable)
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: |
           CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.employeeManagementUMIName }}" --query "clientId" -o tsv)
           echo "::add-mask::$CLIENT_ID"
-          echo "employee_management_umi_client_id="$CLIENT_ID >> $GITHUB_ENV
+          echo "employeeManagementUmiClientId="$CLIENT_ID >> $GITHUB_ENV
           
-    - name: Get The ClientId Of The UMI That Have Access To The Client Authorization Server Db (save result to client_authserver_umi_client_id variable)
+    - name: Get The ClientId Of The Customer Authorization Server UMI (save result to customerAuthserverUmiClientId variable)
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: |
-          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.clientAuthServerUMIName }}" --query "clientId" -o tsv)
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.customerAuthServerUMIName }}" --query "clientId" -o tsv)
           echo "::add-mask::$CLIENT_ID"
-          echo "client_authserver_umi_client_id="$CLIENT_ID >> $GITHUB_ENV    
+          echo "customerAuthserverUmiClientId="$CLIENT_ID >> $GITHUB_ENV    
+
+    - name: Get The ClientId Of The Basket API UMI (save result to basketApiUmiClientId variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.basketApiUMIName }}" --query "clientId" -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "basketApiUmiClientId="$CLIENT_ID >> $GITHUB_ENV  
+
+    - name: Get The ClientId Of The Ordering API UMI (save result to orderingApiUmiClientId variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.orderingApiUMIName }}" --query "clientId" -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "orderingApiUmiClientId="$CLIENT_ID >> $GITHUB_ENV  
+
+    - name: Get The ClientId Of The Payment Processor UMI (save result to paymentProcessorUmiClientId variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.paymentProcessorUMIName }}" --query "clientId" -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "paymentProcessorUmiClientId="$CLIENT_ID >> $GITHUB_ENV  
+
+    - name: Get The ClientId Of The Saga Processor UMI (save result to sagaProcessorUmiClientId variable)
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          CLIENT_ID=$(az identity show --resource-group "${{ env.resourceGroupName }}" --name "${{ env.sagaProcessorUMIName }}" --query "clientId" -o tsv)
+          echo "::add-mask::$CLIENT_ID"
+          echo "sagaProcessorUmiClientId="$CLIENT_ID >> $GITHUB_ENV  
           
-    - name: Get The Customer Portal Gateway DNS Name (save result to client_portal_dns_name variable)
+    - name: Get The Eshop DNS Name (save result to eshopDnsName variable)
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: |
           DNS_NAME=$(az network public-ip list --query "[?dnsSettings.domainNameLabel=='${{ env.dnsLabel }}'].dnsSettings.fqdn" -otsv)
-          echo "client_portal_dns_name="$DNS_NAME >> $GITHUB_ENV
+          echo "eshopDnsName="$DNS_NAME >> $GITHUB_ENV
                 
-    - name: Get The Employee Portal Gateway DNS Name (save result to empoyee_portal_dns_name variable)
+    - name: Get The Eshop Employee Portal DNS Name (save result to eshopEmployeePortalDnsName variable)
       uses: Azure/cli@v1.0.9
       with:
         inlineScript: |
           DNS_NAME=$(az network public-ip list --query "[?dnsSettings.domainNameLabel=='${{ env.dnsLabel }}'].ipAddress" -otsv).nip.io
-          echo "empoyee_portal_dns_name="$DNS_NAME >> $GITHUB_ENV
+          echo "eshopEmployeePortalDnsName="$DNS_NAME >> $GITHUB_ENV
     
     - name: Helm tool installer
       uses: Azure/setup-helm@v3.5
@@ -106,7 +137,13 @@ jobs:
     - name: Helm Upgrade Or Install
       run: |
         helm upgrade --namespace eshop --install \
-        --set useAks=true,imagesTag=kube-${{ env.BUILD_PIPELINE_ID }},dockerRegistry=${{ vars.ACR_NAME }}.azurecr.io,azure.tenantId=${{ env.tenantId }},azure.aksUmiClientId=${{ env.aks_umi_client_id }},azure.akvName=${{ env.akvName }},azure.catalogApiUmiClientId=${{ env.catalog_api_umi_client_id }},azure.employeeManagementUmiClientId=${{ env.employee_management_umi_client_id }},azure.clientAuthserverUmiClientId=${{ env.client_authserver_umi_client_id }},azure.catalogApiSqlServerName=${{ env.catalogApiSqlServerName }},azure.employeeManagementSqlServerName=${{ env.employeeManagementSqlServerName }},azure.clientAuthserverSqlServerName=${{ env.clientAuthserverSqlServerName }},eshop_ingress.clientPortalDnsName=${{ env.client_portal_dns_name }},eshop_ingress.empoyeePortalDnsName=${{ env.empoyee_portal_dns_name }},employee_external_authserver.issuer=${{ env.employeeExternalOAuthIssuer }},employee_external_authserver.metadataAddress=${{ env.employeeExternalOAuthMetadataEndpoint }},employee_external_authserver.audience=${{ env.employeeExternalOAuthAudience }} \
-        --wait --timeout 2m --debug --create-namespace eshop  ./artifacts/Helm/eshop-${{ env.BUILD_PIPELINE_ID }}.tgz
+        --set useAks=true,imagesTag=kube-${{ env.buildPipelineId }},dockerRegistry=${{ vars.ACR_NAME }}.azurecr.io,azure.tenantId=${{ env.tenantId }},azure.catalogApiUmiClientId=${{ env.catalogApiUmiClientId }},azure.employeeManagementUmiClientId=${{ env.employeeManagementUmiClientId }},azure.customerAuthserverUmiClientId=${{ env.customerAuthserverUmiClientId }},azure.basketApiUmiClientId=${{ env.basketApiUmiClientId }},azure.orderingApiUmiClientId=${{ env.orderingApiUmiClientId }},azure.paymentProcessorUmiClientId=${{ env.paymentProcessorUmiClientId }},azure.sagaProcessorUmiClientId=${{ env.sagaProcessorUmiClientId }},azure.catalogSqlServerName=${{ env.catalogSqlServerName }},azure.employeeSqlServerName=${{ env.employeeSqlServerName }},azure.customerSqlServerName=${{ env.customerSqlServerName }},azure.orderingSqlServerName=${{ env.orderingSqlServerName }},azure.sagaSqlServerName=${{ env.sagaSqlServerName }},azure.redisCacheName=${{ env.redisCacheName }},azure.serviceBusNamespaceName=${{ env.serviceBusNamespaceName }},eshop_ingress.eshopDnsName=${{ env.eshopDnsName }},eshop_ingress.eshopEmployeePortalDnsName=${{ env.eshopEmployeePortalDnsName }},employee_external_authserver.issuer=${{ env.employeeExternalOAuthIssuer }},employee_external_authserver.metadataAddress=${{ env.employeeExternalOAuthMetadataEndpoint }},employee_external_authserver.audience=${{ env.employeeExternalOAuthAudience }} \
+        --wait --timeout 2m --debug --create-namespace eshop  ./artifacts/Helm/eshop-${{ env.buildPipelineId }}.tgz
     
-      
+    - name: Check Eshop App
+      run: Invoke-WebRequest -UseBasicParsing -SkipCertificateCheck https://${{ env.eshopDnsName }}/ -TimeoutSec 300
+      shell: pwsh   
+
+    - name: Check Eshop Employee Portal App
+      run: Invoke-WebRequest -UseBasicParsing -SkipCertificateCheck https://${{ env.eshopEmployeePortalDnsName }}/ -TimeoutSec 300
+      shell: pwsh  

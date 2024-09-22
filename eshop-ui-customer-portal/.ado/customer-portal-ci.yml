@@ -1,10 +1,9 @@
 #CUSTOMER PORTAL BUILD PIPELINE
 
 resources:
- repositories:
-    - repository: self
-      trigger: none
-      # - master
+  repositories:
+  - repository: self
+    trigger: none
 
 variables:
   buildConfiguration: 'production'
@@ -17,13 +16,13 @@ steps:
 - task: NodeTool@0
   displayName: 'Install Node.js'
   inputs:
-    versionSpec: '16.x'
+    versionSpec: '22.x'
 
 - task: Npm@1
   displayName: 'Install Angular CLI'
   inputs:
     command: 'custom'
-    customCommand: 'install -g @angular/cli@15.2.0'
+    customCommand: 'install -g @angular/cli@18.1.0'
 
 - task: Npm@1
   displayName: 'NPM ci'
@@ -39,8 +38,8 @@ steps:
 - task: PublishPipelineArtifact@1
   displayName: 'Publish Angular Artifacts'
   inputs:
-    targetPath: '$(workingDirectory)/dist/eshop-ui-customer-portal'
-    artifact: 'ClientPortal'
+    targetPath: '$(workingDirectory)/dist/eshop-ui-customer-portal/browser'
+    artifact: 'CustomerPortal'
     publishLocation: 'pipeline'
 
 - task: PublishPipelineArtifact@1

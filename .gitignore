@@ -32,3 +32,4 @@ _ReSharper*/
 packages/
 .dev_cert
 .docker-local-storage
+*.tgz

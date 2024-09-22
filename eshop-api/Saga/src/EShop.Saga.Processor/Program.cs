@@ -8,6 +8,9 @@ var initDbOnStartup = builder.Configuration.GetValue<bool>(Consts.INIT_DB_ON_STA
 builder.Services.AddLogging(log => log.AddConsole());
 builder.Services.AddSagaServices(builder.Configuration);
 
+// The following line enables Application Insights telemetry collection.
+builder.Services.AddApplicationInsightsTelemetry();
+
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy());
 

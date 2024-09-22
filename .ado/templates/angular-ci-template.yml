@@ -6,9 +6,9 @@ parameters:
 - name: vmImage
   default: ''
 - name: nodeVersion
-  default: '16.x'
+  default: '22.x'
 - name: angularCliVersion
-  default: '15.2.0'
+  default: '18.1.0'
 - name: oauthAuthorizationEndpointPath
   default: '/authorize'
 - name: oauthClientId
@@ -57,7 +57,7 @@ jobs:
   - task: PublishPipelineArtifact@1
     displayName: 'Publish Angular Artifacts - ${{ parameters.projectFolder }}'
     inputs:
-      targetPath: '$(workingDirectory)/dist/${{ parameters.projectFolder }}'
+      targetPath: '$(workingDirectory)/dist/${{ parameters.projectFolder }}/browser'
       artifact: '${{ parameters.jobName }}'
       publishLocation: 'pipeline'
       

@@ -10,31 +10,45 @@ metadata:
 spec:
   ingressClassName: {{ .Values.eshop_ingress.ingressClassName }} 
   rules:
-  - host: {{ .Values.eshop_ingress.clientPortalDnsName }}
+  - host: {{ .Values.eshop_ingress.eshopDnsName }}
     http:
       paths:
       - pathType: Prefix
         path: "/()()(.*)"
         backend:
           service:
-            name: {{ .Values.client_portal.appName }}    
+            name: {{ .Values.customer_portal.appName }}    
             port: 
-              number: {{ .Values.client_portal.servicePort }}
+              number: 80
       - pathType: Prefix
         path: "/catalog(/|$)(.*)"
         backend:
           service:
             name: {{ .Values.catalog_api.appName }}  
             port: 
-              number: {{ .Values.catalog_api.servicePort }}
+              number: 80
+      - pathType: Prefix
+        path:  "/(basket/)(api)(.*)"
+        backend:
+          service:
+            name: {{ .Values.basket_api.appName }}  
+            port: 
+              number: 80
+      - pathType: Prefix
+        path:  "/(ordering/)(api)(.*)"
+        backend:
+          service:
+            name: {{ .Values.ordering_api.appName }}  
+            port: 
+              number: 80
       - pathType: Prefix
         path: /()(authorize)(.*)
         backend:
           service:
-            name: {{ .Values.client_authserver.appName }}
+            name: {{ .Values.customer_authserver.appName }}
             port: 
-              number: {{ .Values.client_authserver.servicePort }}
-  - host: {{ .Values.eshop_ingress.empoyeePortalDnsName }}
+              number: 80
+  - host: {{ .Values.eshop_ingress.eshopEmployeePortalDnsName }}
     http:
       paths:
       - pathType: Prefix
@@ -43,26 +57,26 @@ spec:
           service:
             name: {{ .Values.employee_portal.appName }}
             port: 
-              number: {{ .Values.employee_portal.servicePort }}
+              number: 80
       - pathType: Prefix
         path: "/catalog(/|$)(.*)"
         backend:
           service:
             name: {{ .Values.catalog_api.appName }}
             port: 
-              number: {{ .Values.catalog_api.servicePort }}
+              number: 80
       - pathType: Prefix
         path: /()(authorize)(.*)
         backend:
           service:
             name: {{ .Values.employeemanagement_authserver.appName }}
             port: 
-              number: {{ .Values.employeemanagement_authserver.servicePort }}
+              number: 80
       - pathType: Prefix
         path: "/(employee-management/)(api)(.*)"
         backend:
           service:
             name: {{ .Values.employeemanagement_api.appName }}
             port: 
-              number: {{ .Values.employeemanagement_api.servicePort }}
+              number: 80
   

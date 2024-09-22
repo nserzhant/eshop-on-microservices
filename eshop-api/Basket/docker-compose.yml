@@ -16,7 +16,7 @@ services:
     image: ${DOCKER_REGISTRY-}eshop.basket.api:${TAG:-latest}
     build:
       context: .
-      dockerfile: src/Eshop.Basket.Api/Dockerfile
+      dockerfile: src/EShop.Basket.Api/Dockerfile
     depends_on:
       redis:
         condition: service_started

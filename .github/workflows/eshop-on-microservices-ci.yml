@@ -5,14 +5,29 @@ on:
 
 jobs:
   api:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     env:
       workingDirectory: ./eshop-api
       buildConfiguration: Release
+      sqlPassword: sqlP@ssw0rd
+    
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          MSSQL_SA_PASSWORD: ${{ env.sqlPassword }}
+          ACCEPT_EULA: Y
+        ports:
+        - 1433:1433
+      redis:
+        image: redis:7.0.15-alpine3.20
+        ports:
+        - 6379:6379
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
     
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v4.0.0
@@ -26,7 +41,12 @@ jobs:
       run: dotnet build ${{ env.workingDirectory }}/eshop-api.sln -c ${{ env.buildConfiguration }} --no-restore
       
     - name: Run Tests
-      run: dotnet test ${{ env.workingDirectory }}/eshop-api.sln --verbosity normal
+      env:
+        ConnectionStrings__catalogDbConnectionString: Server=tcp:localhost;Integrated Security=false;Initial Catalog=eshop.catalog.testDb;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+        ConnectionStrings__employeeDbConnectionString: Server=tcp:localhost;Integrated Security=false;Initial Catalog=eshop.employee.testDb;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+        ConnectionStrings__orderingDbConnectionString: Server=tcp:localhost;Integrated Security=false;Initial Catalog=eshop.ordering.testDb;User Id=sa;password=${{ env.sqlPassword }};TrustServerCertificate=true
+        ConnectionStrings__redisConnectionString: localhost:6379
+      run: dotnet test ${{ env.workingDirectory }}/eshop-api.sln  --filter TestCategory!=MicroservicesIntegration --verbosity normal
       
     - name: Publish Catalog Api
       run: dotnet publish ${{ env.workingDirectory }}/Catalog/src/EShop.Catalog.Api/EShop.Catalog.Api.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/catalog
@@ -55,26 +75,62 @@ jobs:
         name: EmployeeManagementAuthorizationServer
         path: ./artifacts/employeeAuthorizationServer
         
-    - name: Publish Client Authorization Server
-      run: dotnet publish ${{ env.workingDirectory }}/Client/src/EShop.Client.AuthorizationServer/EShop.Client.AuthorizationServer.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/clientAuthorizationServer
+    - name: Publish Customer Authorization Server
+      run: dotnet publish ${{ env.workingDirectory }}/Customer/src/EShop.Customer.AuthorizationServer/EShop.Customer.AuthorizationServer.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/customerAuthorizationServer
       
-    - name: Upload Artifact  - Client Authorization Server
+    - name: Upload Artifact  - Customer Authorization Server
       uses: actions/upload-artifact@v4.3.1
       with:
-        name: ClientAuthorizationServer
-        path: ./artifacts/clientAuthorizationServer        
-            
+        name: CustomerAuthorizationServer
+        path: ./artifacts/customerAuthorizationServer  
+      
+    - name: Publish Basket Api
+      run: dotnet publish ${{ env.workingDirectory }}/Basket/src/EShop.Basket.Api/EShop.Basket.Api.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/basket
+        
+    - name: Upload Artifact  - Basket Api
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: BasketApi
+        path: ./artifacts/basket
+      
+    - name: Publish Ordering Api
+      run: dotnet publish ${{ env.workingDirectory }}/Ordering/src/EShop.Ordering.Api/EShop.Ordering.Api.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/ordering
+        
+    - name: Upload Artifact  - Ordering Api
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: OrderingApi
+        path: ./artifacts/ordering
+      
+    - name: Publish Payment Processor
+      run: dotnet publish ${{ env.workingDirectory }}/Payment/src/EShop.Payment.Processor/EShop.Payment.Processor.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/payment
+        
+    - name: Upload Artifact  - Payment Processor
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: PaymentProcessor
+        path: ./artifacts/payment      
+
+    - name: Publish Saga Processor
+      run: dotnet publish ${{ env.workingDirectory }}/Saga/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/saga
+        
+    - name: Upload Artifact  - Saga Processor
+      uses: actions/upload-artifact@v4.3.1
+      with:
+        name: SagaProcessor
+        path: ./artifacts/saga
+
     - name: Upload Artifact - Bicep
       uses: actions/upload-artifact@v4.3.1
       with:
         name: Bicep
         path: .azure
             
-    - name: Upload Artifact - Ingress Templates
+    - name: Upload Artifact - Envoy configuration
       uses: actions/upload-artifact@v4.3.1
       with:
-        name: Ingress
-        path: .ingress
+        name: Envoy
+        path: ./.config/envoy/
 
   customer-portal:
     uses: ./.github/workflows/angular-ci-template.yml
@@ -82,9 +138,9 @@ jobs:
       appFolder: eshop-ui-customer-portal
       buildConfiguration: production
       vmImage: ubuntu-latest
-      nodeVersion: 16.x
-      angularCliVersion: 15.2.0
-      artifactsPackageName: ClientPortal  
+      nodeVersion: 22.x
+      angularCliVersion: 18.1.0
+      artifactsPackageName: CustomerPortal  
 
   emoployee-portal:
     uses: ./.github/workflows/angular-ci-template.yml
@@ -92,8 +148,8 @@ jobs:
       appFolder: eshop-ui-employee-portal
       buildConfiguration: production
       vmImage: ubuntu-latest
-      nodeVersion: 16.x
-      angularCliVersion: 15.2.0
+      nodeVersion: 22.x
+      angularCliVersion: 18.1.0
       artifactsPackageName: EmployeePortal
       oauthAuthorizationEndpointPath: '/authorize'
       oauthClientId: 'employee-portal'

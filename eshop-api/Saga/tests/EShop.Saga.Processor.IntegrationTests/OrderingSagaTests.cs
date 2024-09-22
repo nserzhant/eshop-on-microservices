@@ -8,7 +8,6 @@ using EShop.Catalog.Core.Services;
 using EShop.Catalog.Infrastructure;
 using EShop.Ordering.Core.Interfaces;
 using EShop.Ordering.Infrastructure;
-using EShop.Saga.Components.Infrastructure;
 using EShop.Saga.Components.StateMachines;
 using MassTransit;
 using MassTransit.Testing;
@@ -21,6 +20,7 @@ namespace EShop.Saga.Processor.IntegrationTests;
 
 [TestFixture]
 [Category("OrderingSaga")]
+[Category("MicroservicesIntegration")]
 public class OrderingSagaTests
 {
     private ServiceProvider _serviceProvider = null;
@@ -42,10 +42,11 @@ public class OrderingSagaTests
 
         serviceCollection.AddLogging(logging => logging.AddConsole());
         serviceCollection
-            .AddBasketSercices(configuration)
             .AddOrderingServices(configuration)
             .AddCatalogServices(configuration)
             .AddTestSagaServices(configuration);
+
+        await serviceCollection.AddBasketSercicesAsync(configuration);
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
 

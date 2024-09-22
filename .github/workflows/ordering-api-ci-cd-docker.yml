@@ -1,0 +1,90 @@
+name: Ordering Api CI CD Docker
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/Ordering
+  containerAppName: ordering-api-${{ vars.SUFFIX }}
+  containerAppEnvironmentName: ordering-api-env-${{ vars.SUFFIX }}
+  repositoryName: eshop.ordering.api
+  registryServer: index.docker.io
+  sqlServerName: ordering-api-server-${{ vars.SUFFIX }}
+  sqlDbName: eshop.ordering.Db
+  administratorLogin: orderingapilogin
+  templateFileName: containerapp-with-sql.bicep
+  resourceGroupName: eshop-docker
+  location: westeurope
+  
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 8.0.x
+          
+    - name: Restore
+      run: dotnet restore "${{ env.workingDirectory }}/Ordering.sln"
+      
+    - name: Build
+      run: dotnet build "${{ env.workingDirectory }}/Ordering.sln" -c "${{ env.buildConfiguration }}" --no-restore
+      
+    - name: Run Unit Tests
+      run: dotnet test "${{ env.workingDirectory }}/tests/EShop.Ordering.Core.UnitTests/EShop.Ordering.Core.UnitTests.csproj" --verbosity normal   
+      
+    - name: Run SQL Integration Test
+      run: dotnet test "${{ env.workingDirectory }}/tests/EShop.Ordering.Infrastructure.IntegrationTests/EShop.Ordering.Infrastructure.IntegrationTests.csproj" --verbosity normal  
+      
+    - name: Run API Integration Test
+      run: dotnet test "${{ env.workingDirectory }}/tests/EShop.Ordering.Api.IntegrationTests/EShop.Ordering.Api.IntegrationTests.csproj" --verbosity normal
+    
+  build_deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:    
+    - uses: actions/checkout@v4
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Build and push
+      uses: docker/build-push-action@v6.7.0
+      with:
+        context: ${{ env.workingDirectory }}
+        file: ${{ env.workingDirectory }}/src/EShop.Ordering.Api/Dockerfile
+        push: true
+        tags: ${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:run_id-${{github.run_id}}, ${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:latest
+         
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy Infrastructure
+      uses: Azure/arm-deploy@v2
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: containerAppName="${{ env.containerAppName }}" containerAppEnvironmentName="${{ env.containerAppEnvironmentName }}" containerImage=${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:run_id-${{github.run_id}} registryServer="${{ env.registryServer }}" registryUserName="${{ vars.DOCKERHUB_USERNAME }}" registryPassword="${{ secrets.DOCKERHUB_TOKEN }}" sqlServerName="${{ env.sqlServerName }}" sqlDbName="${{ env.sqlDbName }}" administratorLogin="${{ env.administratorLogin }}" administratorLoginPassword="${{ secrets.SQL_DB_PASSWORD }}" revisionSuffix="${{ github.run_id }}" location="${{ env.location }}" suffix="${{ vars.SUFFIX }}"
+    
+    - name: Get ContainerApp FQDN
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          FQDN=$(az containerapp show --name ${{ env.containerAppName }} --resource-group ${{ env.resourceGroupName }} --query properties.configuration.ingress.fqdn -otsv)
+          echo "containerAppFQDN="$FQDN >> $GITHUB_ENV
+
+    - name: Init And Check Application
+      run: timeout 300s sh -c ' until curl https://${{ env.containerAppFQDN }}/hc -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh  

@@ -1,20 +1,19 @@
-#CLIENT AUTHORIZATION SERVER BUILD PIPELINE (USES CONTAINER JOBS)
+# CUSTOMER AUTHORIZATION SERVER BUILD PIPELINE
 
 resources:   
- repositories:
-    - repository: self
-      trigger: none
-      # - master 
+  repositories:
+  - repository: self
+    trigger: none
       
 variables:
 - group: microservices-variable-group
 
 - name: workingDirectory
-  value: '$(Build.SourcesDirectory)/eshop-api/Client'
+  value: '$(Build.SourcesDirectory)/eshop-api/Customer'
 - name: userName
-  value: $(docker-registry-username) # From variable group
+  value: '$(docker-registry-username)' # From variable group
 - name: imageName
-  value: '$(userName)/eshop.client.authorizationserver'
+  value: '$(userName)/eshop.customer.authorizationserver'
 - name: dockerRegistryConnection
   value: 'docker-connection'
 
@@ -28,7 +27,7 @@ steps:
     containerRegistry: '$(dockerRegistryConnection)'
     repository: '$(imageName)'
     command: 'build'
-    Dockerfile: '$(workingDirectory)/src/EShop.Client.AuthorizationServer/Dockerfile'
+    Dockerfile: '$(workingDirectory)/src/EShop.Customer.AuthorizationServer/Dockerfile'
     buildContext: '$(workingDirectory)'
     tags: |
       $(Build.BuildId)

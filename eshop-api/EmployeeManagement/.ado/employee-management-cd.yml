@@ -1,23 +1,23 @@
-#EMPLOYEE MANAGEMENT SERVICES RELEASE PIPELINE
+# EMPLOYEE MANAGEMENT SERVICES RELEASE PIPELINE
 
 resources:
- repositories:
-   - repository: self
-     trigger: none
- pipelines:
-   - pipeline: employee-management-ci
-     source: employee-management-ci
-     trigger: none
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: employee-management-ci
+    source: employee-management-ci
+    trigger: none
 
 variables:
   suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
   azureserviceconnection: 'azure-spn'
-  apiWebAppName: employee-api-web-app-$(suffix)
-  authServerWebAppName: employee-authserver-web-app-$(suffix)
-  administratorLoginPassword: $(sqlPasswordSecret) #create secret using variables section
+  apiWebAppName: 'employee-api-web-app-$(suffix)'
+  authServerWebAppName: 'employee-authserver-web-app-$(suffix)'
+  administratorLoginPassword: '$(sqlPasswordSecret)' #create secret using variables section
   templateFileName: 'webapps-with-sql.bicep'
-  subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
-  resourceGroupName: 'eshop-on-microservices-rg'
+  subscriptionid: '$(subscription-id)' # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
+  resourceGroupName: 'eshop'
   location: 'westeurope'
   
 pool:
@@ -27,7 +27,6 @@ steps:
 - checkout: none
 - download: employee-management-ci
 
- # Deploy Web App Infrastructure Using Bicep
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: Deploy Web Apps Bicep
   inputs:
@@ -39,7 +38,7 @@ steps:
     location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: '$(Pipeline.Workspace)/employee-management-ci/Bicep/$(templateFileName)'
-    overrideParameters: '-apiWebAppName $(apiWebAppName) -authServerWebAppName $(authServerWebAppName) -administratorLoginPassword $(administratorLoginPassword)'
+    overrideParameters: '-apiWebAppName $(apiWebAppName) -authServerWebAppName $(authServerWebAppName) -administratorLoginPassword $(administratorLoginPassword) -location $(location) -suffix $(suffix)'
     deploymentMode: 'Incremental'
 
 - powershell: az cache purge
@@ -63,7 +62,7 @@ steps:
     WebAppName:  '$(authServerWebAppName)' 
     packageForLinux: '$(Pipeline.Workspace)/employee-management-ci/Authorization Server/*.zip'
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(apiWebAppName).azurewebsites.net/swagger/index.html -TimeoutSec 300
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(apiWebAppName).azurewebsites.net/hc -TimeoutSec 300
   displayName: Init And Check Api Web App
 
 - powershell: Invoke-WebRequest -UseBasicParsing https://$(authServerWebAppName).azurewebsites.net/ -TimeoutSec 300

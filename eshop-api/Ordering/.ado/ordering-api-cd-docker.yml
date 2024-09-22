@@ -1,0 +1,88 @@
+# ORDERING API RELEASE PIPELINE
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: ordering-api-ci-docker
+    source: ordering-api-ci-docker
+    trigger: none
+
+variables: 
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-docker-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: templateFileName
+  value: 'containerapp-with-sql.bicep'
+- name: containerAppName
+  value: 'ordering-api-$(suffix)'
+- name: containerAppEnvironmentName
+  value: 'ordering-api-env-$(suffix)'
+- name: repositoryName
+  value: 'eshop.ordering.api'
+- name: registryServer
+  value: 'index.docker.io'
+- name: registryUserName
+  value: '$(docker-registry-username)'   # From variable group
+- name: registryPassword
+  value: '$(docker-registry-read-token)' # From variable group
+- name: sqlServerName
+  value: 'ordering-api-server-$(suffix)'
+- name: sqlDbName
+  value: 'eshop.ordering.Db'
+- name: administratorLogin
+  value: 'orderingapilogin'
+- name: administratorLoginPassword
+  value: '$(sql-password-secret)' # Create secret using Variables section
+- name: subscriptionid
+  value: '$(subscription-id)' # From variable group
+- name: resourceGroupName
+  value: 'eshop-docker'
+- name: location
+  value: 'westeurope'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: none
+- download: ordering-api-ci-docker
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Container App Infrastructure
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/ordering-api-ci-docker/Bicep/$(templateFileName)'
+    overrideParameters: '-containerAppName $(containerAppName) -containerAppEnvironmentName $(containerAppEnvironmentName) -registryServer $(registryServer) -registryUserName $(registryUserName) -registryPassword $(registryPassword) -sqlServerName $(sqlServerName) -sqlDbName $(sqlDbName) -administratorLogin $(administratorLogin) -administratorLoginPassword $(administratorLoginPassword) -revisionSuffix $(Build.BuildId) -location $(location) -suffix $(suffix)'
+    deploymentMode: 'Incremental'
+
+- task: AzureContainerApps@1
+  displayName: Deploy Container App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    imageToDeploy: '$(registryServer)/$(registryUserName)/$(repositoryName):$(resources.pipeline.ordering-api-ci-docker.runID)'
+    containerAppName: '$(containerAppName)'
+    resourceGroup: '$(resourceGroupName)'
+  
+- task: AzureCLI@2
+  displayName: Get Application FQDN
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      FQDN=$(az containerapp show --name $(containerAppName) --resource-group $(resourceGroupName) --query properties.configuration.ingress.fqdn -otsv)
+      echo "##vso[task.setvariable variable=containerAppFQDN]$FQDN"
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(containerAppFQDN)/hc -TimeoutSec 300
+  displayName: Check App

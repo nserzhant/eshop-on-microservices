@@ -12,7 +12,7 @@ runs:
   using: "composite"
 
   steps:                
-  - name: Prepare SQL For Adding ${{ inputs.appName }} Web App User to SQL Server
+  - name: Prepare SQL For Adding ${{ inputs.appName }} User to SQL Server
     shell: bash
     run: |
       sql="IF DATABASE_PRINCIPAL_ID('${{ inputs.userName }}') IS NULL  
@@ -21,11 +21,12 @@ runs:
           ALTER ROLE db_datareader ADD MEMBER [${{ inputs.userName }}];  
           ALTER ROLE db_datawriter ADD MEMBER [${{ inputs.userName }}];  
           ALTER ROLE db_ddladmin ADD MEMBER [${{ inputs.userName }}]; 
-        END"
+        END"        
+      mkdir -p artifacts
       echo $sql >> "./artifacts/addUser${{ inputs.appName }}.sql"   
 
-  - name: Add Catalog API Web App User to SQL Server
+  - name: Add ${{ inputs.appName }} User to SQL Server
     uses: Azure/sql-action@v2.2.1
     with:
       connection-string: '${{ inputs.connectionString }}'
-      path: ./artifacts/addUser${{ inputs.appName }}.sql
+      path: "./artifacts/addUser${{ inputs.appName }}.sql"

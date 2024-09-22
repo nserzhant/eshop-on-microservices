@@ -1,0 +1,60 @@
+# BASKET API RELEASE PIPELINE
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: basket-api-ci
+    source: basket-api-ci
+    trigger: none
+
+variables:
+  suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+  azureserviceconnection: 'azure-spn'
+  webappname: 'basket-api-web-app-$(suffix)'
+  redisCacheName: 'basket-rediscache-$(suffix)'
+  templateFileName: 'webapp-with-redis.bicep'
+  subscriptionid: '$(subscription-id)' # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
+  resourceGroupName: 'eshop'
+  location: 'westeurope'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: none
+- download: basket-api-ci
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Web App Bicep
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/basket-api-ci/Bicep/$(templateFileName)'
+    overrideParameters: '-webAppName $(webappname) -redisCacheName $(redisCacheName) -location $(location) -suffix $(suffix)'
+    deploymentMode: 'Incremental'
+
+- powershell: az cache purge
+  displayName: Clear Azure Cache
+  
+- task: AzureRmWebAppDeployment@4
+  displayName: Deploy Web App
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: '$(azureserviceconnection)'
+    appType: 'webApp'
+    WebAppName: '$(webappname)'
+    deployToSlotOrASE: false
+    ResourceGroupName: '$(resourceGroupName)'
+    packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+    enableCustomDeployment: true
+    DeploymentType: 'runFromZip'
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net/hc -TimeoutSec 300
+  displayName: Init And Check Web App

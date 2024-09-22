@@ -1,0 +1,73 @@
+# BASKET API BUILD PIPELINE
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+
+  containers:  
+  - container: redis
+    image: redis:7.0.15-alpine3.20
+    ports:
+    - 6379:6379
+
+variables:
+  buildConfiguration: 'Release'
+  workingDirectory: '$(System.DefaultWorkingDirectory)/eshop-api/Basket'
+  ConnectionStrings__redisConnectionString: 'localhost:6379'
+
+pool:
+  vmImage: ubuntu-latest    
+
+services:
+  redis: redis
+
+steps:
+- task: DotNetCoreCLI@2
+  name: Restore
+  inputs:
+    command: 'restore'
+    projects: '$(workingDirectory)/*.sln'
+    
+- task: DotNetCoreCLI@2          
+  displayName: Build
+  inputs:
+    command: 'build'
+    arguments: '--configuration $(buildConfiguration)'
+    projects: '$(workingDirectory)/*.sln'  
+
+- task: DotNetCoreCLI@2
+  displayName: Redis Integration Test
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+    projects: '$(workingDirectory)/tests/EShop.Basket.Infrastructure.IntegrationTests/EShop.Basket.Infrastructure.IntegrationTests.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: API Integration Test
+  inputs:
+    command: 'test'
+    arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+    projects: '$(workingDirectory)/tests/EShop.Basket.Api.IntegrationTests/EShop.Basket.Api.IntegrationTests.csproj'
+
+- task: DotNetCoreCLI@2
+  displayName: Dotnet Publish
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    arguments: '--configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/bin'
+    projects: '$(workingDirectory)/src/EShop.Basket.Api/EShop.Basket.Api.csproj'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Api
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/bin'
+    artifact: 'Basket Api'
+    publishLocation: 'pipeline'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Pipepile Artifact -  Bicep
+  inputs:
+    targetPath: '$(workingDirectory)/.azure/'
+    artifact: 'Bicep'
+    publishLocation: 'pipeline'

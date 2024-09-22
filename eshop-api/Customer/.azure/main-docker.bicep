@@ -21,16 +21,16 @@ param webappLinuxVersion string = 'DOCKER|mcr.microsoft.com/appsvc/staticsite:la
 param suffix string = uniqueString(resourceGroup().id)
 
 @description('The Name Of The Virtual Network (vNet).')
-param vnetName string = 'client-authserver-vnet-${suffix}'
+param vnetName string = 'customer-authserver-vnet-${suffix}'
 
 @description('The Name Of The Database Server')
-param sqlServerName string = 'client-sqlserver-${suffix}'
+param sqlServerName string = 'customer-sqlserver-${suffix}'
 
 @description('The Name Of The Database')
-param dbName string = 'eshop.client.Db'
+param dbName string = 'eshop.customer.Db'
 
 @description('The Name Of The Web App Service Plan')
-param webAppServicePlanName string = 'client-authserver-server-plan-${suffix}'
+param webAppServicePlanName string = 'customer-authserver-server-plan-${suffix}'
 
 /*-----------------------       RESOURCES        -------------------------- */
 

@@ -1,10 +1,10 @@
-#CATALOG API DOCKER IMAGE BUILD PIPELINE (USES CONTAINER JOBS)
+# CATALOG API DOCKER IMAGE BUILD PIPELINE (USES CONTAINER JOBS)
+
 resources:   
- repositories:
-    - repository: self
-      trigger: none
-      # - master
- containers:
+  repositories:
+  - repository: self
+    trigger: none
+  containers:
   - container: dotnetsdk
     image: mcr.microsoft.com/dotnet/sdk:8.0.203
     env:
@@ -15,7 +15,7 @@ resources:
       MSSQL_SA_PASSWORD: $(sqlPassword)
       ACCEPT_EULA: Y
     ports:
-      - 1433
+    - 1433
 
 variables:
 - group: microservices-variable-group
@@ -29,89 +29,89 @@ variables:
 - name: publishFolder
   value: 'publish'
 - name: userName
-  value: $(docker-registry-username) # From variable group
+  value: '$(docker-registry-username)' # From variable group
 - name: imageName
   value: '$(userName)/eshop.catalog.api'
 - name: dockerRegistryConnection
   value: 'docker-connection'
 
 jobs:
-  - job: build_and_test
-    displayName: Build And Test
-    pool:
-      vmImage: ubuntu-latest
-    services:
-      mssql: mssql
-    container: dotnetsdk
+- job: build_and_test
+  displayName: Build And Test
+  pool:
+    vmImage: ubuntu-latest
+  services:
+    mssql: mssql
+  container: dotnetsdk
 
-    steps:
-      - task: DotNetCoreCLI@2          
-        displayName: Restore
-        inputs:
-          command: 'restore'
-          projects: '$(workingDirectory)/*.sln'
+  steps:
+  - task: DotNetCoreCLI@2          
+    displayName: Restore
+    inputs:
+      command: 'restore'
+      projects: '$(workingDirectory)/*.sln'
 
-      - task: DotNetCoreCLI@2          
-        displayName: Build
-        inputs:
-          command: 'build'
-          arguments: '--configuration $(buildConfiguration)'
-          projects: '$(workingDirectory)/*.sln'
+  - task: DotNetCoreCLI@2          
+    displayName: Build
+    inputs:
+      command: 'build'
+      arguments: '--configuration $(buildConfiguration)'
+      projects: '$(workingDirectory)/*.sln'
 
-      - task: DotNetCoreCLI@2
-        displayName: Unit Test
-        inputs:
-          command: 'test'
-          arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
-          projects: '$(workingDirectory)/tests/EShop.Catalog.Core.UnitTests/EShop.Catalog.Core.UnitTests.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: Unit Test
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/EShop.Catalog.Core.UnitTests/EShop.Catalog.Core.UnitTests.csproj'
 
-      - task: DotNetCoreCLI@2
-        displayName: SQL Integration Test
-        inputs:
-          command: 'test'
-          arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
-          projects: '$(workingDirectory)/tests/EShop.Catalog.Infrastructure.IntegrationTests/EShop.Catalog.Infrastructure.IntegrationTests.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: SQL Integration Test
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/EShop.Catalog.Infrastructure.IntegrationTests/EShop.Catalog.Infrastructure.IntegrationTests.csproj'
 
-      - task: DotNetCoreCLI@2
-        displayName: API Integration Test
-        inputs:
-          command: 'test'
-          arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
-          projects: '$(workingDirectory)/tests/EShop.Catalog.Api.IntegrationTests/EShop.Catalog.Api.IntegrationTests.csproj'
+  - task: DotNetCoreCLI@2
+    displayName: API Integration Test
+    inputs:
+      command: 'test'
+      arguments: '--configuration $(buildConfiguration)  --collect "Code coverage"'
+      projects: '$(workingDirectory)/tests/EShop.Catalog.Api.IntegrationTests/EShop.Catalog.Api.IntegrationTests.csproj'
 
-  - job: build_and_push_the_docker_image
-    displayName: Build And Push The Docker Image
-    dependsOn: build_and_test
-    condition: succeeded()
-    pool: 
-      vmImage: ubuntu-latest
+- job: build_and_push_the_docker_image
+  displayName: Build And Push The Docker Image
+  dependsOn: build_and_test
+  condition: succeeded()
+  pool: 
+    vmImage: ubuntu-latest
 
-    steps:
-      - task: Docker@2
-        displayName: 'Build The Docker Image'
-        inputs:
-          containerRegistry: '$(dockerRegistryConnection)'
-          repository: '$(imageName)'
-          command: 'build'
-          Dockerfile: '$(workingDirectory)/src/EShop.Catalog.Api/Dockerfile'
-          buildContext: '$(workingDirectory)'
-          tags: |
-            $(Build.BuildId)
-            latest
+  steps:
+  - task: Docker@2
+    displayName: 'Build The Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(imageName)'
+      command: 'build'
+      Dockerfile: '$(workingDirectory)/src/EShop.Catalog.Api/Dockerfile'
+      buildContext: '$(workingDirectory)'
+      tags: |
+        $(Build.BuildId)
+        latest
 
-      - task: Docker@2
-        displayName: 'Push The Docker Image'
-        inputs:
-          containerRegistry: '$(dockerRegistryConnection)'
-          repository: '$(imageName)'
-          command: 'push'
-          tags: |
-            $(Build.BuildId)
-            latest     
+  - task: Docker@2
+    displayName: 'Push The Docker Image'
+    inputs:
+      containerRegistry: '$(dockerRegistryConnection)'
+      repository: '$(imageName)'
+      command: 'push'
+      tags: |
+        $(Build.BuildId)
+        latest     
 
-      - task: PublishPipelineArtifact@1
-        displayName: Publish Pipepile Artifact - Bicep
-        inputs:
-          targetPath: '$(workingDirectory)/.azure'
-          artifact: 'Bicep'
-          publishLocation: 'pipeline'
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Pipepile Artifact - Bicep
+    inputs:
+      targetPath: '$(workingDirectory)/.azure'
+      artifact: 'Bicep'
+      publishLocation: 'pipeline'

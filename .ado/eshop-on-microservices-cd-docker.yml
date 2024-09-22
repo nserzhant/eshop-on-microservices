@@ -1,8 +1,10 @@
+# RELEASE PIPELINE (Docker Images Deployment)
+
 resources:
- repositories:
-   - repository: self
-     trigger: none
- pipelines:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
   - pipeline: eshop-on-microservices-ci-docker
     source: eshop-on-microservices-ci-docker
 
@@ -10,204 +12,210 @@ variables:
 - group: microservices-variable-group
 
 - name: azureserviceconnection
-  value: 'azure-spn'
+  value: 'azure-docker-spn'
 - name: suffix
   value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
 - name: storageAccountName
   value: 'storageacc$(suffix)'
-- name: clientGatewayConfigContainerName 
-  value: 'clientgateway'
-- name: employeeGatewayConfigContainerName
-  value: 'employeegateway'
-- name: clientProxyConfigurationFile
-  value: '$(Pipeline.Workspace)/eshop-on-microservices-ci-docker/NGINX/nginx-client-azure-docker.conf'
-- name: employeeProxyConfigurationFile
-  value: '$(Pipeline.Workspace)/eshop-on-microservices-ci-docker/NGINX/nginx-employee-azure-docker.conf'
-- name: clientGatewayAppName
-  value: 'customer-portal-gateway-$(suffix)'
-- name: employeeGatewayAppName
-  value: 'employee-portal-gateway-$(suffix)'
-- name: clientPortalWebAppName
-  value: 'customer-portal-$(suffix)'
-- name: employeePortalWebAppName
-  value: 'employee-portal-$(suffix)'
-- name: catalogApiWebAppName
-  value: 'catalog-api-web-app-$(suffix)'
-- name: clientAuthServerWebAppName
-  value: 'client-auth-web-app-$(suffix)'
-- name: employeeApiWebAppName
-  value: 'employee-api-web-app-$(suffix)'
-- name: employeeAuthServerWebAppName
-  value: 'employee-authserver-web-app-$(suffix)'
+- name: eshopProxyConfigFileShareName 
+  value: 'eshopproxy'
+- name: eshopEmployeePortalProxyConfigFileShareName
+  value: 'eshopemployeeportalproxy'
+- name: eshopProxyConfigurationFile
+  value: '$(Pipeline.Workspace)/eshop-on-microservices-ci-docker/Envoy/envoy-azure-docker.yaml'
+- name: eshopEmployeePortalProxyConfigurationFile
+  value: '$(Pipeline.Workspace)/eshop-on-microservices-ci-docker/Envoy/envoy-employee-portal-azure-docker.yaml'
+- name: eshopAppName
+  value: 'eshop-$(suffix)'
+- name: eshopEmployeePortalAppName
+  value: 'eshop-employee-portal-$(suffix)'
+- name: customerPortalContainerAppName
+  value: 'customer-portal-static-$(suffix)'
+- name: employeePortalContainerAppName
+  value: 'employee-portal-static-$(suffix)'
+- name: catalogApiContainerAppName
+  value: 'catalog-api-$(suffix)'
+- name: customerAuthServerContainerAppName
+  value: 'customer-authserver-$(suffix)'
+- name: employeeApiContainerAppName
+  value: 'employee-api-$(suffix)'
+- name: employeeAuthServerContainerAppName
+  value: 'employee-authserver-$(suffix)'
+- name: basketApiContainerAppName
+  value: 'basket-api-$(suffix)'
+- name: orderingApiContainerAppName
+  value: 'ordering-api-$(suffix)'
+- name: paymentProcessorContainerAppName
+  value: 'payment-processor-$(suffix)'
+- name: sagaProcessorContainerAppName
+  value: 'saga-processor-$(suffix)'
 - name: catalogApiRepositoryName
   value: 'eshop.catalog.api'
 - name: employeeApiRepositoryName
   value: 'eshop.employeemanagement.api'
 - name: employeeAuthServerRepositoryName
   value: 'eshop.employeemanagement.authorizationserver'
-- name: clientAuthServerRepositoryName
-  value: 'eshop.client.authorizationserver'
+- name: customerAuthServerRepositoryName
+  value: 'eshop.customer.authorizationserver'
 - name: employeePortalRepositoryName
   value: 'eshop.ui.employeeportal'
-- name: clientPortalRepositoryName
-  value: 'eshop.ui.clientportal'
-- name: dockerregistryurl
-  value: 'https://index.docker.io/v1/'
+- name: customerPortalRepositoryName
+  value: 'eshop.ui.customerportal'
+- name: basketApiRepositoryName
+  value: 'eshop.basket.api'
+- name: orderingApiRepositoryName
+  value: 'eshop.ordering.api'
+- name: paymentProcessorRepositoryName
+  value: 'eshop.payment.processor'
+- name: sagaProcessorRepositoryName
+  value: 'eshop.saga.processor'
+- name: registryServer
+  value: 'index.docker.io'
+- name: registryUserName
+  value: '$(docker-registry-username)' # From variable group
 - name: location
-  value: 'westeurope'
-- name: userName
-  value: $(docker-registry-username) # From variable group
-- name: dockerRegistryPassword
-  value: $(docker-registry-read-token) # From variable group
+  value: 'centralus'
+- name: resourceGroupName
+  value: 'eshop-docker'
   
-pool:
-  vmImage: ubuntu-latest
+jobs:
+- job: DeployProxyConfiguration
+  displayName: Deploy Reverse Proxy Configs
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+  - checkout: none
+  - download: eshop-on-microservices-ci-docker
 
-steps:
-- checkout: none
-- download: eshop-on-microservices-ci-docker
+  - powershell: (Get-Content '$(eshopProxyConfigurationFile)' -Encoding utf8) `
+        -replace '__customerPortalContainerAppName__', '$(customerPortalContainerAppName)' `
+        -replace '__catalogApiContainerAppName__', '$(catalogApiContainerAppName)' `
+        -replace '__customerAuthServerContainerAppName__', '$(customerAuthServerContainerAppName)' `
+        -replace '__basketApiContainerAppName__', '$(basketApiContainerAppName)' `
+        -replace '__orderingApiContainerAppName__', '$(orderingApiContainerAppName)' `
+      | Set-Content '$(eshopProxyConfigurationFile)'
+    displayName: Replace Eshop Web App Tokens
+    
+  - script: cat '$(eshopProxyConfigurationFile)'
+    displayName: Eshop Web App Config Display
 
-- powershell: (Get-Content '$(clientProxyConfigurationFile)' -Encoding utf8) `
-      -replace '__clientPortalWebAppName__', '$(clientPortalWebAppName)' `
-      -replace '__catalogApiWebAppName__', '$(catalogApiWebAppName)' `
-      -replace '__clientAuthServerWebAppName__', '$(clientAuthServerWebAppName)' `
-    | Set-Content '$(clientProxyConfigurationFile)'
-  displayName: Replace Client Gateway Tokens
+  - powershell: (Get-Content '$(eshopEmployeePortalProxyConfigurationFile)' -Encoding utf8) `
+        -replace '__employeePortalContainerAppName__', '$(employeePortalContainerAppName)' `
+        -replace '__catalogApiContainerAppName__', '$(catalogApiContainerAppName)' `
+        -replace '__employeeAuthServerContainerAppName__', '$(employeeAuthServerContainerAppName)' `
+        -replace '__employeeApiContainerAppName__', '$(employeeApiContainerAppName)' `
+      | Set-Content '$(eshopEmployeePortalProxyConfigurationFile)'
+    displayName: Replace Eshop Employee Portal Web App Tokens
+
+  - script: cat '$(eshopEmployeePortalProxyConfigurationFile)'
+    displayName: Eshop Employee Portal Web App Config Display
+
+  - task: AzureCLI@2
+    displayName: Get Storage Account Key
+    inputs:
+      azureSubscription: '$(azureserviceconnection)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        ACCOUNT_KEY=$(az storage account keys list --account-name $(storageAccountName) --query '[0].value')
+        echo "##vso[task.setvariable variable=storageAccountKey;issecret=true]$ACCOUNT_KEY"
+
+  - task: AzureCLI@2
+    displayName: Upload Eshop Proxy Configuration To Storage Account
+    inputs:
+      azureSubscription: '$(azureserviceconnection)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: az storage file upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --share-name $(eshopProxyConfigFileShareName) --path envoy.yaml --source '$(eshopProxyConfigurationFile)'
+      
+  - task: AzureCLI@2
+    displayName: Upload Eshop Employee Portal Proxy Configuration To Storage Account
+    inputs:
+      azureSubscription: '$(azureserviceconnection)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: az storage file upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --share-name $(eshopEmployeePortalProxyConfigFileShareName) --path envoy.yaml --source '$(eshopEmployeePortalProxyConfigurationFile)'
+
+- job: DeployApps
+  displayName: 'Deploy Container Apps'
+  strategy: 
+   matrix: 
+     CatalogApi:
+       repository: '$(catalogApiRepositoryName)'
+       containerAppName: '$(catalogApiContainerAppName)'
+     EmployeeApi:
+       repository: '$(employeeApiRepositoryName)'
+       containerAppName: '$(employeeApiContainerAppName)'
+     EmployeeAuthorizationServer:
+       repository: '$(employeeAuthServerRepositoryName)'
+       containerAppName: '$(employeeAuthServerContainerAppName)'
+     CustomerAuthorizationServer:
+       repository: '$(customerAuthServerRepositoryName)'
+       containerAppName: '$(customerAuthServerContainerAppName)'
+     CustomerPortal:
+       repository: '$(customerPortalRepositoryName)'
+       containerAppName: '$(customerPortalContainerAppName)'
+     EmployeePortal:
+       repository: '$(employeePortalRepositoryName)'
+       containerAppName: '$(employeePortalContainerAppName)'
+     BasketApi:
+       repository: '$(basketApiRepositoryName)'
+       containerAppName: '$(basketApiContainerAppName)'
+     OrderingApi:
+       repository: '$(orderingApiRepositoryName)'
+       containerAppName: '$(orderingApiContainerAppName)'
+     PaymentProcessor:
+       repository: '$(paymentProcessorRepositoryName)'
+       containerAppName: '$(paymentProcessorContainerAppName)'
+     SagaProcessor:
+       repository: '$(sagaProcessorRepositoryName)'
+       containerAppName: '$(sagaProcessorContainerAppName)'
+  pool:
+    vmImage: ubuntu-latest
+
+  steps:
+  - checkout: none
+
+  - task: AzureContainerApps@1
+    displayName: Deploy Container App
+    inputs:
+      azureSubscription: '$(azureserviceconnection)'
+      imageToDeploy: '$(registryServer)/$(registryUserName)/$(repository):$(resources.pipeline.eshop-on-microservices-ci-docker.runID)'
+      containerAppName: '$(containerAppName)'
+      resourceGroup: '$(resourceGroupName)'
+      location: '$(location)'
   
-- script: cat '$(clientProxyConfigurationFile)'
-  displayName: Client Gateway Config Display
+- job: CheckApps
+  dependsOn: [DeployApps, DeployProxyConfiguration]
+  displayName: 'Chceck Apps Is Healthy'
+  pool:
+    vmImage: ubuntu-latest
 
-- powershell: (Get-Content '$(employeeProxyConfigurationFile)' -Encoding utf8) `
-      -replace '__employeePortalWebAppName__', '$(employeePortalWebAppName)' `
-      -replace '__catalogApiWebAppName__', '$(catalogApiWebAppName)' `
-      -replace '__employeeApiWebAppName__', '$(employeeApiWebAppName)' `
-      -replace '__employeeAuthServerWebAppName__', '$(employeeAuthServerWebAppName)' `
-    | Set-Content '$(employeeProxyConfigurationFile)'
-  displayName: Replace Employee Gateway Tokens
+  steps:
+  - checkout: none
 
-- script: cat '$(employeeProxyConfigurationFile)'
-  displayName: Employee Gateway Config Display
+  - task: AzureCLI@2
+    displayName: Get Application FQDN
+    inputs:
+      azureSubscription: '$(azureserviceconnection)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        FQDN=$(az containerapp show --name $(eshopAppName) --resource-group $(resourceGroupName) --query properties.configuration.ingress.fqdn -otsv)
+        echo "##vso[task.setvariable variable=eshopAppFQDN]$FQDN"
 
-- task: AzureCLI@2
-  displayName: Get Storage Account Key
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-     ACCOUNT_KEY=$(az storage account keys list --account-name $(storageAccountName) --query '[0].value')
-     echo "##vso[task.setvariable variable=storageAccountKey;issecret=true]$ACCOUNT_KEY"
+  - task: AzureCLI@2
+    displayName: Get Application FQDN
+    inputs:
+      azureSubscription: '$(azureserviceconnection)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        FQDN=$(az containerapp show --name $(eshopEmployeePortalAppName) --resource-group $(resourceGroupName) --query properties.configuration.ingress.fqdn -otsv)
+        echo "##vso[task.setvariable variable=eshopEmployeePortalAppFQDN]$FQDN"
 
-- task: AzureCLI@2
-  displayName: Upload Customer Portal Gateway Configuration To Storage Account
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: az storage blob upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --container-name $(clientGatewayConfigContainerName) --name nginx.conf --file '$(clientProxyConfigurationFile)' --overwrite
+  - powershell: Invoke-WebRequest -UseBasicParsing https://$(eshopAppFQDN)/ -TimeoutSec 300
+    displayName: Check Eshop App
 
-- task: AzureCLI@2
-  displayName: Upload Employee Portal Gateway Configuration To Storage Account
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: az storage blob upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --container-name $(employeeGatewayConfigContainerName) --name nginx.conf --file '$(employeeProxyConfigurationFile)' --overwrite
-
-- task: AzureWebAppContainer@1
-  displayName: Update Catalog Api Web App
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    appName: '$(catalogApiWebAppName)'
-    containers: '$(userName)/$(catalogApiRepositoryName):$(resources.pipeline.eshop-on-microservices-ci-docker.runID)'
-    appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
-      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
-
-- task: AzureWebAppContainer@1
-  displayName: Update Employee Api Web App
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    appName: '$(employeeApiWebAppName)'
-    containers: '$(userName)/$(employeeApiRepositoryName):$(resources.pipeline.eshop-on-microservices-ci-docker.runID)'
-    appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
-      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
-
-- task: AzureWebAppContainer@1
-  displayName: Update Employee Authorization Server Web App
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    appName: '$(employeeAuthServerWebAppName)'
-    containers: '$(userName)/$(employeeAuthServerRepositoryName):$(resources.pipeline.eshop-on-microservices-ci-docker.runID)'
-    appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
-      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
-
-- task: AzureWebAppContainer@1
-  displayName: Update Client Authorization Server Web App
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    appName: '$(clientAuthServerWebAppName)'
-    containers: '$(userName)/$(clientAuthServerRepositoryName):$(resources.pipeline.eshop-on-microservices-ci-docker.runID)'
-    appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
-      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
-
-- task: AzureWebAppContainer@1
-  displayName: Update Customer Portal Web App
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    appName: '$(clientPortalWebAppName)'
-    containers: '$(userName)/$(clientPortalRepositoryName):$(resources.pipeline.eshop-on-microservices-ci-docker.runID)'
-    appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
-      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
-
-- task: AzureWebAppContainer@1
-  displayName: Update Employee Portal Web App
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    appName: '$(employeePortalWebAppName)'
-    containers: '$(userName)/$(employeePortalRepositoryName):$(resources.pipeline.eshop-on-microservices-ci-docker.runID)'
-    appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
-      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
-
-- task: AzureAppServiceManage@0
-  displayName: Restrart Employee Gateway
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    Action: 'Restart Azure App Service'
-    WebAppName: '$(employeeGatewayAppName)'
-
-- task: AzureAppServiceManage@0
-  displayName: Restrart Client Gateway
-  inputs:
-    azureSubscription: '$(azureserviceconnection)'
-    Action: 'Restart Azure App Service'
-    WebAppName: '$(clientGatewayAppName)'
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(employeeGatewayAppName).azurewebsites.net -TimeoutSec 300
-  displayName: Init And Check Employee Gateway App
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(clientGatewayAppName).azurewebsites.net -TimeoutSec 300
-  displayName: Init And Check Client Gateway App     
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(clientGatewayAppName).azurewebsites.net/catalog/swagger/index.html -TimeoutSec 300
-  displayName: Init And Check Catalog Api
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(clientGatewayAppName).azurewebsites.net/authorize/.well-known/openid-configuration -TimeoutSec 300
-  displayName: Init And Check Client Auth Server
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(employeeGatewayAppName).azurewebsites.net/swagger/index.html -TimeoutSec 300
-  displayName: Init And Check Employee Api
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(employeeGatewayAppName).azurewebsites.net/authorize/.well-known/openid-configuration -TimeoutSec 300
-  displayName: Init And Check Employee Auth Server
+  - powershell: Invoke-WebRequest -UseBasicParsing https://$(eshopEmployeePortalAppFQDN)/ -TimeoutSec 300
+    displayName: Check Eshop Employee Portal App

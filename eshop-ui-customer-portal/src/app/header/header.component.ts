@@ -29,7 +29,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.basketTotal = items.length;
       });
 
-    this.authenticationService.authUser.pipe(takeUntil(this.componentDestroyed$))
+    this.authenticationService.authUser$.pipe(takeUntil(this.componentDestroyed$))
       .subscribe(async (user) => {
         if (user) {
           this.isAuthenticated = true;

@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  {{ if .Values.useAks -}}annotations:
+    azure.workload.identity/client-id: "{{ .Values.azure.paymentProcessorUmiClientId }}"
+  labels:
+    azure.workload.identity/use:  "true"
+{{- end }}        
+  name: {{ .Values.payment_processor.serviceAccountName }}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.payment_processor.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.payment_processor.appName }}
+  replicas: {{ .Values.payment_processor.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.payment_processor.appName }}
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Values.payment_processor.serviceAccountName }}
+      containers:
+      - name: {{ .Values.payment_processor.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.payment_processor.image.repository }}:{{ .Values.imagesTag }}"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.ordering_api.env.ASPNETCORE_ENVIRONMENT }}
+        - name: ASPNETCORE_HTTP_PORTS
+          value: "8080"
+        - name: payment__processPayment
+          value: "{{ .Values.payment_processor.env.payment__processPayment }}"
+        {{ if .Values.useAks -}}
+        - name: broker__AzureServiceBusConnectionString
+          value: sb://{{ .Values.azure.serviceBusNamespaceName }}.servicebus.windows.net      
+        {{- else -}}
+        - name: broker__rabbitMQHost
+          value: {{ .Values.rabbitmq.appName }}
+        {{- end }} 
+        resources:
+          limits:
+            memory: {{ .Values.payment_processor.resources.memory }}
+            cpu: {{ .Values.payment_processor.resources.cpu }}
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 8080
+          initialDelaySeconds: 30  
+          periodSeconds: 10        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 8080
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
+
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName }}
+      {{- end }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.payment_processor.appName }}
+spec:
+  selector:
+    app: {{ .Values.payment_processor.appName }}
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

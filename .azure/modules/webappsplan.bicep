@@ -7,7 +7,7 @@ param location string = resourceGroup().location
 param webAppServicePlanName string
 
 @description('The Name Of The Web App SKU')
-param webAppSkuName string = 'B1'
+param webAppSkuName string = 'B3'
 
 /*----------------------- RESOURCES  --------------------------- */
 /*----------------------- Web App     -------------------------- */

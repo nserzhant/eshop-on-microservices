@@ -15,23 +15,32 @@ spec:
       containers:
       - name: {{ .Values.employee_portal.appName }}
         image: "{{ .Values.dockerRegistry }}/{{ .Values.employee_portal.image.repository }}:{{ .Values.imagesTag }}" 
-        imagePullPolicy: IfNotPresent          
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          periodSeconds: 10
-          initialDelaySeconds: 5   
+        imagePullPolicy: IfNotPresent  
         resources:
           limits:
             memory:  {{ .Values.employee_portal.resources.memory }}
             cpu:  {{ .Values.employee_portal.resources.cpu }}
         ports:
-          - containerPort: 80 
- 
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 10  
+          periodSeconds: 10        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
+
       {{ if .Values.imagePullSecretName -}}
       imagePullSecrets:
-        - name: {{ .Values.imagePullSecretName }}
+      - name: {{ .Values.imagePullSecretName }}
       {{- end }}  
 
 ---
@@ -46,5 +55,4 @@ spec:
   type:  ClusterIP
   ports:
   - protocol: 'TCP'
-    port:  {{ .Values.employee_portal.servicePort }}
-    targetPort:  80
+    port:  80

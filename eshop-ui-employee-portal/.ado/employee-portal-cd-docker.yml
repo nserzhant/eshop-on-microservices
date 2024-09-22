@@ -1,18 +1,19 @@
-# EMPLOYEE PORTAL RELEASE PIPELINE USING DOCKER IMAGES HOSTED ON APP SERVICE
+# EMPLOYEE PORTAL RELEASE PIPELINE (Docker Image Deployment)
+
 resources:
- repositories:
-    - repository: self
-      trigger: none
- pipelines:
-   - pipeline: employee-portal-ci-docker
-     source: employee-portal-ci-docker
-     trigger: none
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: employee-portal-ci-docker
+    source: employee-portal-ci-docker
+    trigger: none
 
 variables:
 - group: microservices-variable-group
 
 - name: azureserviceconnection
-  value: 'azure-spn'
+  value: 'azure-docker-spn'
 - name: suffix
   value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
 - name: webappname
@@ -24,13 +25,13 @@ variables:
 - name: dockerregistryurl
   value: 'https://index.docker.io/v1/'
 - name: subscriptionid
-  value: $(subscription-id) # From variable group
+  value: '$(subscription-id)' # From variable group
 - name: userName
-  value: $(docker-registry-username) # From variable group
+  value: '$(docker-registry-username)' # From variable group
 - name: dockerRegistryPassword
-  value: $(docker-registry-read-token) # From variable group
+  value: '$(docker-registry-read-token)' # From variable group
 - name: resourceGroupName
-  value: 'eshop-on-microservices-rg'
+  value: 'eshop-docker'
 - name: location
   value: 'westeurope'
 
@@ -52,7 +53,7 @@ steps:
     location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: '$(Pipeline.Workspace)/employee-portal-ci-docker/Bicep/$(templateFileName)'
-    overrideParameters: '-webappname $(webappname)'
+    overrideParameters: '-webappname $(webappname) -location $(location) -suffix $(suffix)'
     deploymentMode: 'Incremental'
 
 - powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net -TimeoutSec 300
@@ -67,9 +68,9 @@ steps:
     slotName: 'production'
     containers: '$(userName)/$(repositoryName):$(resources.pipeline.employee-portal-ci-docker.runID)'
     appSettings: |
-      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)" 
-      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
-      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)" 
+      -DOCKER_REGISTRY_SERVER_USERNAME "$(userName)"
+      -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)"
+      -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
 
 - powershell: Invoke-WebRequest -UseBasicParsing https://$(webappname).azurewebsites.net -TimeoutSec 300
   displayName: Check Web App

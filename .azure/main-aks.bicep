@@ -11,23 +11,35 @@ param acrName string
 
 /*----------------------- SQL Server  Parameters -------------------- */
 
-@description('The Name Of The Employees Database Server')
+@description('The Name Of The Employee Database Server')
 param employeeSqlServerName string = 'employee-sqlserver-${suffix}'
 
-@description('The Name Of The Clients Database Server')
-param clientSqlServerName string = 'client-sqlserver-${suffix}'
+@description('The Name Of The Customer Database Server')
+param customerSqlServerName string = 'customer-sqlserver-${suffix}'
 
 @description('The Name Of The Catalog Database Server')
 param catalogSqlServerName string = 'catalog-sqlserver-${suffix}'
 
+@description('The Name Of The Ordering Database Server')
+param orderingSqlServerName string = 'ordering-sqlserver-${suffix}'
+
+@description('The Name Of The Saga Database Server')
+param sagaSqlServerName string = 'saga-sqlserver-${suffix}'
+
 @description('The Name Of The Employee Management Database')
 param employeeDbName string = 'eshop.employee.Db'
 
-@description('The Name Of The Client Authserver Database')
-param clientDbName string = 'eshop.client.Db'
+@description('The Name Of The customer Authserver Database')
+param customerDbName string = 'eshop.customer.Db'
 
 @description('The Name Of The Catalog Api Database')
 param catalogDbName string = 'eshop.catalog.Db'
+
+@description('The Name Of The Ordering Api Database')
+param orderingDbName string = 'eshop.ordering.Db'
+
+@description('The Name Of The Saga Processor Database')
+param sagaDbName string = 'eshop.saga.Db'
 
 @description('The Id Of The Database Server User Assigned Identity. The Identity Should Have A Directory Readers Role')
 param sqlUserAssignedIdentity string
@@ -38,10 +50,9 @@ param sqlEntraIdAdminLogin string
 @description('The Administrator Microsoft Entra Object Id Of The SQL Server')
 param sqlEntraIdAdminObjectId string
 
-
 /*----------------------- AKS Parameters  -------------------- */
 
-@description('The Public IP Label Of The Customer Portal Gateway.')
+@description('The Public IP Label Of The Eshop Web App.')
 param dnsLabel string
 
 @description('The Name Of The Managed Cluster Resource.')
@@ -55,11 +66,11 @@ param agentCount int
 @description('The Size Of The Virtual Machine.')
 param agentVMSize string
 
-@description('The Name Of The Namespace Where Service Account Created.')
+@description('The Name Of The Namespace Where Service Accounts Created.')
 param aksNamespace string
 
-@description('The Name Of The Client Authorization Server Service Account.')
-param clientAuthServerServiceAccountName string = 'client-authserver-sa'
+@description('The Name Of The Customer Authorization Server Service Account.')
+param customerAuthServerServiceAccountName string = 'customer-authserver-sa'
 
 @description('The Name Of The Employee Management Api Service Account.')
 param employeeApiServiceAccountName string = 'employeemanagement-api-sa'
@@ -70,24 +81,27 @@ param employeeAuthServerServiceAccountName string = 'employeemanagement-authserv
 @description('The Name Of The Catalog Api Service Account.')
 param catalogApiServiceAccountName string = 'catalog-api-sa'
 
-/*----------------------- AKV Parameters  -------------------- */
+@description('The Name Of The Basket Api Service Account.')
+param basketApiServiceAccountName string = 'basket-api-sa'
 
-@description('The Name Of The Azure Key Vault Resource.')
-param akvName string = 'akv-eshop-${suffix}'
+@description('The Name Of The Ordering Api Service Account.')
+param orderingApiServiceAccountName string = 'ordering-api-sa'
 
-@description('The Name Of The Client Authorization Server Signing Key Akv Secret.')
-param clientAuthSigningKeySecretName string = 'client-auth-signing-key'
+@description('The Name Of The Payment Processor Service Account.')
+param paymentProcessirServiceAccountName string = 'payment-processor-sa'
 
-@description('The Name Of The Employee Authorization Server Signing Key Akv Secret.')
-param employeeAuthSigningKeySecretName string = 'employee-auth-signing-key'
+@description('The Name Of The Saga Processor Service Account.')
+param sagaProcessirServiceAccountName string = 'saga-processor-sa'
 
-@description('The Client Authorization Server Signing Key.')
-@secure()
-param clientAuthSigningKey string
+/*----------------------- Redis Cache  Parameters ---------------- */
 
-@description('The Employee Authorization Server Signing Key')
-@secure()
-param employeeAuthSigningKey string
+@description('The Name Of The Azure Redis Cache')
+param redisCacheName string = 'basket-rediscache-${suffix}'
+
+/*----------------------- Service Bus Parameters ---------------- */
+
+@description('The Name of the Service Bus namespace')
+param serviceBusNamespaceName string = 'eshop-sb-${suffix}'
 
 /*----------------------- UMI Parameters  -------------------- */
 
@@ -97,15 +111,27 @@ param catalogApiUMIName string = 'catalog-api-identity'
 @description('The Name Of The Employee Management UMI Resource.')
 param employeeManagementUMIName string = 'employee-management-identity'
 
-@description('The Name Of The Client Authserver UMI Resource.')
-param clientAuthServerUMIName string = 'client-authserver-identity'
+@description('The Name Of The customer Authserver UMI Resource.')
+param customerAuthServerUMIName string = 'customer-authserver-identity'
+
+@description('The Name Of The Basket Api UMI Resource.')
+param basketApiUMIName string = 'basket-api-identity'
+
+@description('The Name Of The Ordering Api UMI Resource.')
+param orderingApiUMIName string = 'ordering-api-identity'
+
+@description('The Name Of The Payment Processor UMI Resource.')
+param paymentProcessorUMIName string = 'payment-processor-identity'
+
+@description('The Name Of The Saga Processor UMI Resource.')
+param sagaProcessorUMIName string = 'saga-processor-identity'
 
 /*----------------------- Variables    --------------------------- */
 
 var databases = [
   {
-    sqlDbName: clientDbName
-    sqlServerName: clientSqlServerName
+    sqlDbName: customerDbName
+    sqlServerName: customerSqlServerName
   }
   {
     sqlDbName: employeeDbName
@@ -115,28 +141,92 @@ var databases = [
     sqlDbName: catalogDbName
     sqlServerName: catalogSqlServerName
   }
+  {
+    sqlDbName: orderingDbName
+    sqlServerName: orderingSqlServerName
+  }
+  {
+    sqlDbName: sagaDbName
+    sqlServerName: sagaSqlServerName
+  }
 ]
 
 var UMIs = [
   {
-    umiName: clientAuthServerUMIName
-    umiTargetSqlServerName: clientSqlServerName
-    serviceAccounts: [ clientAuthServerServiceAccountName ]
+    umiName: customerAuthServerUMIName
+    umiTargetServiceBusNamespaceName: ''
+    umiTargetRedisCacheName: ''
+    serviceAccounts: [ customerAuthServerServiceAccountName ]
   } 
   {
     umiName: employeeManagementUMIName
-    umiTargetSqlServerName: employeeSqlServerName
+    umiTargetServiceBusNamespaceName: ''
+    umiTargetRedisCacheName: ''
     serviceAccounts: [ employeeAuthServerServiceAccountName, employeeApiServiceAccountName ]
   }
   {
     umiName: catalogApiUMIName
-    umiTargetSqlServerName: catalogSqlServerName
+    umiTargetServiceBusNamespaceName: serviceBusNamespaceName
+    umiTargetRedisCacheName: ''
     serviceAccounts: [ catalogApiServiceAccountName ]
+  }
+  {
+    umiName: orderingApiUMIName
+    umiTargetServiceBusNamespaceName: serviceBusNamespaceName
+    umiTargetRedisCacheName: ''
+    serviceAccounts: [ orderingApiServiceAccountName ]
+  }
+  {
+    umiName: paymentProcessorUMIName
+    umiTargetServiceBusNamespaceName: serviceBusNamespaceName
+    umiTargetRedisCacheName: ''
+    serviceAccounts: [ paymentProcessirServiceAccountName ]
+  }
+  {
+    umiName: basketApiUMIName
+    umiTargetServiceBusNamespaceName: serviceBusNamespaceName
+    umiTargetRedisCacheName: redisCacheName
+    serviceAccounts: [ basketApiServiceAccountName ]
+  }
+  {
+    umiName: sagaProcessorUMIName
+    umiTargetServiceBusNamespaceName: serviceBusNamespaceName
+    umiTargetRedisCacheName: ''
+    serviceAccounts: [ sagaProcessirServiceAccountName ]
   }
 ]
 
 /*----------------------- RESOURCES    --------------------------- */
+
+ module aks 'modules-aks/aks.bicep' = {
+  name: 'aks'
+
+  params: {
+    location: location
+    acrName: acrName
+    clusterName: clusterName
+    dnsLabel: dnsLabel
+    agentCount: agentCount
+    agentVMSize: agentVMSize
+  }
+}
  
+module redisCache 'modules-aks/redis.bicep' = {
+  name: redisCacheName
+  params: {
+    location: location
+    redisCacheName: redisCacheName
+  }
+}
+
+module servicebus 'modules-aks/servicebus.bicep' = {
+  name: 'servicebus'
+  params: {
+    location: location
+    serviceBusNamespaceName: serviceBusNamespaceName 
+  }
+}
+
 module sqlServers 'modules-aks/sql.bicep' = [for database in databases: {
     name: database.sqlServerName
 
@@ -151,19 +241,6 @@ module sqlServers 'modules-aks/sql.bicep' = [for database in databases: {
   }
 ]
 
- module aks 'modules-aks/aks.bicep' = {
-  name: 'aks'
-
-  params: {
-    location: location
-    acrName: acrName
-    clusterName: clusterName
-    dnsLabel: dnsLabel
-    agentCount: agentCount
-    agentVMSize: agentVMSize
-  }
-}
-
 module userAssignedManagedIdentities 'modules-aks/umi.bicep' = [for umi in UMIs: {
     name:  umi.umiName
 
@@ -173,26 +250,13 @@ module userAssignedManagedIdentities 'modules-aks/umi.bicep' = [for umi in UMIs:
       aksNamespace: aksNamespace
       aksOidcIssuer: aks.outputs.oidIssuer
       aksServiceAccountNames: umi.serviceAccounts
-      sqlServerName: umi.umiTargetSqlServerName
+      serviceBusNamespaceName: umi.umiTargetServiceBusNamespaceName
+      redisCacheName: umi.umiTargetRedisCacheName
     }
 
     dependsOn: [
-      sqlServers
+      redisCache
+      servicebus
     ]
   }
 ]
-
-module akv 'modules-aks/akv.bicep' = {
-  name: 'akv'
-
-  params: {
-    location: location
-    akskeyValutProviderUMI: aks.outputs.keyValutProviderUMI
-    akvName: akvName 
-    clientAuthSigningKey: clientAuthSigningKey
-    clientAuthSigningKeySecretName: clientAuthSigningKeySecretName
-    employeeAuthSigningKey: employeeAuthSigningKey
-    employeeAuthSigningKeySecretName: employeeAuthSigningKeySecretName
-  }
-}
-

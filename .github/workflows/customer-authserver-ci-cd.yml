@@ -1,0 +1,69 @@
+name: Customer Authorization Server CI CD
+
+on:
+  workflow_dispatch:
+
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/Customer
+  webappname: customer-authserver-web-app-${{ vars.SUFFIX }}
+  templateFileName: webapp-with-sql.bicep
+  resourceGroupName: eshop
+  location: westeurope
+  
+jobs:
+  build_deploy:
+    runs-on: ubuntu-latest
+
+    steps:    
+    
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 8.0.x
+          
+    - name: Restore
+      run: dotnet restore ${{ env.workingDirectory }}/*.sln
+      
+    - name: Build
+      run: dotnet build ${{ env.workingDirectory }}/*.sln -c ${{ env.buildConfiguration }} --no-restore
+
+    - name: Dotnet Publish
+      run: dotnet publish ${{ env.workingDirectory }}/src/EShop.Customer.AuthorizationServer/EShop.Customer.AuthorizationServer.csproj -c ${{ env.buildConfiguration }} -o ./artifacts/bin
+
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}          
+    
+    - name: Deploy Infrastructure
+      uses: Azure/arm-deploy@v2
+      id: deployBicep
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: webAppName="${{ env.webappname }}" administratorLoginPassword="${{ secrets.SQL_DB_PASSWORD }}" clientAppId="${{ vars.AUTH_CLIENT_APP_ID }}" clientAppOrigin="${{ vars.AUTH_CLIENT_APP_ORIGIN }}" location="${{ env.location }}" suffix="${{ vars.SUFFIX }}"
+  
+    - name: Get Web Application Publish Profile
+      id: webAppPublishpPofile
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.webappname }}" --resource-group "${{ env.resourceGroupName }}"  --subscription "${{ secrets.AZURE_SUBSCRIPTION }}" --xml)
+          echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT    
+          
+    - name: Deploy Azure Web Application
+      uses: Azure/webapps-deploy@v3.0.0
+      with:
+        app-name: ${{ env.webappname }}
+        package: ./artifacts/bin         
+        publish-profile: ${{ steps.webAppPublishpPofile.outputs.publishProfile }}
+        resource-group-name: ${{ env.resourceGroupName }}
+        restart: true
+   
+    - name: Init And Check Catalog Api App
+      run: timeout 300s sh -c ' until curl https://${{ env.webappname }}.azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh

@@ -1,0 +1,45 @@
+{{ if not .Values.useAks -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.rabbitmq.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.rabbitmq.appName }}
+  template:
+    metadata:
+      labels: 
+        app: {{ .Values.rabbitmq.appName }}
+    spec:
+      containers:
+      - name: {{ .Values.rabbitmq.appName }}
+        image: {{ .Values.rabbitmq.image }}
+        ports:
+        - containerPort: {{ .Values.rabbitmq.ports.service }}
+        - containerPort: {{ .Values.rabbitmq.ports.management }}
+        resources:
+          limits:
+            memory: {{ .Values.rabbitmq.resources.memory }}
+            cpu: {{ .Values.rabbitmq.resources.cpu }}
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata: 
+  name: {{ .Values.rabbitmq.appName }}
+spec:
+  selector:
+    app: {{ .Values.rabbitmq.appName }}
+  type: ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port: {{ .Values.rabbitmq.ports.service }}
+    name: 'service'
+  - protocol: 'TCP'
+    port: {{ .Values.rabbitmq.ports.management }}
+    name: 'management'
+
+{{- end }}

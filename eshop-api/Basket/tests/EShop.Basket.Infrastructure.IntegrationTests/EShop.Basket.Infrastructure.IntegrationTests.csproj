@@ -14,6 +14,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.6" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
@@ -25,11 +26,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.33" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Eshop.Basket.Core\EShop.Basket.Core.csproj" />
-    <ProjectReference Include="..\..\src\Eshop.Basket.Infrastructure\EShop.Basket.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\EShop.Basket.Core\EShop.Basket.Core.csproj" />
+    <ProjectReference Include="..\..\src\EShop.Basket.Infrastructure\EShop.Basket.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

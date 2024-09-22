@@ -4,21 +4,28 @@ on:
   workflow_dispatch:
   
 env:
-  dnsLabel: eshop-customer-portal-${{ vars.SUFFIX }}
+  dnsLabel: eshop-${{ vars.SUFFIX }}
   clusterName: aks-eshop-${{ vars.SUFFIX }}
   agentCount: 2
   agentVMSize: Standard_B2s
   aksNamespace: eshop
-  akvName: akv-eshop-${{ vars.SUFFIX }}
   catalogApiUMIName: catalog-api-identity
   employeeManagementUMIName: employee-management-identity
-  clientAuthServerUMIName: client-authserver-identity
+  customerAuthServerUMIName: customer-authserver-identity
+  basketApiUMIName: basket-api-identity
+  orderingApiUMIName: ordering-api-identity
+  paymentProcessorUMIName: payment-processor-identity
+  sagaProcessorUMIName: saga-processor-identity
   catalogSqlServerName: catalog-sqlserver-${{ vars.SUFFIX }}
   employeeSqlServerName: employee-sqlserver-${{ vars.SUFFIX }}
-  clientSqlServerName: client-sqlserver-${{ vars.SUFFIX }}   
+  customerSqlServerName: customer-sqlserver-${{ vars.SUFFIX }}   
+  orderingSqlServerName: ordering-sqlserver-${{ vars.SUFFIX }}   
+  sagaSqlServerName: saga-sqlserver-${{ vars.SUFFIX }}   
+  redisCacheName: basket-rediscache-${{ vars.SUFFIX }}  
+  serviceBusNamespaceName: eshop-sb-${{ vars.SUFFIX }}  
   templateFileName: main-aks.bicep
   resourceGroupName: eshop-aks
-  location: eastus
+  location: centralus
 
 jobs:
   deploy:
@@ -36,16 +43,16 @@ jobs:
     - name: Azure Login
       uses: Azure/login@v1.6.1
       with:
-        creds: ${{ secrets.AZURE_RG_OWNER_CREDENTIALS }}          
+        creds: ${{ secrets.AZURE_INFRASTRUCTURE_DEPLOYMENT_CREDENTIALS }}          
         
-    - name: Deploy Bicep Template
+    - name: Deploy Infrastructure
       uses: Azure/arm-deploy@v2
       id: deployBicep
       with:
         subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ env.resourceGroupName }}
         template: ./artifacts/Bicep/${{ env.templateFileName }}
-        parameters:  catalogSqlServerName=${{ env.catalogSqlServerName }} clientSqlServerName=${{ env.clientSqlServerName }} employeeSqlServerName=${{ env.employeeSqlServerName }} sqlEntraIdAdminLogin=${{ secrets.AZURE_SP_APP_ID }} sqlEntraIdAdminObjectId=${{ secrets.AZURE_SP_OBJECT_ID }} sqlUserAssignedIdentity=${{ secrets.SQL_DIRECTORY_READER_UMI }} acrName=${{ vars.ACR_NAME }} dnsLabel=${{ env.dnsLabel }} clusterName=${{ env.clusterName }} agentCount=${{ env.agentCount }} agentVMSize=${{ env.agentVMSize }} akvName=${{ env.akvName }} aksNamespace=${{ env.aksNamespace }} clientAuthSigningKey=${{ secrets.CLIENT_AUTH_SIGNING_KEY }} employeeAuthSigningKey=${{ secrets.EMPLOYEE_AUTH_SIGNING_KEY }} catalogApiUMIName=${{ env.catalogApiUMIName }} employeeManagementUMIName=${{ env.employeeManagementUMIName }} clientAuthServerUMIName=${{ env.clientAuthServerUMIName }} location=${{ env.location }}  suffix=${{ vars.SUFFIX }}
+        parameters:  catalogSqlServerName=${{ env.catalogSqlServerName }} customerSqlServerName=${{ env.customerSqlServerName }} employeeSqlServerName=${{ env.employeeSqlServerName }} orderingSqlServerName=${{ env.orderingSqlServerName }}  sagaSqlServerName=${{ env.sagaSqlServerName }} sqlEntraIdAdminLogin=${{ secrets.AZURE_SP_APP_ID }} sqlEntraIdAdminObjectId=${{ secrets.AZURE_SP_OBJECT_ID }} sqlUserAssignedIdentity=${{ secrets.SQL_DIRECTORY_READER_UMI }} acrName=${{ vars.ACR_NAME }} dnsLabel=${{ env.dnsLabel }} clusterName=${{ env.clusterName }} agentCount=${{ env.agentCount }} agentVMSize=${{ env.agentVMSize }} aksNamespace=${{ env.aksNamespace }} catalogApiUMIName=${{ env.catalogApiUMIName }} employeeManagementUMIName=${{ env.employeeManagementUMIName }} customerAuthServerUMIName=${{ env.customerAuthServerUMIName }}  basketApiUMIName=${{ env.basketApiUMIName }}  orderingApiUMIName=${{ env.orderingApiUMIName }}  paymentProcessorUMIName=${{ env.paymentProcessorUMIName }}  sagaProcessorUMIName=${{ env.sagaProcessorUMIName }}  redisCacheName=${{ env.redisCacheName }}  serviceBusNamespaceName=${{ env.serviceBusNamespaceName }} location=${{ env.location }}  suffix=${{ vars.SUFFIX }}
     
     - name: Clear Azure Cache
       run: az cache purge        
@@ -64,10 +71,24 @@ jobs:
         appName: Employee Management Service Account
         connectionString: 'Server=tcp:${{ env.employeeSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.employee.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
 
-    - name:  Add Client Authorization Server Service Account SQL User
+    - name:  Add Customer Authorization Server Service Account SQL User
       uses: ./.github/workflows/actions/create-sql-user
       with:
-        userName: ${{ env.clientAuthServerUMIName }}
-        appName: Client Authorization Server Service Account
-        connectionString: 'Server=tcp:${{ env.clientSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.client.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+        userName: ${{ env.customerAuthServerUMIName }}
+        appName: Customer Authorization Server Service Account
+        connectionString: 'Server=tcp:${{ env.customerSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.customer.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
     
+    - name:  Add Ordering Service Account SQL User
+      uses: ./.github/workflows/actions/create-sql-user
+      with:
+        userName: ${{ env.orderingApiUMIName }}
+        appName: Customer Authorization Server Service Account
+        connectionString: 'Server=tcp:${{ env.orderingSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.ordering.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+   
+    - name:  Add Saga Processor Service Account SQL User
+      uses: ./.github/workflows/actions/create-sql-user
+      with:
+        userName: ${{ env.sagaProcessorUMIName }}
+        appName: Customer Authorization Server Service Account
+        connectionString: 'Server=tcp:${{ env.sagaSqlServerName }}.database.windows.net,1433;Initial Catalog=eshop.saga.Db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+   

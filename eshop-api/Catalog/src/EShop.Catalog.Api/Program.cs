@@ -1,10 +1,9 @@
 using EShop.Catalog.Api.Constants;
 using EShop.Catalog.Api.Data;
 using EShop.Catalog.Api.Filters;
+using EShop.Catalog.Api.RegistrationExtensions;
 using EShop.Catalog.Api.Settings;
 using EShop.Catalog.Infrastructure;
-using EShop.Catalog.Infrastructure.ConsumeFilters;
-using EShop.Catalog.Integration.Consumers;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -23,11 +22,6 @@ var employeeJwtSettings = builder.Configuration.GetSection(ConfigurationKeys.EMP
 
 var customerJWTSettings = builder.Configuration.GetSection(ConfigurationKeys.CUSTOMER_JWT_CONFIG_NAME)
     .Get<JWTSettings>() ?? new JWTSettings();
-
-// Get settings to configure Message Broker connection
-
-var messageBrokerSettings = builder.Configuration.GetSection(ConfigurationKeys.MESSAGE_BROKER_CONFIG_NAME)
-    .Get<MessageBrockerSettings>() ?? new MessageBrockerSettings();
 
 // Configure settings for Client app
 var clientOrigins = builder.Configuration[ConfigurationKeys.SPA_CLIENT_ORIGINS_CONFIG_NAME];
@@ -109,61 +103,8 @@ builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Heal
 // The following line enables Application Insights telemetry collection.
 builder.Services.AddApplicationInsightsTelemetry();
 
-// Add MassTransit Consumers worker (Generally it should be implemented as a separate worker service)
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<ReserveStocksConsumer>();
-    x.AddConsumer<ReleaseStocksConsumer>();
-
-    if(messageBrokerSettings.AzureServiceBusConnectionString != null)
-    {
-        x.UsingAzureServiceBus((context, cfg) =>
-        {
-            cfg.Host(messageBrokerSettings.AzureServiceBusConnectionString);
-
-            cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
-            {
-                configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
-                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-            });
-
-            cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
-            {
-                configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
-                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-            });
-
-            cfg.ConfigureEndpoints(context);
-        });
-    }
-    else
-    {
-        x.UsingRabbitMq((context, cfg) =>
-        {
-            cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
-            {
-                h.Username(messageBrokerSettings.RabbitMQUsername);
-                h.Password(messageBrokerSettings.RabbitMQPassword);
-            
-            });
-
-            cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
-            {
-                configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
-                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-            });
-
-            cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
-            {
-                configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
-                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-            });
-
-            cfg.ConfigureEndpoints(context);
-        });
-    }
-
-});
+// Add MassTransit Consumers worker
+builder.Services.AddMassTransitServices(builder.Configuration);
 
 var app = builder.Build();
 

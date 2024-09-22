@@ -1,0 +1,70 @@
+# PAYMENT PROCESSOR RELEASE PIPELINE
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: payment-processor-ci-docker
+    source: payment-processor-ci-docker
+    trigger: none
+
+variables: 
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-docker-infrastructure-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: templateFileName
+  value: 'aci-with-servicebus.bicep'
+- name: containerInstanceGroupName
+  value: 'payment-processor-$(suffix)'
+- name: repositoryName
+  value: 'eshop.payment.processor'
+- name: registryServer
+  value: 'index.docker.io'
+- name: registryUserName
+  value: '$(docker-registry-username)'   # From variable group
+- name: registryPassword
+  value: '$(docker-registry-read-token)' # From variable group
+- name: serviceBusNamespaceName
+  value: 'eshop-sb-$(suffix)'
+- name: subscriptionid
+  value: '$(subscription-id)' # From variable group
+- name: resourceGroupName
+  value: 'eshop-docker'
+- name: location
+  value: 'westeurope'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: none
+- download: payment-processor-ci-docker
+  
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Web App Bicep
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/payment-processor-ci-docker/Bicep/$(templateFileName)'
+    overrideParameters: '-containerInstanceGroupName $(containerInstanceGroupName) -containerInstanceName $(containerInstanceGroupName) -registryServer $(registryServer) -registryUserName $(registryUserName) -registryPassword $(registryPassword) -serviceBusNamespaceName $(serviceBusNamespaceName) -containerImage $(registryUserName)/$(repositoryName):$(resources.pipeline.payment-processor-ci-docker.runID) -location $(location) -suffix $(suffix)'
+    deploymentMode: 'Incremental'
+      
+- task: AzureCLI@2
+  displayName: Restart ACI
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: az container restart --name $(containerInstanceGroupName) --resource-group $(resourceGroupName)
+  
+- powershell: Invoke-WebRequest -UseBasicParsing http://$(containerInstanceGroupName).$(location).azurecontainer.io:8080/hc -TimeoutSec 300
+  displayName: Health Check

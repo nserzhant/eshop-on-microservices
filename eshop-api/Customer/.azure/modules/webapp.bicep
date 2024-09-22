@@ -86,9 +86,13 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
     name: 'connectionstrings'
 
     properties: {
-      clientDbConnectionString: {
+      customerDbConnectionString: {
         type: 'SQLAzure'
         value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+      }
+      openIddictDbConnectionString: {
+        type: 'Custom'
+        value: 'DataSource=customer.openiddict.db'
       }
     }
   }

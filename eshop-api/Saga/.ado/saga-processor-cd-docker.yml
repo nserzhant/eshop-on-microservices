@@ -1,0 +1,47 @@
+# PAYMENT PROCESSOR RELEASE PIPELINE (Docker Image Deployment)
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: saga-processor-ci-docker
+    source: saga-processor-ci-docker
+    trigger: none
+
+variables:
+  suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+  azureserviceconnection: 'azure-docker-spn'
+  containerAppName: 'saga-processor-$(suffix)'
+  repositoryName: 'eshop.saga.processor'
+  registryServer: 'index.docker.io'
+  registryUserName: '$(docker-registry-username)' # Create the "docker-registry-username" pipeline variable in Variables section or replace the expression by the value
+  resourceGroupName: 'eshop-docker'
+  location: 'westeurope'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: none
+
+- task: AzureContainerApps@1
+  displayName: Deploy Container App
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    imageToDeploy: '$(registryServer)/$(registryUserName)/$(repositoryName):$(resources.pipeline.saga-processor-ci-docker.runID)'
+    containerAppName: '$(containerAppName)'
+    resourceGroup: '$(resourceGroupName)'
+
+- task: AzureCLI@2
+  displayName: Get Application FQDN
+  inputs:
+    azureSubscription: '$(azureserviceconnection)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      FQDN=$(az containerapp show --name $(containerAppName) --resource-group $(resourceGroupName) --query properties.configuration.ingress.fqdn)
+      echo "##vso[task.setvariable variable=containerAppFQDN]$FQDN"
+
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(containerAppFQDN)/hc -TimeoutSec 300
+  displayName: Check App

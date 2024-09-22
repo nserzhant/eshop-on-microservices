@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  {{ if .Values.useAks -}}annotations:
+  {{ if .Values.useAks -}}
+  annotations:
     azure.workload.identity/client-id: "{{ .Values.azure.employeeManagementUmiClientId }}"
   labels:
     azure.workload.identity/use:  "true"
@@ -35,30 +36,41 @@ spec:
             value: http://+:80
           - name: ConnectionStrings__employeeDbConnectionString
             value: {{ template "employee-management.connectionString" . }}
+          - name: ConnectionStrings__openIddictDbConnectionString      
+            value: DataSource=employee.openiddict.db
           - name: clients__0__clientOrigin
-            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}"
+            value: "https://{{ .Values.eshop_ingress.eshopEmployeePortalDnsName }}"
           - name: clients__0__clientId
             value: {{ .Values.employeemanagement_authserver.env.clientId }}
           - name: clients__0__displayName
             value: {{ .Values.employeemanagement_authserver.env.displayName }}
           - name: ASPNETCORE_APPL_PATH
             value: authorize   
-          {{ if .Values.useAks -}}- name: JWTSecretKey
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.azure.akvEmployeeSigningSecretName }}
-                key: jwt
-          {{- end }}   
         resources:
           limits:
             memory:  {{ .Values.employeemanagement_authserver.resources.memory }}
             cpu:  {{ .Values.employeemanagement_authserver.resources.cpu }}
         ports:
-          - containerPort: 80 
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 10  
+          periodSeconds: 10        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
  
       {{ if .Values.imagePullSecretName -}}
       imagePullSecrets:
-        - name: {{ .Values.imagePullSecretName }}
+      - name: {{ .Values.imagePullSecretName }}
       {{- end }}  
 
 ---
@@ -73,5 +85,4 @@ spec:
   type:  ClusterIP
   ports:
   - protocol: 'TCP'
-    port:  {{ .Values.employeemanagement_authserver.servicePort }}
-    targetPort:  80
+    port: 80

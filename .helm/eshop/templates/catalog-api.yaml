@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  {{ if .Values.useAks -}}annotations:
+  {{ if .Values.useAks -}}
+  annotations:
     azure.workload.identity/client-id: "{{ .Values.azure.catalogApiUmiClientId }}"
   labels:
     azure.workload.identity/use:  "true"
@@ -31,37 +32,60 @@ spec:
         image: "{{ .Values.dockerRegistry }}/{{ .Values.catalog_api.image.repository }}:{{ .Values.imagesTag }}" 
         imagePullPolicy: IfNotPresent
         env:
-          - name: ASPNETCORE_ENVIRONMENT
-            value: {{ .Values.catalog_api.env.ASPNETCORE_ENVIRONMENT }}
-          - name: ASPNETCORE_URLS
-            value: http://+:80
-          - name: ConnectionStrings__catalogDbConnectionString            
-            value: {{ template "catalog-api.connectionString" . }}
-          - name: initDbOnStartup
-            value: "{{ .Values.catalog_api.env.initDbOnStartup }}"
-          - name: generatedItemPictureUriHost
-            value: /catalog
-          - name: clients
-            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }},https://{{ .Values.eshop_ingress.clientPortalDnsName }}"
-          - name: EmployeeJWTSettings__Issuer
-            value: {{ template "employee-authorization-server.OAuthIssuer" . }}
-          - name: EmployeeJWTSettings__MetadataAddress
-            value: {{ template "employee-authorization-server.OAuthMetadataAddress" . }}
-          - name: EmployeeJWTSettings__Audience
-            value: {{ template "employee-authorization-server.OAuthAudience" . }}
-          - name: ClientJWTSettings__Issuer
-            value: "https://{{ .Values.eshop_ingress.clientPortalDnsName }}/authorize"
-          - name: ClientJWTSettings__MetadataAddress
-            value: "https://{{ .Values.eshop_ingress.clientPortalDnsName }}/authorize/.well-known/openid-configuration"      
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.catalog_api.env.ASPNETCORE_ENVIRONMENT }}
+        - name: ASPNETCORE_URLS
+          value: http://+:80
+        - name: ConnectionStrings__catalogDbConnectionString            
+          value: {{ template "catalog-api.connectionString" . }}
+        {{ if .Values.useAks -}}
+        - name: broker__AzureServiceBusConnectionString
+          value: sb://{{ .Values.azure.serviceBusNamespaceName }}.servicebus.windows.net      
+        {{- else -}}
+        - name: broker__rabbitMQHost
+          value: {{ .Values.rabbitmq.appName }}
+        {{- end }} 
+        - name: initDbOnStartup
+          value: "{{ .Values.catalog_api.env.initDbOnStartup }}"
+        - name: generatedItemPictureUriHost
+          value: /catalog
+        - name: clients
+          value: "https://{{ .Values.eshop_ingress.eshopEmployeePortalDnsName }},https://{{ .Values.eshop_ingress.eshopDnsName }}"
+        - name: EmployeeJWTSettings__Issuer
+          value: {{ template "employee-authorization-server.OAuthIssuer" . }}
+        - name: EmployeeJWTSettings__MetadataAddress
+          value: {{ template "employee-authorization-server.OAuthMetadataAddress" . }}
+        - name: EmployeeJWTSettings__Audience
+          value: {{ template "employee-authorization-server.OAuthAudience" . }}
+        - name: CustomerJWTSettings__Issuer
+          value: "https://{{ .Values.eshop_ingress.eshopDnsName }}/authorize"
+        - name: CustomerJWTSettings__MetadataAddress
+          value: "https://{{ .Values.eshop_ingress.eshopDnsName }}/authorize/.well-known/openid-configuration"      
         resources:
           limits:
             memory:  {{ .Values.catalog_api.resources.memory }}
             cpu:  {{ .Values.catalog_api.resources.cpu }}
         ports:
-          - containerPort: 80       
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
+      
       {{ if .Values.imagePullSecretName -}}
       imagePullSecrets:
-        - name: {{ .Values.imagePullSecretName }}
+      - name: {{ .Values.imagePullSecretName }}
       {{- end }}             
 
 ---
@@ -76,5 +100,4 @@ spec:
   type:  ClusterIP
   ports:
   - protocol: 'TCP'
-    port:  {{ .Values.catalog_api.servicePort }}
-    targetPort:  80
+    port: 80

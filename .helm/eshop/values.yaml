@@ -2,27 +2,30 @@ useAks: false
 dockerRegistry: "" 
 imagesTag: ""
 imagePullSecretName: ""
-ingressControllerNamespaceName: "ingress-nginx"
- 
+ingressControllerNamespaceName: "ingress-nginx" 
 
 azure: 
   tenantId: ""
-  aksUmiClientId: ""
-  akvName: ""
-  akvClientSigningSecretName: "client-auth-signing-key"
-  akvEmployeeSigningSecretName: "employee-auth-signing-key"
   catalogApiUmiClientId: ""
   employeeManagementUmiClientId: ""
-  clientAuthserverUmiClientId: ""
-  catalogApiSqlServerName: ""
-  employeeManagementSqlServerName: ""
-  clientAuthserverSqlServerName: ""
+  customerAuthserverUmiClientId: ""
+  catalogSqlServerName: ""
+  employeeSqlServerName: ""
+  customerSqlServerName: ""
+  orderingSqlServerName: ""
+  sagaSqlServerName: ""
+  basketApiUmiClientId: ""
+  orderingApiUmiClientId: ""
+  paymentProcessorUmiClientId: ""
+  sagaProcessorUmiClientId: ""
+  serviceBusNamespaceName: ""
+  redisCacheName: ""
 
 eshop_ingress:
   appName: eshop-ingress
   ingressClassName: nginx
-  clientPortalDnsName:  client-portal-gateway.example.com 
-  empoyeePortalDnsName: employee-portal-gateway.example.com 
+  eshopDnsName:  eshop.example.com 
+  eshopEmployeePortalDnsName: eshop-employee-portal.example.com 
 
 catalog_api:
   appName: catalog-api
@@ -36,33 +39,30 @@ catalog_api:
   resources:
     memory: "200Mi"
     cpu: "200m"
-  servicePort: 5035
 
-client_authserver:
-  appName: client-authserver
+customer_authserver:
+  appName: customer-authserver
   replicaCount: 1
-  serviceAccountName: client-authserver-sa
+  serviceAccountName: customer-authserver-sa
   image:
-    repository: eshop.client.authorizationserver
+    repository: eshop.customer.authorizationserver
   env:
     ASPNETCORE_ENVIRONMENT: "Development"
     initDbOnStartup: "true"
-    clientId: "client-portal"
+    clientId: "customer-portal"
     displayName: "public spa"  
   resources:
     memory: "200Mi"
     cpu: "200m"
-  servicePort: 5058
 
-client_portal:
-  appName: client-portal
+customer_portal:
+  appName: customer-portal
   replicaCount: 1
   image:
-    repository: eshop.ui.clientportal    
+    repository: eshop.ui.customerportal    
   resources:
     memory: "100Mi"
     cpu: "100m"
-  servicePort: 4201
 
 employee_portal:
   appName: employee-portal
@@ -72,7 +72,6 @@ employee_portal:
   resources:
     memory: "100Mi"
     cpu: "100m"
-  servicePort: 4202
 
 employeemanagement_api:
   appName: employeemanagement-api
@@ -86,7 +85,6 @@ employeemanagement_api:
   resources:
     memory: "200Mi"
     cpu: "100m"
-  servicePort: 5158
 
 employeemanagement_authserver:
   appName: employeemanagement-authserver
@@ -101,12 +99,62 @@ employeemanagement_authserver:
   resources:
     memory: "200Mi"
     cpu: "100m"
-  servicePort: 5218
 
 employee_external_authserver:
   issuer: ''
   metadataAddress: ''
   audience: ''
+
+basket_api:
+  appName: basket-api
+  replicaCount: 1
+  serviceAccountName: basket-api-sa
+  image: 
+    repository: eshop.basket.api
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
+
+ordering_api:
+  appName: ordering-api
+  replicaCount: 1
+  serviceAccountName: ordering-api-sa
+  image:
+    repository: eshop.ordering.api
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    initDbOnStartup: "true"
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
+
+payment_processor:
+  appName: payment-processor
+  replicaCount: 1
+  serviceAccountName: payment-processor-sa
+  image:
+    repository: eshop.payment.processor
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    payment__processPayment: "True"
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
+
+saga_processor:
+  appName: saga-processor
+  replicaCount: 1
+  serviceAccountName: saga-processor-sa
+  image:
+    repository: eshop.saga.processor
+  env:
+    ASPNETCORE_ENVIRONMENT: "Development"
+    initDbOnStartup: "true"
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
 
 sql_db:
   appName: sql-db
@@ -122,6 +170,21 @@ sql_db:
     memory: "2000Mi"
     cpu: "2000m"
   servicePort: 1433
-  
-secrets_provider:
-  appName: akv-secrets-provider
+
+redis:
+  appName: redis
+  image: redis:7.0.15-alpine3.20
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
+  servicePort: 6379
+
+rabbitmq:
+  appName: rabbitmq
+  image: rabbitmq:3.13-management-alpine
+  resources:
+    memory: "200Mi"
+    cpu: "100m"
+  ports:
+    service: 5672
+    management: 15672

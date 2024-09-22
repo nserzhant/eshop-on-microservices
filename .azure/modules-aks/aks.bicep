@@ -3,7 +3,7 @@ param location string = resourceGroup().location
 
 /*----------------------- AKS Parameters  -------------------- */
 
-@description('The Public IP Label Of The Customer Portal Gateway.')
+@description('The Public IP Label Of The Eshop Web App.')
 param dnsLabel string
 
 @description('The Name Of The Managed Cluster Resource.')
@@ -42,7 +42,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   name: acrName
 }
 
-resource aks 'Microsoft.ContainerService/managedClusters@2023-11-01' = {
+resource aks 'Microsoft.ContainerService/managedClusters@2024-04-02-preview' = {
   name: clusterName
   location: location
 
@@ -77,7 +77,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2023-11-01' = {
           enableSecretRotation: 'true'
           rotationPollInterval: '5m'
         }
-      }      
+      }           
     }
 
     networkProfile: {
@@ -118,7 +118,6 @@ module runHelm 'br/public:deployment-scripts/aks-run-helm:2.0.3' = {
     aks
   ]
 }
-
 
 /*----------------------- ACR Role Assginment --------------------------- */
 

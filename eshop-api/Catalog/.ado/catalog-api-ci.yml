@@ -1,9 +1,9 @@
-#CATALOG API BUILD PIPELINE
+# CATALOG API BUILD PIPELINE
+
 resources:
- repositories:
-    - repository: self
-      trigger: none
-      # - master
+  repositories:
+  - repository: self
+    trigger: none
 
 variables:
   buildConfiguration: 'Release'

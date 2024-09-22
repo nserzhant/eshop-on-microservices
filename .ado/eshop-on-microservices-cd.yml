@@ -1,47 +1,50 @@
+# RELEASE PIPELINE
+
 resources:
- repositories:
-   - repository: self
-     trigger: none
- pipelines:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
   - pipeline: eshop-on-microservices-ci
     source: eshop-on-microservices-ci
 
 variables:
   suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
-  
   azureserviceconnection: 'azure-spn'
-  subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
+  subscriptionid: '$(subscription-id)' # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
   storageAccountName: 'storageacc$(suffix)'
-  clientGatewayConfigContainerName: 'clientgateway'
-  employeeGatewayConfigContainerName: 'employeegateway'
-  clientProxyConfigurationFile: '.ingress/nginx-client-azure.conf'
-  employeeProxyConfigurationFile: '.ingress/nginx-employee-azure.conf'
-  resourceGroupName: 'eshop-on-microservices-rg'
+  eshopProxyConfigContainerName: 'eshopproxy'
+  eshopEmployeePortalProxyConfigContainerName: 'eshopemployeeportalproxy'
+  eshopProxyConfigurationFile: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Envoy/envoy-azure.yaml'
+  eshopEmployeePortalProxyConfigurationFile: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Envoy/envoy-employee-portal-azure.yaml'
 
-  clientGatewayAppName: 'customer-portal-gateway-$(suffix)'
-  employeeGatewayAppName: 'employee-portal-gateway-$(suffix)'
-  clientPortalStaticAppName: 'customer-portal-$(suffix)'
-  employeePortalStaticAppName: 'employee-portal-$(suffix)'
+  eshopAppName: 'eshop-$(suffix)'
+  eshopEmployeePortalAppName: 'eshop-employee-portal-$(suffix)'
+  customerPortalStaticAppName: 'customer-portal-static-$(suffix)'
+  employeePortalStaticAppName: 'employee-portal-static-$(suffix)'
   catalogApiWebAppName: 'catalog-api-web-app-$(suffix)'
-  clientAuthServerWebAppName: 'client-auth-web-app-$(suffix)'
+  customerAuthServerWebAppName: 'customer-authserver-web-app-$(suffix)'
   employeeApiWebAppName: 'employee-api-web-app-$(suffix)'
   employeeAuthServerWebAppName: 'employee-authserver-web-app-$(suffix)'
-  
-  employeeOAuthIssuer: 'https://$(employeeGatewayAppName).azurewebsites.net/authorize'
-  employeeOAuthMetadataEndpoint: 'https://$(employeeGatewayAppName).azurewebsites.net/authorize/.well-known/openid-configuration'
+  basketApiWebAppName: 'basket-api-web-app-$(suffix)'
+  orderingApiWebAppName: 'ordering-api-web-app-$(suffix)'  
+  paymentProcessorAppName: 'payment-processor-$(suffix)'
+  sagaProcessorAppName: 'saga-processor-$(suffix)'
+  employeeOAuthIssuer: 'https://$(eshopEmployeePortalAppName).azurewebsites.net/authorize'
+  employeeOAuthMetadataEndpoint: 'https://$(eshopEmployeePortalAppName).azurewebsites.net/authorize/.well-known/openid-configuration'
   employeeOAuthAudience: ''
-
+  resourceGroupName: 'eshop'
   location: 'westeurope'
   
 pool:
   vmImage: ubuntu-latest
 
 steps:
-# - checkout: none
+- checkout: none
 - download: eshop-on-microservices-ci
 
 - task: AzureResourceManagerTemplateDeployment@3
-  displayName: Deploy Bicep
+  displayName: Deploy Infrastructure
   inputs:
     deploymentScope: 'Resource Group'
     azureResourceManagerConnection: '$(azureserviceconnection)'
@@ -50,39 +53,41 @@ steps:
     resourceGroupName: '$(resourceGroupName)'
     location: '$(location)'
     templateLocation: 'Linked artifact'
-    csmFile: '$(System.DefaultWorkingDirectory)/.azure/main.bicep'
-    overrideParameters: '-employeeGatewayAppName $(employeeGatewayAppName) -clientGatewayAppName $(clientGatewayAppName) -catalogApiWebAppName $(catalogApiWebAppName) -clientAuthServerWebAppName $(clientAuthServerWebAppName) -employeeApiWebAppName $(employeeApiWebAppName) -employeeAuthServerWebAppName $(employeeAuthServerWebAppName) -clientPortalStaticAppName $(clientPortalStaticAppName) -employeePortalStaticAppName $(employeePortalStaticAppName) -storageAccountName $(storageAccountName) -employeeOAuthIssuer $(employeeOAuthIssuer) -employeeOAuthMetadataEndpoint $(employeeOAuthMetadataEndpoint) -employeeOAuthAudience $(employeeOAuthAudience) -suffix $(suffix)'
+    csmFile: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Bicep/main.bicep'
+    overrideParameters: '-eshopEmployeePortalAppName $(eshopEmployeePortalAppName) -eshopAppName $(eshopAppName) -catalogApiWebAppName $(catalogApiWebAppName) -customerAuthServerWebAppName $(customerAuthServerWebAppName) -employeeApiWebAppName $(employeeApiWebAppName) -employeeAuthServerWebAppName $(employeeAuthServerWebAppName) -customerPortalStaticAppName $(customerPortalStaticAppName) -employeePortalStaticAppName $(employeePortalStaticAppName) -storageAccountName $(storageAccountName) -eshopProxyConfigContainerName $(eshopProxyConfigContainerName) -eshopEmployeePortalProxyConfigContainerName $(eshopEmployeePortalProxyConfigContainerName) -employeeOAuthIssuer $(employeeOAuthIssuer) -employeeOAuthMetadataEndpoint $(employeeOAuthMetadataEndpoint) -employeeOAuthAudience $(employeeOAuthAudience) -basketApiWebAppName $(basketApiWebAppName) -orderingApiWebAppName $(orderingApiWebAppName) -paymentProcessorAppName $(paymentProcessorAppName) -sagaProcessorAppName $(sagaProcessorAppName) -location $(location) -suffix $(suffix)'
     deploymentMode: 'Incremental'
     deploymentOutputs: 'deploymentOutputs'
 
 - powershell: |
     $var=ConvertFrom-Json '$(deploymentOutputs)'
-    $clientPortalDNSValue=$var.staticAppDNSNames.value.clientPortal
-    $employeePortalDNSValue=$var.staticAppDNSNames.value.employeePortal
-    Write-Host "##vso[task.setvariable variable=clientAppDomainName;]$clientPortalDNSValue"
-    Write-Host "##vso[task.setvariable variable=employeeAppDomainName;]$employeePortalDNSValue"
+    $customerPortalDNSValue=$var.staticAppDNSNames.value.customerPortalStatic
+    $employeePortalDNSValue=$var.staticAppDNSNames.value.employeePortalStatic
+    Write-Host "##vso[task.setvariable variable=customerPortalStaticAppDomainName;]$customerPortalDNSValue"
+    Write-Host "##vso[task.setvariable variable=employeePortalStaticAppDomainName;]$employeePortalDNSValue"
   displayName: Get Static Apps Domain Names
 
-- powershell: (Get-Content '$(clientProxyConfigurationFile)' -Encoding utf8) `
-      -replace '__clientAppDomainName__', '$(clientAppDomainName)' `
+- powershell: (Get-Content '$(eshopProxyConfigurationFile)' -Encoding utf8) `
+      -replace '__customerPortalStaticAppDomainName__', '$(customerPortalStaticAppDomainName)' `
       -replace '__catalogApiWebAppName__', '$(catalogApiWebAppName)' `
-      -replace '__clientAuthServerWebAppName__', '$(clientAuthServerWebAppName)' `
-    | Set-Content '$(clientProxyConfigurationFile)'
-  displayName: Replace Client Gateway Tokens
+      -replace '__customerAuthServerWebAppName__', '$(customerAuthServerWebAppName)' `
+      -replace '__basketApiWebAppName__', '$(basketApiWebAppName)' `
+      -replace '__orderingApiWebAppName__', '$(orderingApiWebAppName)' `
+    | Set-Content '$(eshopProxyConfigurationFile)'
+  displayName: Replace Eshop Web App Tokens
   
-- script: cat '$(clientProxyConfigurationFile)'
-  displayName: Client Gateway Config Display
+- script: cat '$(eshopProxyConfigurationFile)'
+  displayName: Eshop Web App Config Display
 
-- powershell: (Get-Content '$(employeeProxyConfigurationFile)' -Encoding utf8) `
-      -replace '__employeeAppDomainName__', '$(employeeAppDomainName)' `
+- powershell: (Get-Content '$(eshopEmployeePortalProxyConfigurationFile)' -Encoding utf8) `
+      -replace '__employeePortalStaticAppDomainName__', '$(employeePortalStaticAppDomainName)' `
       -replace '__catalogApiWebAppName__', '$(catalogApiWebAppName)' `
       -replace '__employeeApiWebAppName__', '$(employeeApiWebAppName)' `
       -replace '__employeeAuthServerWebAppName__', '$(employeeAuthServerWebAppName)' `
-    | Set-Content '$(employeeProxyConfigurationFile)'
-  displayName: Replace Employee Gateway Tokens
+    | Set-Content '$(eshopEmployeePortalProxyConfigurationFile)'
+  displayName: Replace Eshop Employee Portal Web App Tokens
 
-- script: cat '$(employeeProxyConfigurationFile)'
-  displayName: Employee Gateway Config Display
+- script: cat '$(eshopEmployeePortalProxyConfigurationFile)'
+  displayName: Eshop Employee Portal Web App Config Display
 
 - task: AzureCLI@2
   displayName: Get Storage Account Key
@@ -95,20 +100,20 @@ steps:
      echo "##vso[task.setvariable variable=storageAccountKey;issecret=true]$ACCOUNT_KEY"
 
 - task: AzureCLI@2
-  displayName: Upload Customer Portal Gateway Configuration To Storage Account
+  displayName: Upload Eshop Proxy Configuration To Storage Account
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
-    inlineScript: az storage blob upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --container-name $(clientGatewayConfigContainerName) --name nginx.conf --file '$(clientProxyConfigurationFile)' --overwrite
+    inlineScript: az storage blob upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --container-name $(eshopProxyConfigContainerName) --name envoy.yaml --file '$(eshopProxyConfigurationFile)' --overwrite
 
 - task: AzureCLI@2
-  displayName: Upload Employee Portal Gateway Configuration To Storage Account
+  displayName: Upload Eshop Employee Portal Proxy Configuration To Storage Account
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
-    inlineScript: az storage blob upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --container-name $(employeeGatewayConfigContainerName) --name nginx.conf --file '$(employeeProxyConfigurationFile)' --overwrite
+    inlineScript: az storage blob upload --account-name $(storageAccountName) --account-key $(storageAccountKey) --container-name $(eshopEmployeePortalProxyConfigContainerName) --name envoy.yaml --file '$(eshopEmployeePortalProxyConfigurationFile)' --overwrite
 
 - task: AzureRmWebAppDeployment@4
   displayName: Deploy Catalog Api
@@ -144,15 +149,59 @@ steps:
     packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Employee Authorization Server/*.zip'
     
 - task: AzureRmWebAppDeployment@4
-  displayName: Deploy Client Authorization Server
+  displayName: Deploy Customer Authorization Server
   inputs:
     ConnectionType: 'AzureRM'
     azureSubscription: '$(azureserviceconnection)'
     appType: 'webApp'
-    WebAppName:  '$(clientAuthServerWebAppName)' 
+    WebAppName:  '$(customerAuthServerWebAppName)' 
     deployToSlotOrASE: false
     ResourceGroupName: '$(resourceGroupName)'
-    packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Client Authorization Server/*.zip'
+    packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Customer Authorization Server/*.zip'
+
+- task: AzureRmWebAppDeployment@4
+  displayName: Deploy Basket Api
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: '$(azureserviceconnection)'
+    appType: 'webApp'
+    WebAppName: '$(basketApiWebAppName)'
+    deployToSlotOrASE: false
+    ResourceGroupName: '$(resourceGroupName)'
+    packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Basket Api/*.zip'
+
+- task: AzureRmWebAppDeployment@4
+  displayName: Deploy Ordering Api
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: '$(azureserviceconnection)'
+    appType: 'webApp'
+    WebAppName: '$(orderingApiWebAppName)'
+    deployToSlotOrASE: false
+    ResourceGroupName: '$(resourceGroupName)'
+    packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Ordering Api/*.zip'
+
+- task: AzureRmWebAppDeployment@4
+  displayName: Deploy Payment Processor
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: '$(azureserviceconnection)'
+    appType: 'webApp'
+    WebAppName: '$(paymentProcessorAppName)'
+    deployToSlotOrASE: false
+    ResourceGroupName: '$(resourceGroupName)'
+    packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Payment Processor/*.zip'
+
+- task: AzureRmWebAppDeployment@4
+  displayName: Deploy Saga Processor
+  inputs:
+    ConnectionType: 'AzureRM'
+    azureSubscription: '$(azureserviceconnection)'
+    appType: 'webApp'
+    WebAppName: '$(sagaProcessorAppName)'
+    deployToSlotOrASE: false
+    ResourceGroupName: '$(resourceGroupName)'
+    packageForLinux: '$(Pipeline.Workspace)/eshop-on-microservices-ci/Saga Processor/*.zip'
 
 - task: AzureCLI@2
   displayName: Get Customer Portal Deployment Key
@@ -161,15 +210,15 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      APIKEY=$(az staticwebapp secrets list --n $(clientPortalStaticAppName)  --resource-group $(resourceGroupName) --subscription $(subscriptionid) | jq -r '.properties.apiKey')
-      echo "##vso[task.setvariable variable=clientPortalDeploymentToken;issecret=true]$APIKEY"
+      APIKEY=$(az staticwebapp secrets list --n $(customerPortalStaticAppName)  --resource-group $(resourceGroupName) --subscription $(subscriptionid) | jq -r '.properties.apiKey')
+      echo "##vso[task.setvariable variable=customerPortalDeploymentToken;issecret=true]$APIKEY"
 
 - task: AzureStaticWebApp@0
   displayName: Deploy Customer Portal Static Web App
   inputs:
     workingDirectory: '$(Pipeline.Workspace)/eshop-on-microservices-ci'
-    app_location: 'ClientPortal'
-    azure_static_web_apps_api_token:  $(clientPortalDeploymentToken)
+    app_location: 'CustomerPortal'
+    azure_static_web_apps_api_token:  $(customerPortalDeploymentToken)
 
 - task: AzureCLI@2
   displayName: Get Employee Portal Deployment Key
@@ -189,33 +238,49 @@ steps:
     azure_static_web_apps_api_token:  $(employeePortalDeploymentToken)
 
 - task: AzureAppServiceManage@0
-  displayName: Restrart Employee Gateway
+  displayName: Restrart Eshop Web App
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     Action: 'Restart Azure App Service'
-    WebAppName: '$(employeeGatewayAppName)'
+    WebAppName: '$(eshopAppName)'
 
 - task: AzureAppServiceManage@0
-  displayName: Restrart Client Gateway
+  displayName: Restrart Eshop Employee Portal Web App
   inputs:
     azureSubscription: '$(azureserviceconnection)'
     Action: 'Restart Azure App Service'
-    WebAppName: '$(clientGatewayAppName)'
+    WebAppName: '$(eshopEmployeePortalAppName)'
+    
+- script: curl https://$(eshopAppName).azurewebsites.net
+  displayName: Check Eshop Web App
+  retryCountOnTaskFailure: 10
+  timeoutInMinutes: 1
+  
+- script: curl https://$(eshopEmployeePortalAppName).azurewebsites.net
+  displayName: Check Eshop Employee Portal Web App
+  retryCountOnTaskFailure: 10
+  timeoutInMinutes: 1
+  
+- script: timeout 300s sh -c ' until curl https://$(catalogApiWebAppName).azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Catalog Api
+  
+- script: timeout 300s sh -c ' until curl https://$(customerAuthServerWebAppName).azurewebsites.net/hc  -m 10  | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Customer Auth Server
+  
+- script: timeout 300s sh -c ' until curl https://$(employeeApiWebAppName).azurewebsites.net/hc  -m 10  | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Employee Api
+  
+- script: timeout 300s sh -c ' until curl https://$(employeeAuthServerWebAppName).azurewebsites.net/hc  -m 10  | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Employee Auth Server
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(employeeGatewayAppName).azurewebsites.net -TimeoutSec 300
-  displayName: Init And Check Employee Gateway App
+- script: timeout 300s sh -c ' until curl https://$(basketApiWebAppName).azurewebsites.net/hc  -m 10  | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Basket Api
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(clientGatewayAppName).azurewebsites.net -TimeoutSec 300
-  displayName: Init And Check Client Gateway App
+- script: timeout 300s sh -c ' until curl https://$(orderingApiWebAppName).azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Ordering Api
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(catalogApiWebAppName).azurewebsites.net/swagger/index.html -TimeoutSec 300
-  displayName: Init And Check Catalog Api
+- script: timeout 300s sh -c ' until curl https://$(paymentProcessorAppName).azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Payment Processor
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(clientAuthServerWebAppName).azurewebsites.net -TimeoutSec 300
-  displayName: Init And Check Client Auth Server
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(employeeApiWebAppName).azurewebsites.net/swagger/index.html -TimeoutSec 300
-  displayName: Init And Check Employee Api
-
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(employeeAuthServerWebAppName).azurewebsites.net -TimeoutSec 300
-  displayName: Init And Check Employee Auth Server
+- script: timeout 300s sh -c ' until curl https://$(sagaProcessorAppName).azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+  displayName: Check Saga Processor

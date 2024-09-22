@@ -1,0 +1,91 @@
+name: Saga Processor CI CD Docker
+
+on:
+  workflow_dispatch:
+  
+env:
+  buildConfiguration: Release
+  workingDirectory: ./eshop-api/Saga
+  containerAppName: saga-processor-${{ vars.SUFFIX }}
+  containerAppEnvironmentName: saga-processor-env-${{ vars.SUFFIX }}
+  repositoryName: eshop.saga.processor
+  registryServer: index.docker.io
+  sqlServerName: saga-processor-server-${{ vars.SUFFIX }}
+  sqlDbName: eshop.saga.Db
+  serviceBusNamespaceName: eshop-sb-${{ vars.SUFFIX }}
+  templateFileName: main-docker.bicep
+  resourceGroupName: eshop-docker
+  location: westeurope
+  
+jobs:
+  test:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4.0.0
+      with:
+        dotnet-version: 8.0.x
+          
+    - name: Restore
+      run: dotnet restore "${{ env.workingDirectory }}/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj"
+      
+    - name: Build
+      run: dotnet build "${{ env.workingDirectory }}/src/EShop.Saga.Processor/EShop.Saga.Processor.csproj" -c "${{ env.buildConfiguration }}" --no-restore
+      
+    - name: Components Tests
+      run: dotnet test "${{ env.workingDirectory }}/tests/EShop.Saga.Components.Tests/EShop.Saga.Components.Tests.csproj" --verbosity normal   
+
+  build_deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:    
+    - uses: actions/checkout@v4
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Build and push
+      uses: docker/build-push-action@v6.7.0
+      with:
+        context: ${{ env.workingDirectory }}
+        file: ${{ env.workingDirectory }}/src/EShop.Saga.Processor/Dockerfile
+        push: true
+        tags: ${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:run_id-${{github.run_id}}, ${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:latest
+         
+    - name: Azure Login
+      uses: Azure/login@v1.6.1
+      with:
+        creds: ${{ secrets.AZURE_INFRASTRUCTURE_DEPLOYMENT_CREDENTIALS }}
+
+    - name: Deploy Infrastructure With Application
+      uses: Azure/arm-deploy@v2
+      with:
+        subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ env.resourceGroupName }}
+        template: ${{ env.workingDirectory }}/.azure/${{ env.templateFileName }}
+        parameters: containerAppName="${{ env.containerAppName }}" containerAppEnvironmentName="${{ env.containerAppEnvironmentName }}" containerImage=${{ vars.DOCKERHUB_USERNAME }}/${{ env.repositoryName }}:run_id-${{github.run_id}} registryServer="${{ env.registryServer }}" registryUserName="${{ vars.DOCKERHUB_USERNAME }}" registryPassword="${{ secrets.DOCKERHUB_TOKEN }}" sqlServerName="${{ env.sqlServerName }}" sqlDbName="${{ env.sqlDbName }}" sqlEntraIdAdminLogin="${{ secrets.AZURE_SP_APP_ID }}" sqlEntraIdAdminObjectId="${{ secrets.AZURE_SP_OBJECT_ID }}" sqlUserAssignedIdentity=${{ secrets.SQL_DIRECTORY_READER_UMI }} revisionSuffix="${{ github.run_id }}" location="${{ env.location }}" suffix="${{ vars.SUFFIX }}"
+    
+    - name: Add Saga Processor Sql User
+      uses: ./.github/workflows/actions/create-sql-user
+      with:
+        userName: ${{ env.containerAppName }}
+        appName: Saga Processor
+        connectionString: 'Server=tcp:${{ env.sqlServerName }}.database.windows.net,1433;Initial Catalog=${{ env.sqlDbName }};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication="Active Directory Default";'
+   
+    - name: Get Application FQDN
+      uses: Azure/cli@v1.0.9
+      with:
+        inlineScript: |
+          FQDN=$(az containerapp show --name ${{ env.containerAppName }} --resource-group ${{ env.resourceGroupName }} --query properties.configuration.ingress.fqdn -otsv)
+          echo "containerAppFQDN="$FQDN >> $GITHUB_ENV
+    
+    - name: Init And Check Application
+      run: timeout 300s sh -c ' until curl https://${{ env.containerAppFQDN }}/hc -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh  

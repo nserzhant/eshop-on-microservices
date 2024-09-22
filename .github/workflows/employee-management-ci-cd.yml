@@ -9,7 +9,7 @@ env:
   apiWebAppName: employee-api-web-app-${{ vars.SUFFIX }}
   authServerWebAppName: employee-authserver-web-app-${{ vars.SUFFIX }}
   templateFileName: webapps-with-sql.bicep
-  resourceGroupName: eshop-zip-deployment
+  resourceGroupName: eshop
   sqlPassword: sqlP@ssw0rd
   
   location: westeurope
@@ -38,13 +38,6 @@ jobs:
       with:
         dotnet-version: 8.0.x
           
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET Core SDK
-      uses: actions/setup-dotnet@v4.0.0
-      with:
-        dotnet-version: 8.0.x
-          
     - name: Restore
       run: dotnet restore ${{ env.workingDirectory }}/*.sln
       
@@ -52,7 +45,7 @@ jobs:
       run: dotnet build ${{ env.workingDirectory }}/*.sln -c ${{ env.buildConfiguration }} --no-restore
       
     - name: Run SQL Integration Test
-      run: dotnet test ${{ env.workingDirectory }}/tests/EShop.EmployeeManagement.IntegrationTests/EShop.EmployeeManagement.Core.IntegrationTests.csproj --verbosity normal
+      run: dotnet test ${{ env.workingDirectory }}/tests/EShop.EmployeeManagement.Infrastructure.IntegrationTests/EShop.EmployeeManagement.Infrastructure.IntegrationTests.csproj --verbosity normal
       
     - name: Run API Integration Test
       run: dotnet test ${{ env.workingDirectory }}/tests/EShop.EmployeeManagement.Api.IntegrationTests/EShop.EmployeeManagement.Api.IntegrationTests.csproj --verbosity normal
@@ -66,13 +59,13 @@ jobs:
     - name: Upload Artifact -  Api
       uses: actions/upload-artifact@v4.3.1
       with:
-        name: 'EmployeeManagement Api'
+        name: EmployeeManagement Api
         path: ./artifacts/api
         
     - name: Upload Artifact -  Authorization Server
       uses: actions/upload-artifact@v4.3.1
       with:
-        name: 'Authorization Server'
+        name: Authorization Server
         path: ./artifacts/auth
       
     - name: Upload Artifact - Bicep
@@ -89,19 +82,19 @@ jobs:
     - name: Download Artifact -  Api
       uses: actions/download-artifact@v4
       with:
-        name: 'EmployeeManagement Api'
+        name: EmployeeManagement Api
         path: ./artifacts/api
 
     - name: Download Artifact -  Authorization Server
       uses: actions/download-artifact@v4
       with:
-        name: 'Authorization Server'
+        name: Authorization Server
         path: ./artifacts/auth
 
     - name: Download Artifact - Bicep
       uses: actions/download-artifact@v4
       with:
-        name: 'Bicep'
+        name: Bicep
         path: ${{ env.workingDirectory }}/.azure/
 
     - name: Azure Login
@@ -109,7 +102,7 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}    
         
-    - name: Deploy Bicep Template
+    - name: Deploy Infrastructure
       uses: Azure/arm-deploy@v2
       id: deployBicep
       with:
@@ -121,7 +114,7 @@ jobs:
     - name: Clear Azure Cache
       run: az cache purge
         
-    - name: Get Api WebApp Publish Profile
+    - name: Get Api Web Application Publish Profile
       id: apiPublishProfile
       uses: Azure/cli@v1.0.9
       with:
@@ -129,7 +122,7 @@ jobs:
           publishProfile=$(az webapp deployment list-publishing-profiles --name "${{ env.apiWebAppName }}" --resource-group "${{ env.resourceGroupName }}"  --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --xml)
           echo "publishProfile=$publishProfile" >> $GITHUB_OUTPUT
                     
-    - name: Get Auth Server WebApp Publish Profile
+    - name: Get Auth Server Web Application Publish Profile
       id: authServerPublishProfile
       uses: Azure/cli@v1.0.9
       with:
@@ -154,11 +147,11 @@ jobs:
         resource-group-name: ${{ env.resourceGroupName }}
         publish-profile: ${{ steps.authServerPublishProfile.outputs.publishProfile}}
         restart: true
-          
-    - name: Init And Check Api Web App
-      run: Invoke-WebRequest -UseBasicParsing https://${{ env.apiWebAppName }}.azurewebsites.net/swagger/index.html -TimeoutSec 300
-      shell: pwsh
-        
-    - name: Init And Check Authorization Server Web App
-      run: Invoke-WebRequest -UseBasicParsing https://${{ env.authServerWebAppName }}.azurewebsites.net/ -TimeoutSec 300
-      shell: pwsh
+
+    - name: Init And Check Api Web Application
+      run: timeout 300s sh -c ' until curl https://${{ env.apiWebAppName }}.azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh      
+
+    - name: Check Authorization Server Web Application
+      run: timeout 300s sh -c ' until curl https://${{ env.authServerWebAppName }}.azurewebsites.net/hc  -m 10 | grep -q Healthy; do echo "Checking app service HC..."; sleep 30; done; echo "App is healthy"'
+      shell: sh

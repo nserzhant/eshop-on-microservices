@@ -33,7 +33,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authenticationService: AuthenticationService) { }
 
   ngOnInit(): void {
-    this.authenticationService.authUser.pipe(takeUntil(this.componentDestroyed$))
+    this.authenticationService.authUser$.pipe(takeUntil(this.componentDestroyed$))
       .subscribe((user) => {
         if (user) {
           this.isAuthenticated = true;

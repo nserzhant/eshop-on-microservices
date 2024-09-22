@@ -1,21 +1,6 @@
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-/*----------------------- SQL Server  Parameters -------------------- */
-
-@description('The Name Of The Database Server')
-param sqlServerName string
-
-@description('The Name Of The Database')
-param dbName string
-
-@description('The Administrator Login Of The SQL Server')
-param administratorLogin string
-
-@description('The Administrator Password Of The SQL Server')
-@secure()
-param administratorLoginPassword string
-
 /*----------------------- Web App Parameters -------------------- */
 
 @description('The Id Of The Web App Service Plan')
@@ -27,25 +12,37 @@ param webAppName string
 @description('The Linux Version Of The Web App')
 param webappLinuxVersion string = 'DOTNETCORE|8.0'
 
-@description('The Name Of The Connection String')
-param connectionStringName string
-
 @description('The Configuration Of The Application')
 param appConfiguration object
+
+@description('The Connection Strings Of The Application')
+@secure()
+param appConnectionStrings object = {}
+
+/*----------------------- Log Analytics Workspace Parameters ----- */
+
+@description('The Id Of The Log Analytics Workspace')
+param logAnalyticsWorkspaceId string
 
 /*----------------------- RESOURCES  --------------------------- */
 /*----------------------- Web App     -------------------------- */
 
-resource webApp 'Microsoft.Web/sites@2022-09-01' = {
+resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   name: webAppName
   location: location
   kind: 'linux'
 
+  tags: {
+    appName: webAppName
+  }
+  
   properties: {
     httpsOnly: true
     serverFarmId: webAppServicePlanId
     siteConfig: {
       linuxFxVersion: webappLinuxVersion
+      alwaysOn: true
+      healthCheckPath: '/hc'
     } 
   }
   
@@ -58,11 +55,50 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
   resource connectionStrings 'config' = {
     name: 'connectionstrings'
 
+    properties: appConnectionStrings
+  }
+
+  resource appServiceLogging  'config' = {
+    name: 'logs' 
+
     properties: {
-      '${connectionStringName}': {
-        type: 'SQLAzure'
-        value: 'Server=tcp:${sqlServerName}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${dbName};User Id=${administratorLogin};Password=${administratorLoginPassword};Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+      applicationLogs: {
+        fileSystem: {
+          level: 'Warning'          
+        }
+      }
+      httpLogs: {
+        fileSystem: {
+          retentionInDays: 7
+          retentionInMb: 100
+          enabled: true
+        }
+      }
+      failedRequestsTracing: {
+        enabled: true
+      }
+      detailedErrorMessages: {
+        enabled: true
       }
     }
+  }
+}
+
+resource webAppDiagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'application-logs'
+  scope: webApp 
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+
+    logs: [
+      {
+        category: 'AppServiceConsoleLogs'
+        enabled: true
+      }
+      {
+        category: 'AppServiceAppLogs'
+        enabled: true
+      }
+    ]
   }
 }

@@ -1,7 +1,8 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  {{ if .Values.useAks -}}annotations:
+  {{ if .Values.useAks -}}
+  annotations:
     azure.workload.identity/client-id: "{{ .Values.azure.employeeManagementUmiClientId }}"
   labels:
     azure.workload.identity/use:  "true"
@@ -29,32 +30,47 @@ spec:
       - name: {{ .Values.employeemanagement_api.appName }}
         image: "{{ .Values.dockerRegistry }}/{{ .Values.employeemanagement_api.image.repository }}:{{ .Values.imagesTag }}" 
         env:
-          - name: ASPNETCORE_ENVIRONMENT
-            value: {{ .Values.employeemanagement_api.env.ASPNETCORE_ENVIRONMENT }}
-          - name: ASPNETCORE_URLS
-            value: http://+:80
-          - name: ConnectionStrings__employeeDbConnectionString      
-            value: {{ template "employee-management.connectionString" . }}
-          - name: initDbOnStartup
-            value: "{{ .Values.employeemanagement_api.env.initDbOnStartup }}"
-          - name: clientOrigin
-            value: "https://{{ .Values.eshop_ingress.empoyeePortalDnsName }}"
-          - name: JWTSettings__Issuer
-            value: {{ template "employee-authorization-server.OAuthIssuer" . }}
-          - name: JWTSettings__MetadataAddress
-            value: {{ template "employee-authorization-server.OAuthMetadataAddress" . }}
-          - name: JWTSettings__Audience
-            value: {{ template "employee-authorization-server.OAuthAudience" . }}
+        - name: ASPNETCORE_ENVIRONMENT
+          value: {{ .Values.employeemanagement_api.env.ASPNETCORE_ENVIRONMENT }}
+        - name: ASPNETCORE_URLS
+          value: http://+:80
+        - name: ConnectionStrings__employeeDbConnectionString      
+          value: {{ template "employee-management.connectionString" . }}
+        - name: initDbOnStartup
+          value: "{{ .Values.employeemanagement_api.env.initDbOnStartup }}"
+        - name: clientOrigin
+          value: "https://{{ .Values.eshop_ingress.eshopEmployeePortalDnsName }}"
+        - name: JWTSettings__Issuer
+          value: {{ template "employee-authorization-server.OAuthIssuer" . }}
+        - name: JWTSettings__MetadataAddress
+          value: {{ template "employee-authorization-server.OAuthMetadataAddress" . }}
+        - name: JWTSettings__Audience
+          value: {{ template "employee-authorization-server.OAuthAudience" . }}
         resources:
           limits:
             memory:  {{ .Values.employeemanagement_api.resources.memory }}
             cpu:  {{ .Values.employeemanagement_api.resources.cpu }}
         ports:
-          - containerPort: 80 
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 10        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
  
       {{ if .Values.imagePullSecretName -}}
       imagePullSecrets:
-        - name: {{ .Values.imagePullSecretName }}
+      - name: {{ .Values.imagePullSecretName }}
       {{- end }}   
 
 ---
@@ -69,5 +85,4 @@ spec:
   type:  ClusterIP
   ports:
   - protocol: 'TCP'
-    port:  {{ .Values.employeemanagement_api.servicePort }}
-    targetPort:  80
+    port: 80

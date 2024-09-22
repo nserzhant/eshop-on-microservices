@@ -1,0 +1,40 @@
+{{ if not .Values.useAks -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.redis.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.redis.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.redis.appName }}
+    spec:
+      containers:
+      - name: {{ .Values.redis.appName }}
+        image: {{ .Values.redis.image }}
+        ports:
+        - containerPort: {{ .Values.redis.servicePort }}
+        resources:
+          limits:
+            memory: {{ .Values.redis.resources.memory }}
+            cpu: {{ .Values.redis.resources.cpu }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.redis.appName }}
+spec:
+  selector:
+    app: {{ .Values.redis.appName }}
+  type: ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port: {{ .Values.redis.servicePort }}
+
+{{- end }}

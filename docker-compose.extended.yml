@@ -1,4 +1,4 @@
-version: '3.8'
+name: 'eshop'
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -70,7 +70,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__customerDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.customer.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
-      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customer.openiddict.db
       - initDbOnStartup=true
       - clients__0__clientOrigin=https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT}
       - clients__0__clientId=customer-portal
@@ -94,26 +94,6 @@ services:
       - basket-api
       - ordering-api
       - customer-authorizationserver
-  
-  customer-portal-nginx-ingress:
-    image: nginx:1.25.3
-    container_name: customer-portal-nginx-ingress
-    ports:
-      - "${CUSTOMER_PORTAL_PORT}:443"
-    volumes:
-      - ${CERTIFICATES_PATH}:/etc/nginx/certs
-      - ./.config/nginx/nginx-customer-portal.conf:/etc/nginx/nginx.conf
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
-        tag: customer-portal-nginx-ingress
-    depends_on:
-      - customer-portal
-      - customer-authorizationserver
-      - catalog-api
-      - basket-api
-      - ordering-api
 
   employeemanagement-api:
     image: ${DOCKER_REGISTRY-}eshop.employeemanagement.api:${TAG:-latest}
@@ -145,7 +125,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
-      - ConnectionStrings__openIddictDbConnectionString=DataSource=customers.openiddict.db
+      - ConnectionStrings__openIddictDbConnectionString=DataSource=customer.openiddict.db
       - clients__0__clientOrigin=https://${DNS_NAME_OR_IP}:${EMPLOYEE_PORTAL_PORT}
       - clients__0__clientId=employee-portal
       - clients__0__displayName="public spa"
@@ -255,7 +235,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ConnectionStrings__sagaDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.ordering.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
+      - ConnectionStrings__sagaDbConnectionString=Server=sqlserver;Integrated Security=false;Initial Catalog=eshop.saga.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true
       - initDbOnStartup=true
       - broker__rabbitMQHost=rabbitmq
       - broker__rabbitMQPort=5672
@@ -294,24 +274,45 @@ services:
       - employeemanagement-authorizationserver
       - catalog-api 
   
-  employee-portal-nginx-ingress:
-    image: nginx:1.25.3
-    container_name: employee-portal-nginx-ingress
+  eshop:
+    image: envoyproxy/envoy:v1.31.1
     ports:
-      - "${EMPLOYEE_PORTAL_PORT}:443"
+      - "${CUSTOMER_PORTAL_PORT}:8443"
+      - "8001:8001"
     volumes:
-      - ${CERTIFICATES_PATH}:/etc/nginx/certs
-      - ./.config/nginx/nginx-employee-portal.conf:/etc/nginx/nginx.conf
+      -  ./.config/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+      -  ${CERTIFICATES_PATH}:/etc/ssl # should point to local dev certs
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: eshop
+    depends_on:
+      - customer-portal
+      - customer-authorizationserver
+      - catalog-api
+      - basket-api
+      - ordering-api    
+  
+  
+  eshop-employee-portal:
+    image: envoyproxy/envoy:v1.31.1
+    ports:
+      - "${EMPLOYEE_PORTAL_PORT}:8443"
+      - "8002:8001"
+    volumes:
+      -  ./.config/envoy/envoy-employee-portal.yaml:/etc/envoy/envoy.yaml
+      -  ${CERTIFICATES_PATH}:/etc/ssl # should point to local dev certs
     logging:
         driver: gelf
         options:
           gelf-address: "udp://127.0.0.1:12201"
-          tag: employee-portal-nginx-ingress
+          tag: eshop-employee-portal
     depends_on:
       - employee-portal
       - employeemanagement-api
       - catalog-api
-      - employeemanagement-authorizationserver
+      - employeemanagement-authorizationserver  
 
   grafana:
     image: grafana/grafana:10.4.2

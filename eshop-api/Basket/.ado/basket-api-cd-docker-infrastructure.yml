@@ -1,0 +1,50 @@
+# BASKET API RELEASE PIPELINE (Infrastructure Deployment)
+
+resources:
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: basket-api-ci-docker
+    source: basket-api-ci-docker
+
+variables:
+- group: microservices-variable-group
+
+- name: azureserviceconnection
+  value: 'azure-docker-infrastructure-spn'
+- name: suffix
+  value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
+- name: webAppName
+  value: 'basket-api-web-app-$(suffix)'
+- name: redisCacheName
+  value: 'basket-rediscache-$(suffix)'
+- name: templateFileName
+  value: 'main-docker.bicep'
+- name: subscriptionid
+  value: '$(subscription-id)' # From variable group
+- name: resourceGroupName
+  value: 'eshop-docker'
+- name: location
+  value: 'westeurope'
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- checkout: none
+- download: basket-api-ci-docker
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy WebApp Infrastructure
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: '$(azureserviceconnection)'
+    subscriptionId: '$(subscriptionid)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Pipeline.Workspace)/basket-api-ci-docker/Bicep/$(templateFileName)'
+    overrideParameters: '-webAppName $(webAppName) -redisCacheName $(redisCacheName) -location $(location) -suffix $(suffix)'
+    deploymentMode: 'Incremental'

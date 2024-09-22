@@ -37,7 +37,7 @@ param dbSkuCapacity int = 5
 param privateEndpointName string = '${sqlServerName}-private-endpoint'
 
 @description('The Name Of The Network Interface For The Private Endpoint')
-param privateEndoiuntNICName string = '${sqlServerName}-nic'
+param privateEndpointNICName string = '${sqlServerName}-nic'
 
 /*----------------------- Variables  --------------------------- */
 
@@ -122,7 +122,7 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
       id: virtualNetwork.properties.subnets[2].id
     }
     
-    customNetworkInterfaceName: privateEndoiuntNICName
+    customNetworkInterfaceName: privateEndpointNICName
 
     privateLinkServiceConnections: [
       {

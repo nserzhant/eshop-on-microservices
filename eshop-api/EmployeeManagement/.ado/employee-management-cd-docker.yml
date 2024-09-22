@@ -1,4 +1,5 @@
-#CLIENT AUTHORIZATION SERVER RELEASE PIPELINE (Azure Infrastructure Deployment)
+# EMPLOYEE MANAGEMENT RELEASE PIPELINE (Docker Image Deployment)
+
 resources:
  repositories:
     - repository: self
@@ -12,7 +13,7 @@ variables:
 - group: microservices-variable-group
 
 - name: azureserviceconnection
-  value: 'azure-spn'
+  value: 'azure-docker-spn'
 - name: suffix
   value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
 - name: apiWebAppName
@@ -57,8 +58,8 @@ steps:
       -DOCKER_REGISTRY_SERVER_URL "$(dockerregistryurl)" 
       -DOCKER_REGISTRY_SERVER_PASSWORD "$(dockerRegistryPassword)"
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(apiWebAppName).azurewebsites.net/swagger/index.html -TimeoutSec 300
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(apiWebAppName).azurewebsites.net/hc -TimeoutSec 300
   displayName: Init And Check Api Web App
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(authServerWebAppName).azurewebsites.net/ -TimeoutSec 300
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(authServerWebAppName).azurewebsites.net/hc -TimeoutSec 300
   displayName: Init And Check Authorization Server Web App

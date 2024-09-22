@@ -48,14 +48,14 @@ export class CheckoutComponent implements OnInit {
 
     this.orderingService.clearBasket();
 
-    //Wait For 5 sec
+    //Wait For 20 sec
 
-    let loop = 10;
+    let loop = 20;
     let orderPlaced = false;
     this.isCheckingOut = true;
 
     while (loop-- > 0) {
-      await this.sleep(500);
+      await this.sleep(1000);
 
       const basket$ = this.basketClient.getBasket();
       const result = await lastValueFrom(basket$);

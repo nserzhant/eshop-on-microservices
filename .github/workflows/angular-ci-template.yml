@@ -1,4 +1,4 @@
-name: Build Angular App
+name: Build Angular Application
 
 on:
   workflow_call:
@@ -65,4 +65,4 @@ jobs:
       uses: actions/upload-artifact@v4.3.1
       with:
         name: ${{ inputs.artifactsPackageName }}
-        path: ${{ inputs.appFolder }}/dist/${{ inputs.appFolder }}
+        path: ${{ inputs.appFolder }}/dist/${{ inputs.appFolder }}/browser

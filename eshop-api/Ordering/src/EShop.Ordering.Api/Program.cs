@@ -1,10 +1,9 @@
 using EShop.Ordering.Api;
 using EShop.Ordering.Api.Data;
 using EShop.Ordering.Api.Filters;
-using EShop.Ordering.Api.Integration.Consumers;
+using EShop.Ordering.Api.RegistrationExtensions;
 using EShop.Ordering.Api.Settings;
 using EShop.Ordering.Infrastructure;
-using EShop.Ordering.Infrastructure.ConsumeFilters;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
@@ -18,11 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var jwtSettings = builder.Configuration.GetSection(Consts.JWT_CONFIG_NAME)
     .Get<JWTSettings>() ?? new JWTSettings();
-
-// Get settings to configure Message Broker connection
-
-var messageBrokerSettings = builder.Configuration.GetSection(Consts.MESSAGE_BROKER_CONFIG_NAME)
-    .Get<MessageBrockerSettings>() ?? new MessageBrockerSettings();
 
 // Setting to init Db on startup
 
@@ -82,45 +76,7 @@ builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Heal
 builder.Services.AddApplicationInsightsTelemetry();
 
 // Add MassTransit Consumers worker (Generally it should be implemented as a separate worker service)
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<CreateOrderConsumer>();
-
-    if (messageBrokerSettings.AzureServiceBusConnectionString != null)
-    {
-        x.UsingAzureServiceBus((context, cfg) =>
-        {
-            cfg.Host(messageBrokerSettings.AzureServiceBusConnectionString);
-
-            cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
-            {
-                configureEndpoint.ConfigureConsumer<CreateOrderConsumer>(context);
-                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-            });
-
-            cfg.ConfigureEndpoints(context);
-        });
-    }
-    else
-    {
-        x.UsingRabbitMq((context, cfg) =>
-        {
-            cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
-            {
-                h.Username(messageBrokerSettings.RabbitMQUsername);
-                h.Password(messageBrokerSettings.RabbitMQPassword);
-            });
-
-            cfg.ReceiveEndpoint(messageBrokerSettings.QueueName, configureEndpoint =>
-            {
-                configureEndpoint.ConfigureConsumer<CreateOrderConsumer>(context);
-                configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
-            });
-
-            cfg.ConfigureEndpoints(context);
-        });
-    }
-});
+builder.Services.AddMassTransitServices(builder.Configuration);
 
 var app = builder.Build();
 

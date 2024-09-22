@@ -1,21 +1,21 @@
 # CUSTOMER PORTAL STATIC APP RELEASE PIPELINE
 
 resources:
- repositories:
-    - repository: self
-      trigger: none
- pipelines:
-   - pipeline: customer-portal-ci
-     source: customer-portal-ci
-     trigger: none
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: customer-portal-ci
+    source: customer-portal-ci
+    trigger: none
 
 variables:
   suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
   azureserviceconnection: 'azure-spn'
-  staticWebAppName: 'customer-portal-$(suffix)'
+  staticWebAppName: 'customer-portal-static-$(suffix)'
   templateFileName: 'customer-portal-static.bicep'
-  subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
-  resourceGroupName: 'eshop-on-microservices-rg'
+  subscriptionid: '$(subscription-id)' # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
+  resourceGroupName: 'eshop'
   location: 'westeurope'
   staticAppSkuName: 'Free'
   staticAppTier: 'Free'
@@ -28,7 +28,7 @@ steps:
 - download: customer-portal-ci
 
 - task: AzureResourceManagerTemplateDeployment@3
-  displayName: Deploy Static Web App Bicep
+  displayName: Deploy Static Web App Infrastructure
   inputs:
     deploymentScope: 'Resource Group'
     azureResourceManagerConnection: '$(azureserviceconnection)'
@@ -38,7 +38,7 @@ steps:
     location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: '$(Pipeline.Workspace)/customer-portal-ci/Bicep/$(templateFileName)'
-    overrideParameters: ' -staticAppSkuName $(staticAppSkuName) -staticAppTier $(staticAppTier) -staticWebAppName $(staticWebAppName)'
+    overrideParameters: ' -staticAppSkuName $(staticAppSkuName) -staticAppTier $(staticAppTier) -staticWebAppName $(staticWebAppName) -location $(location) -suffix $(suffix)'
     deploymentMode: 'Incremental'
     deploymentOutputs: 'deploymentOutputs'
 
@@ -47,8 +47,8 @@ steps:
 
 - powershell: |
     $var=ConvertFrom-Json '$(deploymentOutputs)'
-    $clientPortalDNSValue=$var.staticAppDNSName.value
-    Write-Host "##vso[task.setvariable variable=clientAppDomainName;]$clientPortalDNSValue"
+    $customerPortalDNSValue=$var.staticAppDNSName.value
+    Write-Host "##vso[task.setvariable variable=customerPortalStaticAppDomainName;]$customerPortalDNSValue"
   displayName: Get Static Apps Domain Name
 
 - task: AzureCLI@2
@@ -65,8 +65,8 @@ steps:
   displayName: Deploy Static Web App
   inputs:
     workingDirectory: '$(Pipeline.Workspace)/customer-portal-ci'
-    app_location: 'ClientPortal'
+    app_location: 'CustomerPortal'
     azure_static_web_apps_api_token:  $(deploymentToken)
 
-- powershell: Invoke-WebRequest -UseBasicParsing https://$(clientAppDomainName) -TimeoutSec 300
+- powershell: Invoke-WebRequest -UseBasicParsing https://$(customerPortalStaticAppDomainName) -TimeoutSec 300
   displayName: Init And Check Customer Portal

@@ -1,37 +1,38 @@
-#CLIENT AUTHORIZATION SERVER RELEASE PIPELINE (Update Docker Image Reference)
+# CUSTOMER AUTHORIZATION SERVER RELEASE PIPELINE (Infrastructure Deployment)
+
 resources:
- repositories:
-   - repository: self
-     trigger: none
- pipelines:
-   - pipeline: client-authserver-ci-docker
-     source: client-authserver-ci-docker
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: customer-authserver-ci-docker
+    source: customer-authserver-ci-docker
 
 variables:
 - group: microservices-variable-group
 
 - name: azureserviceconnection
-  value: 'azure-owner-role-spn'
+  value: 'azure-docker-infrastructure-spn'
 - name: suffix
   value: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
 - name: webAppName
-  value: 'client-authserver-web-app-$(suffix)'
+  value: 'customer-authserver-web-app-$(suffix)'
 - name: sqlServerName
-  value: 'client-sqlserver-$(suffix)'
+  value: 'customer-sqlserver-$(suffix)'
 - name: sqlDbName
-  value: 'eshop.client.Db'
+  value: 'eshop.customer.Db'
 - name: templateFileName
   value: 'main-docker.bicep'
 - name: subscriptionid
-  value: $(subscription-id) # From variable group
+  value: '$(subscription-id)' # From variable group
 - name: sqlEntraIdAdminLogin
-  value: $(ado-service-principal-id) # azureserviceconnection  service principal login (will be assigned as administrator)
+  value: '$(ado-service-principal-id)' # azureserviceconnection  service principal login (will be assigned as administrator)
 - name: sqlEntraIdAdminObjectId
-  value: $(ado-service-principal-object-id) # azureserviceconnection service principal Object Id (will be assigned as administrator)
+  value: '$(ado-service-principal-object-id)' # azureserviceconnection service principal Object Id (will be assigned as administrator)
 - name: sqlUserAssignedIdentity
-  value: $(sql-umi-id) # Identity with directory reader role
+  value: '$(sql-umi-id)' # Identity with directory reader role
 - name: resourceGroupName
-  value: 'eshop-on-microservices-rg'
+  value: 'eshop-docker'
 - name: location
   value: 'westeurope'
 
@@ -40,10 +41,10 @@ pool:
 
 steps:
 - checkout: none
-- download: client-authserver-ci-docker
- # Deploy Web App Infrastructure Using Bicep
+- download: customer-authserver-ci-docker
+
 - task: AzureResourceManagerTemplateDeployment@3
-  displayName: Deploy WebApp Bicep
+  displayName: Deploy WebApp Infrastructure
   inputs:
     deploymentScope: 'Resource Group'
     azureResourceManagerConnection: '$(azureserviceconnection)'
@@ -52,11 +53,10 @@ steps:
     resourceGroupName: '$(resourceGroupName)'
     location: '$(location)'
     templateLocation: 'Linked artifact'
-    csmFile: '$(Pipeline.Workspace)/client-authserver-ci-docker/Bicep/$(templateFileName)'
-    overrideParameters: '-webAppName $(webAppName) -sqlServerName $(sqlServerName) -dbName $(sqlDbName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity)'
+    csmFile: '$(Pipeline.Workspace)/customer-authserver-ci-docker/Bicep/$(templateFileName)'
+    overrideParameters: '-webAppName $(webAppName) -sqlServerName $(sqlServerName) -dbName $(sqlDbName) -sqlEntraIdAdminLogin $(sqlEntraIdAdminLogin) -sqlEntraIdAdminObjectId $(sqlEntraIdAdminObjectId) -sqlUserAssignedIdentity $(sqlUserAssignedIdentity) -location $(location) -suffix $(suffix)'
     deploymentMode: 'Incremental'
 
-# Add SQL Server User For WebApp Service Principal
 - task: SqlAzureDacpacDeployment@1
   displayName: Add WebApp user to SQL Server
   inputs:

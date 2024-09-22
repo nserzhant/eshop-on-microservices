@@ -30,32 +30,20 @@ param sqlEntraIdAdminObjectId string
 
 /*----------------------- Virtual Network Parameters  --------------- */
 
-@description('The Name Of The Virtual Network (vNet).')
-param vnetName string
-
-@description('The Name Of The Subnet.')
-param subNetName string
+@description('The Id Of The Subnet')
+param subNetId string
 
 @description('The Name Of The Private Endpoint')
 param privateEndpointName string = '${sqlServerName}-private-endpoint'
 
 @description('The Name Of The Network Interface For The Private Endpoint')
-param privateEndoiuntNICName string = '${sqlServerName}-nic'
+param privateEndpointNICName string = '${sqlServerName}-nic'
 
 /*----------------------- Variables  --------------------------- */
 
 var privateDnsZoneName =  'privatelink${environment().suffixes.sqlServerHostname}'
 
 /*----------------------- RESOURCES  --------------------------- */
-
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
-  name: vnetName
-}
-
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-06-01' existing = {
-  name: subNetName
-  parent: virtualNetwork
-}
 
 resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
   name: privateDnsZoneName
@@ -116,10 +104,10 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
 
   properties: {
     subnet: {
-      id: subnet.id
+      id: subNetId
     }
     
-    customNetworkInterfaceName: privateEndoiuntNICName
+    customNetworkInterfaceName: privateEndpointNICName
 
     privateLinkServiceConnections: [
       {

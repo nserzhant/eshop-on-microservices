@@ -66,7 +66,6 @@ builder.Services.AddHostedService<Worker>();
 // (like pruning orphaned authorizations/tokens from the database) at regular intervals.
 builder.Services.AddQuartz(options =>
 {
-    options.UseMicrosoftDependencyInjectionJobFactory();
     options.UseSimpleTypeLoader();
     options.UseInMemoryStore();
 });
@@ -154,11 +153,7 @@ builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>
 
 // Create Google Authentication Scheme
 
-builder.Services.AddAuthentication().AddGoogle(googleOptions =>
-{
-    googleOptions.ClientId = configuration["Authentication:Google:ClientId"];
-    googleOptions.ClientSecret = configuration["Authentication:Google:ClientSecret"];
-});
+builder.Services.AddAuthentication();
 
 // Configure services for HTTP ingress
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

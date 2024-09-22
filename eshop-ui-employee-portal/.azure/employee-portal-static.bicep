@@ -7,7 +7,7 @@ param suffix string = uniqueString(resourceGroup().id)
 /*----------------------- Statuc App Parameters ----------------------- */
 
 @description('The Name Of The Static Web App')
-param staticWebAppName string = 'employee-portal-${suffix}'
+param staticWebAppName string = 'employee-portal-static-${suffix}'
 
 @description('The Name Of The SKU')
 param staticAppSkuName string = 'Free'

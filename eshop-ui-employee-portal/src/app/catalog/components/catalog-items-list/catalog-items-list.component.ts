@@ -13,7 +13,7 @@ import { CatalogDomainErrorDTO, CatalogItemClient, CatalogItemReadModel, ICatalo
 })
 export class CatalogItemsListComponent implements OnInit, OnDestroy, AfterViewInit {
 
-  MAX_SMALL_WIDTH = 480;
+  MAX_SMALL_WIDTH = 520;
 
   componentDestroyed$ = new Subject<void>();
   screenWidth$ = new BehaviorSubject<number>(window.innerWidth);

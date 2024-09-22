@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.customer_portal.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.customer_portal.appName }}
+  replicas: {{ .Values.customer_portal.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.customer_portal.appName }}    
+    spec:
+      containers:
+      - name: {{ .Values.customer_portal.appName }}
+        image: "{{ .Values.dockerRegistry }}/{{ .Values.customer_portal.image.repository }}:{{ .Values.imagesTag }}" 
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory:  {{ .Values.customer_portal.resources.memory }}
+            cpu:  {{ .Values.customer_portal.resources.cpu }}
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 10  
+          periodSeconds: 10        
+          failureThreshold: 1
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /hc
+            port: 80
+          initialDelaySeconds: 30  
+          periodSeconds: 30        
+          failureThreshold: 3
+
+      {{ if .Values.imagePullSecretName -}}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecretName }}
+      {{- end }}  
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name:  {{ .Values.customer_portal.appName }}
+spec:
+  selector:
+    app:  {{ .Values.customer_portal.appName }}
+  type:  ClusterIP
+  ports:
+  - protocol: 'TCP'
+    port: 80 
+  
+  

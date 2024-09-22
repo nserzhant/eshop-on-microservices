@@ -10,13 +10,13 @@ param vnetName string
 param vNetAddressSpace string = '10.2.0.0/16'
 
 @description('The Auth Service Subnet Name.')
-param apiSubNetName string = 'client-authserver'
+param apiSubNetName string = 'customer-authserver'
 
 @description('The Auth Service Subnet Address Space.')
 param apiSubNetAddressSpace string ='10.2.0.0/24'
 
 @description('The Name Of The Database Subnet.')
-param dbSubNetName string = 'client-authserver-db'
+param dbSubNetName string = 'customer-authserver-db'
 
 @description('The Address Space Of The Database Subnet.')
 param dbSubNetAddressSpace string = '10.2.1.0/24'

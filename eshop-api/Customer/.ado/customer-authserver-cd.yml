@@ -1,30 +1,32 @@
-#CLIENT AUTHORIZATION SERVER RELEASE PIPELINE
+# CUSTOMER AUTHORIZATION SERVER RELEASE PIPELINE
+
 resources:
- repositories:
-   - repository: self
-     trigger: none
- pipelines:
-   - pipeline: client-authserver-ci
-     source: client-authserver-ci
-     trigger: none
+  repositories:
+  - repository: self
+    trigger: none
+  pipelines:
+  - pipeline: customer-authserver-ci
+    source: customer-authserver-ci
+    trigger: none
 
 variables:
   suffix: ${{ split(variables['System.TeamProjectId'], '-')[0]}} # Pseudo - random string based on project Id
   azureserviceconnection: 'azure-spn'
-  webappname: client-auth-web-app-$(suffix)
-  administratorLoginPassword: $(sqlPasswordSecret) #create secret using variables section
+  webappname: 'customer-authserver-web-app-$(suffix)'
+  administratorLoginPassword: '$(sqlPasswordSecret)' # Create secret using variables section
   templateFileName: 'webapp-with-sql.bicep'
-  subscriptionid: $(subscription-id) # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
-  resourceGroupName: 'eshop-on-microservices-rg'
+  subscriptionid: '$(subscription-id)' # Create the "subscription-id" pipeline variable in Variables section or replace the expression by the value
+  resourceGroupName: 'eshop'
   location: 'westeurope'
+  clientAppId: '$(client-app-id)' # Optional. Create the "client-app-id" pipeline variable in Variables section or replace the expression by the value
+  clientAppOrigin: '$(client-app-origin)' # Optional. Create the "client-app-origin" pipeline variable in Variables section or replace the expression by the value
 pool:
   vmImage: windows-latest
 
 steps:
 - checkout: none
-- download: client-authserver-ci
+- download: customer-authserver-ci
 
- # Deploy Web App Infrastructure Using Bicep
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: Deploy Web App Bicep
   inputs:
@@ -35,8 +37,8 @@ steps:
     resourceGroupName: '$(resourceGroupName)'
     location: '$(location)'
     templateLocation: 'Linked artifact'
-    csmFile: '$(Pipeline.Workspace)/client-authserver-ci/Bicep/$(templateFileName)'
-    overrideParameters: '-webAppName $(webappname) -administratorLoginPassword $(administratorLoginPassword)'
+    csmFile: '$(Pipeline.Workspace)/customer-authserver-ci/Bicep/$(templateFileName)'
+    overrideParameters: '-webAppName $(webappname) -administratorLoginPassword $(administratorLoginPassword) -clientAppId $(clientAppId) -clientAppOrigin $(clientAppOrigin) -location $(location) -suffix $(suffix)'
     deploymentMode: 'Incremental'
 
 - powershell: az cache purge

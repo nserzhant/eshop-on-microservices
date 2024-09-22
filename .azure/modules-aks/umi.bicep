@@ -15,22 +15,24 @@ param aksNamespace string
 @description('The Reference To The AKS OIDC Issuer.')
 param aksOidcIssuer string
 
-/*----------------------- SQL Server  Parameters -------------------- */
+/*----------------------- Redis Cache  Parameters -------------- */
 
-@description('The Name Of The Database Server')
-param sqlServerName string
+@description('The Name Of The Azure Redis Cache')
+param redisCacheName string = ''
+
+/*----------------------- Service Bus Parameters ---------------- */
+
+@description('The Name of the Service Bus namespace')
+param serviceBusNamespaceName string = ''
 
 /*----------------------- Variables  --------------------------- */
 
-var databaseContributorRoleDefinitionResourceID = '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
-var roleAssignmentName= guid(umiName, resourceGroup().id, databaseContributorRoleDefinitionResourceID)
+var serviceBusDataOwnerResourceID = '090c5cfd-751d-490a-894a-3ce6f1109419'
+var dataOwnerRoleAssignmentName= guid(serviceBusNamespaceName, resourceGroup().id, umiName)
+var builtInRedisAccessPolicyName = 'Data Contributor'
 
 /*----------------------- RESOURCES    --------------------------- */
 
-
-resource sqlServer 'Microsoft.Sql/servers@2023-02-01-preview' existing = {
-  name: sqlServerName
-}
 
 resource umi 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: umiName
@@ -48,12 +50,33 @@ resource umi 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   ]
 }
 
-resource dbAccessRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: sqlServer
-  name: roleAssignmentName
+/*------------   Role And Access Policy Assignment   ----------- */
+
+resource redisCache  'Microsoft.Cache/redis@2024-03-01' existing = if(!empty(redisCacheName)) {
+  name: empty(redisCacheName) ? 'placeholder' : redisCacheName
+}
+
+resource redisAccessPolicyAssignment 'Microsoft.Cache/redis/accessPolicyAssignments@2024-03-01' = if(!empty(redisCacheName)) {
+  name: '${umi.name}assignment'
+  parent: redisCache
+
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', databaseContributorRoleDefinitionResourceID)
+    accessPolicyName: builtInRedisAccessPolicyName
+    objectId: umi.properties.principalId
+    objectIdAlias: umi.name
+  }
+}
+
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing =  if(!empty(serviceBusNamespaceName))  {
+  name: empty(serviceBusNamespaceName) ? 'placeholder' : serviceBusNamespaceName
+}
+
+resource serviceBusRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if(!empty(serviceBusNamespaceName))  {
+  name: dataOwnerRoleAssignmentName
+  scope: serviceBusNamespace
+  properties: {
     principalId: umi.properties.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', serviceBusDataOwnerResourceID)
     principalType: 'ServicePrincipal'
   }
 }

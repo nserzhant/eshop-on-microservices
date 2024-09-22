@@ -7,23 +7,27 @@ name: Eshop CD
 
 env:
   storageAccountName: storageacc${{ vars.SUFFIX }}
-  clientGatewayConfigContainerName: clientgateway
-  employeeGatewayConfigContainerName: employeegateway
-  clientProxyConfigurationFile: nginx-client-azure.conf
-  employeeProxyConfigurationFile: nginx-employee-azure.conf
-  clientGatewayAppName: customer-portal-gateway-${{ vars.SUFFIX }}
-  employeeGatewayAppName: employee-portal-gateway-${{ vars.SUFFIX }}
-  clientPortalStaticAppName: customer-portal-${{ vars.SUFFIX }}
-  employeePortalStaticAppName: employee-portal-${{ vars.SUFFIX }}
+  eshopProxyConfigContainerName: eshopproxy
+  eshopEmployeePortalProxyConfigContainerName: eshopemployeeportalproxy
+  eshopProxyConfigurationFile: envoy-azure.yaml
+  eshopEmployeePortalProxyConfigurationFile: envoy-employee-portal-azure.yaml
+  eshopAppName: eshop-${{ vars.SUFFIX }}
+  eshopEmployeePortalAppName: eshop-employee-portal-${{ vars.SUFFIX }}
+  customerPortalStaticAppName: customer-portal-static-${{ vars.SUFFIX }}
+  employeePortalStaticAppName: employee-portal-static-${{ vars.SUFFIX }}
   catalogApiWebAppName: catalog-api-web-app-${{ vars.SUFFIX }}
-  clientAuthServerWebAppName: client-auth-web-app-${{ vars.SUFFIX }}
+  customerAuthServerWebAppName: customer-authserver-web-app-${{ vars.SUFFIX }}
   employeeApiWebAppName: employee-api-web-app-${{ vars.SUFFIX }}
   employeeAuthServerWebAppName: employee-authserver-web-app-${{ vars.SUFFIX }}
-  employeeOAuthIssuer: 'https://employee-portal-gateway-${{ vars.SUFFIX }}.azurewebsites.net/authorize'
-  employeeOAuthMetadataEndpoint: 'https://employee-portal-gateway-${{ vars.SUFFIX }}.azurewebsites.net/authorize/.well-known/openid-configuration'
+  basketApiWebAppName: basket-api-web-app-${{ vars.SUFFIX }}
+  orderingApiWebAppName: ordering-api-web-app-${{ vars.SUFFIX }}  
+  paymentProcessorAppName: payment-processor-${{ vars.SUFFIX }}
+  sagaProcessorAppName: saga-processor-${{ vars.SUFFIX }}
+  employeeOAuthIssuer: https://eshop-employee-portal-${{ vars.SUFFIX }}.azurewebsites.net/authorize
+  employeeOAuthMetadataEndpoint: https://eshop-employee-portal-${{ vars.SUFFIX }}.azurewebsites.net/authorize/.well-known/openid-configuration
   employeeOAuthAudience: ''
 
-  resourceGroupName: eshop-zip-deployment
+  resourceGroupName: eshop
   location: westeurope
 
 jobs:
@@ -32,9 +36,13 @@ jobs:
 
     outputs:
       catalogApiWebAppName: ${{ env.catalogApiWebAppName }}
-      clientAuthServerWebAppName: ${{ env.clientAuthServerWebAppName }}
+      customerAuthServerWebAppName: ${{ env.customerAuthServerWebAppName }}
       employeeApiWebAppName: ${{ env.employeeApiWebAppName }}
       employeeAuthServerWebAppName: ${{ env.employeeAuthServerWebAppName }}
+      basketApiWebAppName: ${{ env.basketApiWebAppName }}
+      orderingApiWebAppName: ${{ env.orderingApiWebAppName }}
+      paymentProcessorAppName: ${{ env.paymentProcessorAppName }}
+      sagaProcessorAppName: ${{ env.sagaProcessorAppName }}
       resourceGroupName: ${{ env.resourceGroupName }}
       
     steps:
@@ -49,47 +57,49 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}          
     
-    - name: Deploy Bicep Template
+    - name: Deploy Infrastructure
       uses: Azure/arm-deploy@v2
       id: deployBicep
       with:
         subscriptionId:  ${{ secrets.AZURE_SUBSCRIPTION }}
         resourceGroupName: ${{ env.resourceGroupName }}
         template: ./artifacts/Bicep/main.bicep
-        parameters: employeeGatewayAppName="${{ env.employeeGatewayAppName }}" clientGatewayAppName="${{ env.clientGatewayAppName }}" catalogApiWebAppName="${{ env.catalogApiWebAppName }}" clientAuthServerWebAppName="${{ env.clientAuthServerWebAppName }}" employeeApiWebAppName="${{ env.employeeApiWebAppName }}" employeeAuthServerWebAppName="${{ env.employeeAuthServerWebAppName }}" clientPortalStaticAppName="${{ env.clientPortalStaticAppName }}" employeePortalStaticAppName="${{ env.employeePortalStaticAppName }}" storageAccountName="${{ env.storageAccountName }}" employeeOAuthIssuer=${{ env.employeeOAuthIssuer }} employeeOAuthMetadataEndpoint=${{ env.employeeOAuthMetadataEndpoint}} employeeOAuthAudience=${{ env.employeeOAuthAudience }} location=${{ env.location }} suffix=${{ vars.SUFFIX }}
+        parameters: eshopEmployeePortalAppName="${{ env.eshopEmployeePortalAppName }}" eshopAppName="${{ env.eshopAppName }}" catalogApiWebAppName="${{ env.catalogApiWebAppName }}" customerAuthServerWebAppName="${{ env.customerAuthServerWebAppName }}" employeeApiWebAppName="${{ env.employeeApiWebAppName }}" employeeAuthServerWebAppName="${{ env.employeeAuthServerWebAppName }}" customerPortalStaticAppName="${{ env.customerPortalStaticAppName }}" employeePortalStaticAppName="${{ env.employeePortalStaticAppName }}" storageAccountName="${{ env.storageAccountName }}" employeeOAuthIssuer=${{ env.employeeOAuthIssuer }} employeeOAuthMetadataEndpoint=${{ env.employeeOAuthMetadataEndpoint}} employeeOAuthAudience=${{ env.employeeOAuthAudience }} location=${{ env.location }} suffix=${{ vars.SUFFIX }}
     
     - name: Retrieve Customer Portal DNS Name
       run: |
         staticAppDNSNames='${{ steps.deployBicep.outputs.staticAppDNSNames }}'
-        echo "clientPortalDNSName="$(echo $staticAppDNSNames | jq -r '.clientPortal')>> $GITHUB_ENV
+        echo "customerPortalStaticAppDomainName="$(echo $staticAppDNSNames | jq -r '.customerPortalStatic')>> $GITHUB_ENV
         
     - name: Retrieve Employee Portal DNS Name
       run: |
         staticAppDNSNames='${{ steps.deployBicep.outputs.staticAppDNSNames }}'
-        echo "employeePortalDNSName="$(echo $staticAppDNSNames | jq -r '.employeePortal')>> $GITHUB_ENV
+        echo "employeePortalDNSName="$(echo $staticAppDNSNames | jq -r '.employeePortalStatic')>> $GITHUB_ENV
         
-    - name: Replace Client Gateway Tokens
-      run: (Get-Content './artifacts/Ingress/${{ env.clientProxyConfigurationFile }}' -Encoding utf8) `
-          -replace '__clientAppDomainName__', '${{ env.clientPortalDNSName }}' `
+    - name: Replace Eshop Web App Tokens
+      run: (Get-Content './artifacts/Envoy/${{ env.eshopProxyConfigurationFile }}' -Encoding utf8) `
+          -replace '__customerPortalStaticAppDomainName__', '${{ env.customerPortalStaticAppDomainName }}' `
           -replace '__catalogApiWebAppName__', '${{ env.catalogApiWebAppName }}' `
-          -replace '__clientAuthServerWebAppName__', '${{ env.clientAuthServerWebAppName }}' `
-        | Set-Content '${{ env.clientProxyConfigurationFile }}'
+          -replace '__customerAuthServerWebAppName__', '${{ env.customerAuthServerWebAppName }}' `
+          -replace '__basketApiWebAppName__', '${{ env.basketApiWebAppName }}' `
+          -replace '__orderingApiWebAppName__', '${{ env.orderingApiWebAppName }}' `
+        | Set-Content '${{ env.eshopProxyConfigurationFile }}'
       shell: pwsh
       
-    - name: Client Gateway Config Display
-      run: cat '${{ env.clientProxyConfigurationFile }}'
+    - name: Eshop Web App Config Display
+      run: cat '${{ env.eshopProxyConfigurationFile }}'
     
-    - name: Replace Employee Gateway Tokens
-      run: (Get-Content './artifacts/Ingress/${{ env.employeeProxyConfigurationFile }}' -Encoding utf8) `
-          -replace '__employeeAppDomainName__', '${{ env.employeePortalDNSName }}' `
+    - name: Replace Eshop Employee Portal Web App Tokens
+      run: (Get-Content './artifacts/Envoy/${{ env.eshopEmployeePortalProxyConfigurationFile }}' -Encoding utf8) `
+          -replace '__employeePortalStaticAppDomainName__', '${{ env.employeePortalDNSName }}' `
           -replace '__catalogApiWebAppName__', '${{ env.catalogApiWebAppName }}' `
           -replace '__employeeApiWebAppName__', '${{ env.employeeApiWebAppName }}' `
           -replace '__employeeAuthServerWebAppName__', '${{ env.employeeAuthServerWebAppName }}' `
-        | Set-Content '${{ env.employeeProxyConfigurationFile }}'
+        | Set-Content '${{ env.eshopEmployeePortalProxyConfigurationFile }}'
       shell: pwsh
     
-    - name: Employee Gateway Config Display
-      run: cat '${{ env.employeeProxyConfigurationFile }}'
+    - name: Eshop Employee Portal Web App Config Display
+      run: cat '${{ env.eshopEmployeePortalProxyConfigurationFile }}'
       
     - name: Clear Azure Cache
       run: az cache purge
@@ -103,15 +113,15 @@ jobs:
           echo "::add-mask::$val"
           echo "storageAccountKey="$val >> $GITHUB_ENV
     
-    - name: Upload Customer Portal Gateway Configuration To Storage Account
+    - name: Upload Eshop Proxy Configuration To Storage Account
       uses: Azure/cli@v1.0.9
       with:
-        inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.clientGatewayConfigContainerName }} --name nginx.conf --file '${{ env.clientProxyConfigurationFile }}' --overwrite
+        inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.eshopProxyConfigContainerName }} --name envoy.yaml --file '${{ env.eshopProxyConfigurationFile }}' --overwrite
       
-    - name: Upload Employee Portal Gateway Configuration To Storage Account
+    - name: Upload Eshop Employee Portal Proxy Configuration To Storage Account
       uses: Azure/cli@v1.0.9
       with:
-        inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.employeeGatewayConfigContainerName }} --name nginx.conf --file '${{ env.employeeProxyConfigurationFile }}' --overwrite
+        inlineScript: az storage blob upload --account-name ${{ env.storageAccountName }} --account-key ${{ env.storageAccountKey }} --container-name ${{ env.eshopEmployeePortalProxyConfigContainerName }} --name envoy.yaml --file '${{ env.eshopEmployeePortalProxyConfigurationFile }}' --overwrite
 
   deploy_catalog_api:
     needs: deploy_infrastructure
@@ -121,7 +131,7 @@ jobs:
       webAppName: ${{ needs.deploy_infrastructure.outputs.catalogApiWebAppName }}
       resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
       artifactFolderPath: CatalogApi
-      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.catalogApiWebAppName }}.azurewebsites.net/swagger/index.html
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.catalogApiWebAppName }}.azurewebsites.net/hc
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
@@ -134,33 +144,85 @@ jobs:
       webAppName: ${{ needs.deploy_infrastructure.outputs.employeeApiWebAppName }}
       resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
       artifactFolderPath: EmployeeManagementApi
-      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.employeeApiWebAppName }}.azurewebsites.net/swagger/index.html
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.employeeApiWebAppName }}.azurewebsites.net/hc
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
     
   deploy_employeemanagement_authserver:
-    needs: [deploy_infrastructure, deploy_employeemanagement_api]
+    needs: [ deploy_infrastructure, deploy_employeemanagement_api]
     uses: ./.github/workflows/webapp-cd-template.yml
     with:
       serviceName: EmployeeManagement Authorization Server
       webAppName: ${{ needs.deploy_infrastructure.outputs.employeeAuthServerWebAppName }}
       resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
       artifactFolderPath: EmployeeManagementAuthorizationServer
-      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.employeeAuthServerWebAppName }}.azurewebsites.net
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.employeeAuthServerWebAppName }}.azurewebsites.net/hc
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
       
-  deploy_client_authserver:
+  deploy_customer_authserver:
     needs: deploy_infrastructure
     uses: ./.github/workflows/webapp-cd-template.yml
     with:
-      serviceName: Client Authorization Server
-      webAppName: ${{ needs.deploy_infrastructure.outputs.clientAuthServerWebAppName }}
+      serviceName: Customer Authorization Server
+      webAppName: ${{ needs.deploy_infrastructure.outputs.customerAuthServerWebAppName }}
       resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
-      artifactFolderPath: ClientAuthorizationServer
-      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.employeeAuthServerWebAppName }}.azurewebsites.net
+      artifactFolderPath: CustomerAuthorizationServer
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.customerAuthServerWebAppName }}.azurewebsites.net/hc
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
+      
+  deploy_basket_api:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-template.yml
+    with:
+      serviceName: Basket Api
+      webAppName: ${{ needs.deploy_infrastructure.outputs.basketApiWebAppName }}
+      resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
+      artifactFolderPath: BasketApi
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.basketApiWebAppName }}.azurewebsites.net/hc
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
+      
+  deploy_ordering_api:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-template.yml
+    with:
+      serviceName: Ordering Api
+      webAppName: ${{ needs.deploy_infrastructure.outputs.orderingApiWebAppName }}
+      resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
+      artifactFolderPath: OrderingApi
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.orderingApiWebAppName }}.azurewebsites.net/hc
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
+      
+  deploy_payment_processor:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-template.yml
+    with:
+      serviceName: Payment Processor
+      webAppName: ${{ needs.deploy_infrastructure.outputs.paymentProcessorAppName }}
+      resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
+      artifactFolderPath: PaymentProcessor
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.paymentProcessorAppName }}.azurewebsites.net/hc
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
+      
+  deploy_saga_processor:
+    needs: deploy_infrastructure
+    uses: ./.github/workflows/webapp-cd-template.yml
+    with:
+      serviceName: Saga Processor
+      webAppName: ${{ needs.deploy_infrastructure.outputs.sagaProcessorAppName }}
+      resourceGroupName: ${{ needs.deploy_infrastructure.outputs.resourceGroupName }} 
+      artifactFolderPath: SagaProcessor
+      healthCheckUri: https://${{ needs.deploy_infrastructure.outputs.sagaProcessorAppName }}.azurewebsites.net/hc
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AZURE_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION }}
@@ -183,10 +245,10 @@ jobs:
         
     - name: Get Customer Portal Deployment Key
       uses: Azure/cli@v1.0.9
-      id: clientPortalApiKey
+      id: customerPortalApiKey
       with:
         inlineScript: |
-          val=$(az staticwebapp secrets list --n ${{ env.clientPortalStaticAppName }}  --resource-group ${{ env.resourceGroupName }} --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --query "properties.apiKey" -otsv)
+          val=$(az staticwebapp secrets list --n ${{ env.customerPortalStaticAppName }}  --resource-group ${{ env.resourceGroupName }} --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --query "properties.apiKey" -otsv)
           echo "::add-mask::$val"
           echo "apiKey="$val >> $GITHUB_OUTPUT
     
@@ -194,8 +256,8 @@ jobs:
       uses: Azure/static-web-apps-deploy@v1
       with:
         action: "upload"
-        app_location: ./artifacts/ClientPortal
-        azure_static_web_apps_api_token: ${{ steps.clientPortalApiKey.outputs.apiKey }}          
+        app_location: ./artifacts/CustomerPortal
+        azure_static_web_apps_api_token: ${{ steps.customerPortalApiKey.outputs.apiKey }}          
         
     - name: Get Employee Portal Deployment Key
       uses: Azure/cli@v1.0.9
@@ -214,8 +276,8 @@ jobs:
         azure_static_web_apps_api_token: ${{ steps.employeePortalApiKey.outputs.apiKey }}
 
     
-  ingress_apps_check:
-    needs: [ deploy_catalog_api, deploy_employeemanagement_authserver, deploy_client_authserver, deploy_static_apps]
+  apps_check:
+    needs: [ deploy_catalog_api, deploy_employeemanagement_authserver, deploy_customer_authserver, deploy_static_apps, deploy_basket_api, deploy_ordering_api, deploy_payment_processor, deploy_saga_processor]
     runs-on: ubuntu-latest
 
     steps:
@@ -224,20 +286,20 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}    
         
-    - name: Restrart Client Gateway
+    - name: Restrart Eshop Web App
       uses: Azure/cli@v1.0.9
       with:
-        inlineScript: az webapp restart --name ${{ env.clientGatewayAppName }} --resource-group ${{ env.resourceGroupName }}          
+        inlineScript: az webapp restart --name ${{ env.eshopAppName }} --resource-group ${{ env.resourceGroupName }}          
     
-    - name: Restrart Employee Gateway
+    - name: Restrart Eshop Employee Portal Web App
       uses: Azure/cli@v1.0.9
       with:
-        inlineScript: az webapp restart --name ${{ env.employeeGatewayAppName }} --resource-group ${{ env.resourceGroupName }}
+        inlineScript: az webapp restart --name ${{ env.eshopEmployeePortalAppName }} --resource-group ${{ env.resourceGroupName }}
         
-    - name: Init And Check Employee Gateway App
-      run: Invoke-WebRequest -UseBasicParsing https://${{ env.employeeGatewayAppName }}.azurewebsites.net -TimeoutSec 300
+    - name: Check Eshop Employee Web App
+      run: Invoke-WebRequest -UseBasicParsing https://${{ env.eshopEmployeePortalAppName }}.azurewebsites.net -TimeoutSec 300
       shell: pwsh
       
-    - name: Init And Check Client Gateway App
-      run: Invoke-WebRequest -UseBasicParsing https://${{ env.clientGatewayAppName }}.azurewebsites.net -TimeoutSec 300
+    - name: Check Eshop Web App
+      run: Invoke-WebRequest -UseBasicParsing https://${{ env.eshopAppName }}.azurewebsites.net -TimeoutSec 300
       shell: pwsh      
