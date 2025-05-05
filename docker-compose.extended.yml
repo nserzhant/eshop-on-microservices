@@ -19,7 +19,7 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: rabbitmq-diagnostics check_port_connectivity
       interval: 5s
       timeout: 10s
       retries: 10
@@ -156,9 +156,6 @@ services:
       - broker__queueName=clear-basket
       - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT}/authorize
       - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro    
     logging:
       driver: gelf
       options:
@@ -188,9 +185,6 @@ services:
       - broker__queueName=create-order
       - JWTSettings__Issuer=https://${DNS_NAME_OR_IP}:${CUSTOMER_PORTAL_PORT}/authorize
       - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro    
     logging:
       driver: gelf
       options:
@@ -216,8 +210,6 @@ services:
       - broker__rabbitMQUsername=guest
       - broker__rabbitMQPassword=guest
       - queueName=process-payment
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
     logging:
       driver: gelf
       options:
@@ -247,8 +239,6 @@ services:
       - ordering__createOrderQueueName=create-order
       - ordering__releaseStockQueueName=release-stocks
       - ordering__clearBasketQueueName=clear-basket    
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
     logging:
       driver: gelf
       options:

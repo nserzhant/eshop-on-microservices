@@ -19,7 +19,7 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     healthcheck:
-      test: rabbitmq-diagnostics -q ping
+      test: rabbitmq-diagnostics check_port_connectivity
       interval: 5s
       timeout: 10s
       retries: 10
@@ -50,11 +50,12 @@ services:
       - broker__rabbitMQPassword=guest
       - broker__reserveStockQueueName=reserve-stocks
       - broker__releaseStockQueueName=release-stocks
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${MICROSERVICES_CERTIFICATE_PWD:-}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/${MICROSERVICES_CERTIFICATE_NAME:-}
+    volumes:
+      - ~/.aspnet/https:/https:ro
     ports:
       - "7208:443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     depends_on:
       sqlserver:
         condition: service_started
@@ -73,11 +74,12 @@ services:
       - ConnectionStrings__openIddictDbConnectionString=DataSource=customer.openiddict.db
       - initDbOnStartup=true
       - clients__0__clientOrigin=http://localhost:4201
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${MICROSERVICES_CERTIFICATE_PWD:-}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/${MICROSERVICES_CERTIFICATE_NAME:-}
+    volumes:
+      - ~/.aspnet/https:/https:ro
     ports:
       - "7086:443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     depends_on:
       - sqlserver
 
@@ -94,11 +96,12 @@ services:
       - clientOrigin=http://localhost:4202
       - JWTSettings__Issuer=https://localhost:7272/
       - JWTSettings__MetadataAddress=http://employeemanagement-authorizationserver/.well-known/openid-configuration
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${MICROSERVICES_CERTIFICATE_PWD:-}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/${MICROSERVICES_CERTIFICATE_NAME:-}
+    volumes:
+      - ~/.aspnet/https:/https:ro
     ports:
       - "7158:443"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     depends_on:
       - sqlserver
       
@@ -113,11 +116,12 @@ services:
       - ConnectionStrings__employeeDbConnectionString=Server=tcp:sqlserver;Integrated Security=false;Initial Catalog=eshop.employee.Db;User Id=sa;password=E*AmPleP@ssw0rd;TrustServerCertificate=true  
       - ConnectionStrings__openIddictDbConnectionString=DataSource=customer.openiddict.db    
       - clients__0__clientOrigin=http://localhost:4202
-    ports:
-      - "7272:443"
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${MICROSERVICES_CERTIFICATE_PWD:-}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/${MICROSERVICES_CERTIFICATE_NAME:-}
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro    
+      - ~/.aspnet/https:/https:ro
+    ports:
+      - "7272:443"  
     depends_on:
       - sqlserver
       - employeemanagement-api
@@ -140,12 +144,13 @@ services:
       - broker__queueName=clear-basket
       - JWTSettings__Issuer=https://localhost:7086/
       - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${MICROSERVICES_CERTIFICATE_PWD:-}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/${MICROSERVICES_CERTIFICATE_NAME:-}
+    volumes:
+      - ~/.aspnet/https:/https:ro
     ports:
       - "7120:8081"
       - "5008:8080"     
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro  
     depends_on:
       redis:
         condition: service_started
@@ -171,12 +176,13 @@ services:
       - broker__queueName=create-order
       - JWTSettings__Issuer=https://localhost:7086/
       - JWTSettings__MetadataAddress=http://customer-authorizationserver/.well-known/openid-configuration
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${MICROSERVICES_CERTIFICATE_PWD:-}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/${MICROSERVICES_CERTIFICATE_NAME:-}
+    volumes:
+      - ~/.aspnet/https:/https:ro
     ports:
       - "5009:8080"
-      - "7247:8081"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro    
+      - "7247:8081" 
     depends_on:
       sqlserver:
         condition: service_started
@@ -199,8 +205,6 @@ services:
       - queueName=process-payment
     ports:
       - "5010:8080"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -227,8 +231,6 @@ services:
       - ordering__clearBasketQueueName=clear-basket 
     ports:
       - "5011:8080"      
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
     depends_on:
       sqlserver:
         condition: service_started
