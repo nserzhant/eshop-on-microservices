@@ -13,35 +13,35 @@ spec:
   - host: {{ .Values.eshop_ingress.eshopDnsName }}
     http:
       paths:
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path: "/()()(.*)"
         backend:
           service:
             name: {{ .Values.customer_portal.appName }}    
             port: 
               number: 80
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path: "/catalog(/|$)(.*)"
         backend:
           service:
             name: {{ .Values.catalog_api.appName }}  
             port: 
               number: 80
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path:  "/(basket/)(api)(.*)"
         backend:
           service:
             name: {{ .Values.basket_api.appName }}  
             port: 
               number: 80
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path:  "/(ordering/)(api)(.*)"
         backend:
           service:
             name: {{ .Values.ordering_api.appName }}  
             port: 
               number: 80
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path: /()(authorize)(.*)
         backend:
           service:
@@ -51,28 +51,28 @@ spec:
   - host: {{ .Values.eshop_ingress.eshopEmployeePortalDnsName }}
     http:
       paths:
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path: "/()()(.*)"
         backend:
           service:
             name: {{ .Values.employee_portal.appName }}
             port: 
               number: 80
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path: "/catalog(/|$)(.*)"
         backend:
           service:
             name: {{ .Values.catalog_api.appName }}
             port: 
               number: 80
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path: /()(authorize)(.*)
         backend:
           service:
             name: {{ .Values.employeemanagement_authserver.appName }}
             port: 
               number: 80
-      - pathType: Prefix
+      - pathType: ImplementationSpecific
         path: "/(employee-management/)(api)(.*)"
         backend:
           service:
