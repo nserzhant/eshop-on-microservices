@@ -23,7 +23,7 @@
   },
   "checkout" : {
     "shipping-address" : "Shipping Address",
-    "shipping-address-required" : "Shipping Address Required",
+    "shipping-address-required" : "Shipping Address is Required",
     "cardholder" : "Cardholder",
     "card-number" : "Card Number",
     "expiration-date" : "Expiration Date",
@@ -39,14 +39,24 @@
     "brand" : "Brand",
     "type" : "Type",
     "qty" : "Qty",
-    "price" : "Price"
+    "price" : "Price",
+    "errors" : {
+      "checkout-failed": "Checkout failed"
+    }
+  },
+  "paginator": {
+    "firstPageLabel" : "First page",
+    "itemsPerPageLabel" : "Items per page:",
+    "lastPageLabel" : "Last page",
+    "nextPageLabel" : "Next page",
+    "previousPageLabel" : "Previous page",
+    "currentPageLabelTemplate" : "{{startIndex}} - {{endIndex}} of {{length}}"
   },
   "errors" : {
     "unathorized" : "Unathorized",
     "access-is-denied" : "Access is denied",
     "internal-server-error" : "Internal server error",
     "unknown-error" : "Unknown error",
-    "service-unavailable" : "Service unavailable",
-    "checkout-failed": "Checkout failed"
+    "service-unavailable" : "Service unavailable"
   }
 }

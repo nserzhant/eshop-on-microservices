@@ -5,7 +5,6 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace EShop.Saga.Processor.IntegrationTests;
 

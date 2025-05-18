@@ -40,10 +40,10 @@
       <input matInput disabled="true" value="{{ total }} $">
     </mat-form-field>
     <div  style="grid-column-start: span 2;" class="form-item">
-      <button type="submit" mat-raised-button color="primary" [disabled]="checkoutForm.invalid" style="width: 150px;">
+      <button type="submit" mat-raised-button color="primary" [disabled]="checkoutForm.invalid" class="action-button">
         {{ 'checkout.place-order' | translate }}
       </button>
-      <button type="button" mat-raised-button color="primary" style="width: 150px;" class="right" (click)="back()">
+      <button type="button" mat-raised-button color="primary" class="right action-button" (click)="back()">
         {{ 'checkout.back' | translate }}
       </button>
     </div>

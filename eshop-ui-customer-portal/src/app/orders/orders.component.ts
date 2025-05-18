@@ -7,7 +7,6 @@ import { BehaviorSubject, lastValueFrom, Subject, takeUntil } from 'rxjs';
   templateUrl: './orders.component.html'
 })
 export class OrdersComponent implements OnInit, OnDestroy  {
-
   MAX_SMALL_WIDTH = 520;
   componentDestroyed$ = new Subject<void>();
   screenWidth$ = new BehaviorSubject<number>(window.innerWidth);

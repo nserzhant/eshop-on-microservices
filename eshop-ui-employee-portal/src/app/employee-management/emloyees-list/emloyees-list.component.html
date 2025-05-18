@@ -1,34 +1,34 @@
 <mat-card>
   <mat-card-header>
-    <mat-card-title>{{ 'employees-list-header' | translate }}</mat-card-title>
+    <mat-card-title>{{ 'employee-management.employees-list-header' | translate }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <form>
       <mat-form-field appearance="outline" class="email-filter">
-        <mat-label>{{ 'filter-by-email' | translate }}</mat-label>
+        <mat-label>{{ 'employee-management.filter-by-email' | translate }}</mat-label>
         <input matInput #emailFilter [ngModel] = "currentEmailFilter" name = "emailFilter">
       </mat-form-field>
       <button mat-raised-button class="right"  (click)="applyEmailFilter(emailFilter.value)">
-        {{ 'apply-filter' | translate }}
+        {{ 'employee-management.apply-filter' | translate }}
       </button>
     </form>
     <table mat-table [dataSource]="data"  matSort>
 
       <!-- Email Column -->
       <ng-container matColumnDef="Email">
-        <th mat-header-cell *matHeaderCellDef  mat-sort-header> {{ 'email' | translate }} </th>
+        <th mat-header-cell *matHeaderCellDef  mat-sort-header> {{ 'employee-management.email' | translate }} </th>
         <td mat-cell *matCellDef="let user"> {{user.email}} </td>
       </ng-container>
 
       <!-- Roles Column -->
       <ng-container matColumnDef="Roles">
-        <th mat-header-cell *matHeaderCellDef  style="width: 160px">  {{ 'roles' | translate }} </th>
+        <th mat-header-cell *matHeaderCellDef>  {{ 'employee-management.roles' | translate }} </th>
         <td mat-cell *matCellDef="let user">{{getRoles(user)}}</td>
       </ng-container>
 
       <!-- Edit Column -->
       <ng-container matColumnDef="Edit">
-        <th mat-header-cell *matHeaderCellDef   style="width: 40px">
+        <th mat-header-cell *matHeaderCellDef>
             <div class="center">{{ 'edit' | translate }}</div>
         </th>
         <td mat-cell *matCellDef="let user">
@@ -42,8 +42,7 @@
     <mat-spinner *ngIf="isLoadingResults" class="grid-spinner"></mat-spinner>
     <mat-paginator [pageSizeOptions]="[5, 10, 20]"
                    [length]="resultsLength"
-                   showFirstLastButtons
-                   attr.aria-label="{{'paginator-aria-label' | translate }}">
+                   showFirstLastButtons>
     </mat-paginator>
   </mat-card-content>
 </mat-card>

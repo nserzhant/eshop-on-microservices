@@ -76,8 +76,7 @@
       <mat-spinner *ngIf="isLoadingResults" class="grid-spinner"></mat-spinner>
       <mat-paginator [pageSizeOptions]="[5, 10, 20]"
                     [length]="resultsLength"
-                    showFirstLastButtons
-                    attr.aria-label="{{'paginator-aria-label' | translate }}">
+                    showFirstLastButtons>
       </mat-paginator>
     </div>
     <span *ngIf="hidePaginator" class="not-found-container">{{'catalog.items-not-found' | translate }}</span>

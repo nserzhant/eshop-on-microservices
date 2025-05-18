@@ -69,7 +69,7 @@ export class CheckoutComponent implements OnInit {
     this.isCheckingOut = false;
 
     if(!orderPlaced) {
-      const message$ = this.translateService.get('errors.checkout-failed');
+      const message$ = this.translateService.get('orders.errors.checkout-failed');
       const message = await lastValueFrom(message$);
       this.matSnackBar.open(message , 'Close', { duration: 3000, panelClass: ['error-snack-bar'] });
       await this.sleep(3000);
@@ -84,6 +84,6 @@ export class CheckoutComponent implements OnInit {
   }
 
   sleep(timeout: number) : Promise<void> {
-      return new Promise(resolve => setTimeout(resolve, timeout));
+    return new Promise(resolve => setTimeout(resolve, timeout));
   }
 }

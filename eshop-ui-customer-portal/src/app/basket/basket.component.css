@@ -1,0 +1,15 @@
+
+.mat-column-remove {
+  flex: none;
+  width: 80px;
+}
+
+.mat-column-price {
+  flex: none;
+  width: 100px
+}
+
+.mat-column-qty {
+  flex: none;
+  width: 100px
+}

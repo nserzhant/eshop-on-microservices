@@ -5,7 +5,8 @@ import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-basket',
-  templateUrl: './basket.component.html'
+  templateUrl: './basket.component.html',
+  styleUrl: './basket.component.css'
 })
 export class BasketComponent implements OnInit, OnDestroy {
   items: BasketItem[] = [];

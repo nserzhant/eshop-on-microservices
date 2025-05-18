@@ -25,13 +25,13 @@ export class OrderingService {
     const storageBasketJSON = this.storage.getItem(this.BASKET_STORAGE_KEY);
 
     if (storageBasketJSON) {
-        const parsedBasket = JSON.parse(storageBasketJSON) as CustomerBasket;
+      const parsedBasket = JSON.parse(storageBasketJSON) as CustomerBasket;
 
-        if(parsedBasket && parsedBasket.items) {
-          this.basketSubject$.next(new CustomerBasket({
-            items: parsedBasket.items.map( item => new BasketItem(item))
-          }));
-        }
+      if(parsedBasket && parsedBasket.items) {
+        this.basketSubject$.next(new CustomerBasket({
+          items: parsedBasket.items.map( item => new BasketItem(item))
+        }));
+      }
     }
   }
 

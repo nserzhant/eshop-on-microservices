@@ -29,21 +29,3 @@ COPY --from=build /app/dist/eshop-ui-employee-portal/browser .
 # Containers run nginx with global directives and daemon off
 EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
-
-# For development runtime environment use:
-# Build
-# docker build -t employee-portal-development --target development .
-# Run with browser debugging
-# docker run -p 4202:4202 -p 49153:49153 -d --rm -v .\src:/app/src --name employee-portal-dev  employee-portal-development
-# Run without browser debugging
-# docker run -p 4202:4202 -d --rm employee-portal-development
-# Run with other configuration (production in the example)
-# docker run -p 4202:4202 -d --rm employee-portal-development --configuration=production
-
-# For production runtime environment use:
-# Build
-# docker build --target release --no-cache  -t employee-portal-release .
-# Build with other configuration (development in the example)
-# docker build --target release --no-cache  -t employee-portal-release --build-arg="CONFIGURATION=development" .
-# Run
-# docker run -d --rm -p 4202:80 employee-portal-release

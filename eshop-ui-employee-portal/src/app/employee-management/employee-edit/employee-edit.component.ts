@@ -23,10 +23,10 @@ export class EmployeeEditComponent implements OnInit {
               private location: Location) { }
 
   ngOnInit(): void {
-      this.route.params.subscribe((params: Params) => {
-        const id = params['employeeId'];
-        this.loadUser(id);
-      });
+    this.route.params.subscribe((params: Params) => {
+      const id = params['employeeId'];
+      this.loadUser(id);
+    });
   }
 
   async loadUser(employeeId: string) {
@@ -40,15 +40,15 @@ export class EmployeeEditComponent implements OnInit {
 
     this.isRolesUpdating = true;
     this.employeeManagementClient.setRoles(this.employee?.id!, roles).subscribe({
-          error: (e) => {
-          this.isRolesUpdating = false;
-          this.updateRolesApiError = e;
-          },
-          complete: () => {
-            this.isRolesUpdating = false;
-            this.updateRolesApiError = null;
-          }
-      });
+      error: (e) => {
+        this.isRolesUpdating = false;
+        this.updateRolesApiError = e;
+      },
+      complete: () => {
+        this.isRolesUpdating = false;
+        this.updateRolesApiError = null;
+      }
+    });
   }
 
   changePassword(form: NgForm) {
@@ -60,15 +60,15 @@ export class EmployeeEditComponent implements OnInit {
 
     this.isPasswordUpdating = true;
     this.employeeManagementClient.setPassword(this.employee?.id!,password).subscribe({
-          error: (e) => {
-          this.isPasswordUpdating = false;
-          this.updatePasswordApiError = e;
-          },
-          complete: () => {
-            this.isPasswordUpdating = false;
-            this.updatePasswordApiError = null;
-          }
-      });
+      error: (e) => {
+        this.isPasswordUpdating = false;
+        this.updatePasswordApiError = e;
+      },
+      complete: () => {
+        this.isPasswordUpdating = false;
+        this.updatePasswordApiError = null;
+      }
+    });
   }
 
   back() {

@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -22,67 +21,76 @@ import { OrdersComponent } from './orders/orders.component';
 import { BASKET_API_URL, BasketClient } from './services/api/basket.api.client';
 import { OrderClient, ORDERING_API_URL } from './services/api/ordering.api.client';
 import { HttpErrorInterceptor } from './services/http-error-interceptor.service';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { CustomPaginatorIntl } from './common/custom.paginator.intl';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
 }
 
-@NgModule({ declarations: [
-        AppComponent,
-        HeaderComponent,
-        CatalogComponent,
-        LoginCallbackComponent,
-        BasketComponent,
-        CheckoutComponent,
-        OrdersComponent
-    ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
-        AppRoutingModule,
-        BrowserAnimationsModule,
-        MaterialModule,
-        FormsModule,
-        ReactiveFormsModule,
-        TranslateModule.forRoot({
-            loader: {
-                provide: TranslateLoader,
-                useFactory: HttpLoaderFactory,
-                deps: [HttpClient]
-            }
-        })], providers: [
-        CatalogBrandClient,
-        CatalogTypeClient,
-        CatalogItemClient,
-        BasketClient,
-        OrderClient,
-        {
-            provide: CATALOG_API_URL,
-            useValue: environment.catalogApi
-        },
-        {
-          provide: BASKET_API_URL,
-          useValue: environment.basketApi
-        },
-        {
-          provide: ORDERING_API_URL,
-          useValue: environment.orderingApi
-        },
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: AuthenticationInterceptorService,
-            multi: true
-        },
-        {
-          provide: HTTP_INTERCEPTORS,
-          useClass: HttpErrorInterceptor,
-          multi: true
-        },
-        {
-            provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
-            useValue: {
-                diameter: 24,
-            }
-        },
-        provideHttpClient(withInterceptorsFromDi())
-    ] })
+@NgModule({
+  declarations: [
+    AppComponent,
+    HeaderComponent,
+    CatalogComponent,
+    LoginCallbackComponent,
+    BasketComponent,
+    CheckoutComponent,
+    OrdersComponent
+  ],
+  bootstrap: [AppComponent],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    MaterialModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useFactory: HttpLoaderFactory,
+        deps: [HttpClient]
+      }
+    })
+  ],
+  providers: [
+    CatalogBrandClient,
+    CatalogTypeClient,
+    CatalogItemClient,
+    BasketClient,
+    OrderClient,
+    {
+      provide: CATALOG_API_URL,
+      useValue: environment.catalogApi
+    },
+    {
+      provide: BASKET_API_URL,
+      useValue: environment.basketApi
+    },
+    {
+      provide: ORDERING_API_URL,
+      useValue: environment.orderingApi
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthenticationInterceptorService,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: HttpErrorInterceptor,
+      multi: true
+    },
+    {
+      provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
+      useValue: {
+        diameter: 24,
+      }
+    },
+    provideHttpClient(withInterceptorsFromDi()),
+    { provide: MatPaginatorIntl, useClass: CustomPaginatorIntl }
+  ]
+})
 export class AppModule { }

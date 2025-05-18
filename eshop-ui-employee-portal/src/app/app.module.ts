@@ -16,49 +16,57 @@ import { HeaderComponent } from './header/header.component';
 import { LoginCallbackComponent } from './auth/login-callback.component';
 import { AuthenticationInterceptorService } from './auth/authentication-interceptor.service';
 import { EmployeeManagementModule } from './employee-management/employee-management.module';
+import { MatPaginatorIntl } from '@angular/material/paginator';
+import { CustomPaginatorIntl } from './common/custom.paginator.intl';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
 }
 
-@NgModule({ declarations: [
-        AppComponent,
-        HomeComponent,
-        HeaderComponent,
-        LoginCallbackComponent
-    ],
-    bootstrap: [AppComponent], imports: [MaterialModule,
-        BrowserModule,
-        FormsModule,
-        ReactiveFormsModule,
-        AppRoutingModule,
-        BrowserAnimationsModule,
-        CatalogModule,
-        EmployeeManagementModule,
-        TranslateModule.forRoot({
-            loader: {
-                provide: TranslateLoader,
-                useFactory: HttpLoaderFactory,
-                deps: [HttpClient]
-            }
-        })], providers: [
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: AuthenticationInterceptorService,
-            multi: true
-        },
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: HttpErrorInterceptor,
-            multi: true
-        },
-        {
-            provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
-            useValue: {
-                diameter: 24,
-            }
-        },
-        provideHttpClient(withInterceptorsFromDi())
-    ] })
+@NgModule({
+  declarations: [
+      AppComponent,
+      HomeComponent,
+      HeaderComponent,
+      LoginCallbackComponent
+  ],
+  bootstrap: [AppComponent],
+  imports: [
+    MaterialModule,
+    BrowserModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    CatalogModule,
+    EmployeeManagementModule,
+    TranslateModule.forRoot({
+        loader: {
+            provide: TranslateLoader,
+            useFactory: HttpLoaderFactory,
+            deps: [HttpClient]
+        }
+    })],
+  providers: [
+    {
+        provide: HTTP_INTERCEPTORS,
+        useClass: AuthenticationInterceptorService,
+        multi: true
+    },
+    {
+        provide: HTTP_INTERCEPTORS,
+        useClass: HttpErrorInterceptor,
+        multi: true
+    },
+    {
+        provide: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS,
+        useValue: {
+            diameter: 24,
+        }
+    },
+    provideHttpClient(withInterceptorsFromDi()),
+    { provide: MatPaginatorIntl, useClass: CustomPaginatorIntl }
+  ]
+})
 export class AppModule { }

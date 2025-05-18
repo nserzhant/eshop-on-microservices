@@ -42,13 +42,13 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
-         if (width < this.MAX_SMALL_WIDTH) {
-          this.isSmallScreen = true;
-        }
-        else if (width >  this.MAX_SMALL_WIDTH) {
-          this.isSmallScreen = false;
-        }
-      });
+       if (width < this.MAX_SMALL_WIDTH) {
+        this.isSmallScreen = true;
+      }
+      else if (width >  this.MAX_SMALL_WIDTH) {
+        this.isSmallScreen = false;
+      }
+    });
   }
 
   ngOnDestroy(): void {
