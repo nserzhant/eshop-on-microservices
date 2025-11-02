@@ -1,27 +1,48 @@
-# Eshop Ui Customer Portal
+# Using Docker with the eshop-ui-customer-portal
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.2.0.
+The following commands should be executed from the `eshop-ui-customer-portal` folder.
 
-## Development server
+## Run the application in the development runtime environment:
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4201/`. The application will automatically reload if you change any of the source files.
+Build:
 
-## Code scaffolding
+```sh
+docker build -t customer-portal-development --target development .
+```
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Run:
 
-## Build
+```sh
+docker run -p 4201:4201 -d --rm customer-portal-development
+```
+Run with debugging in a browser:
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```sh
+docker run -p 4201:4201 -p 49153:49153 -d --rm -v .\src:/app/src --name customer-portal-dev  customer-portal-development
+```
 
-## Running unit tests
+Run using a specific build configuration (production in the example):
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```sh
+docker run -p 4201:4201 -d --rm customer-portal-development --configuration=production
+```
 
-## Running end-to-end tests
+## Run the application in the production runtime environment:
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+Build:
 
-## Further help
+```sh
+docker build --target release --no-cache  -t customer-portal-release .
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+Build using a specific build configuration (development in the example):
+
+```sh
+docker build --target release --no-cache  -t customer-portal-release --build-arg="CONFIGURATION=development" .
+```
+
+Run:
+
+```sh
+docker run -d --rm -p 4201:80 customer-portal-release
+```
