@@ -31,7 +31,7 @@ public class BasketIntegrationTests : BaseBasketIntegrationTests
 
     [Test]
     [Category("Get Basket")]
-    public async Task When_Save_Basket_Then_It_Could_Be_Retreived_By_Customer_Id()
+    public async Task When_Saved_Basket_Then_It_Can_Be_Retrieved_By_Customer_Id()
     {
         var customerId = Guid.NewGuid();
         var basket = new CustomerBasket()

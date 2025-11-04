@@ -58,8 +58,8 @@
         "catalogItemNameIsNullOrEmptyException" : "Item Name is empty",
         "catalogItemNegativePriceException" : "Item Price is negative",
         "catalogItemNegativeQtyException" : "Item Qty is negative",
-        "catalogItemsForBrandExistsException" : "Item with the same Brand already exists",
-        "catalogItemsForTypeExistsException" : "Item with the same Type already exists",
+        "catalogItemsForBrandExistException" : "Item with the same Brand already exists",
+        "catalogItemsForTypeExistException" : "Item with the same Type already exists",
         "catalogItemTsIsNullException" : "Item ts is null",
         "catalogItemTypeIsEmptyException" : "Item Type is empty",
         "catalogTypeAlreadyExistsException" : "Type alredy exists",
@@ -94,7 +94,7 @@
     "currentPageLabelTemplate" : "{{startIndex}} - {{endIndex}} of {{length}}"
   },
   "errors" : {
-    "unathorized" : "Unathorized",
+    "unauthorized" : "Unauthorized",
     "access-is-denied" : "Access is denied",
     "internal-server-error" : "Internal server error",
     "unknown-error" : "Unknown error",

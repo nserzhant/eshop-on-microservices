@@ -61,7 +61,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
 
     [Test]
     [Category("Save Basket")]
-    public async Task When_Customer_Is_Unauthenticated_Then_Save_Basket_Returns_Unathorized()
+    public async Task When_Customer_Is_Unauthenticated_Then_Save_Basket_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var basketClient = webApplicationFactory.CreateClient();
@@ -87,7 +87,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
 
     [Test]
     [Category("Checkout Basket")]
-    public async Task When_Customer_Is_Unauthenticated_Then_Checkout_Basket_Returns_Unathorized()
+    public async Task When_Customer_Is_Unauthenticated_Then_Checkout_Basket_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var basketClient = webApplicationFactory.CreateClient();
@@ -163,7 +163,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
        
     [Test]
     [Category("Get Basket")]
-    public async Task When_Customer_Is_Unauthenticated_Then_Get_Basket_Returns_Unathorized()
+    public async Task When_Customer_Is_Unauthenticated_Then_Get_Basket_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var basketClient = webApplicationFactory.CreateClient();
@@ -175,7 +175,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
 
     [Test]
     [Category("Get Basket")]
-    public async Task When_Customer_Is_Authenticated_Then_Basket_Can_Get()
+    public async Task When_Customer_Is_Authenticated_Then_Basket_Can_Be_Retrieved()
     {
         _testAuthenticationContextBuilder.SetAuthorizedAs(Guid.NewGuid());
         var basketClient = webApplicationFactory.CreateClient();
@@ -187,7 +187,7 @@ public class BasketControllerTests : BaseBasketIntegrationTests
 
     [Test]
     [Category("Get Basket")]
-    public async Task When_Customer_Saved_Basket_Then_Basket_Can_Get()
+    public async Task When_Customer_Saved_Basket_Then_Basket_Can_Be_Retrieved()
     {
         var customerId = Guid.NewGuid();
         var basket = await createCustomerBasketAsync(customerId);

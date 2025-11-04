@@ -42,47 +42,47 @@ public class OrderingStateMachineTests
     }
 
     [Test]
-    public async Task When_Basket_Check_Out_Then_State_Should_Be_Reserving_Stocks()
+    public async Task When_Basket_Checked_Out_Event_Is_Published_Then_State_Should_Be_Reserving_Stocks()
     {
         var correlationId = Guid.NewGuid();
+        
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
 
         var orderCreatingSagaId = await _sagaHarness.Exists(correlationId, x => x.ReservingStocks, TimeSpan.FromSeconds(10));
-
         Assert.That(orderCreatingSagaId.HasValue, Is.True);
         Assert.That(orderCreatingSagaId.Value, Is.EqualTo(correlationId));
     }
 
     [Test]
-    public async Task When_Stocks_Reserved_Then_State_Should_Be_Stocks_Reserved()
+    public async Task When_Stocks_Reserved_Event_Is_Published_Then_State_Should_Be_Stocks_Reserved()
     {
         var correlationId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
         await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
+
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
 
         var catalogUpdatedSagaId = await _sagaHarness.Exists(correlationId, x => x.StocksReserved, TimeSpan.FromSeconds(10));
-
         Assert.That(catalogUpdatedSagaId.HasValue, Is.True);
         Assert.That(catalogUpdatedSagaId.Value, Is.EqualTo(correlationId));
     }
 
     [Test]
-    public async Task When_Stocks_Reservation_Failed_Then_State_Should_Be_Checkout_Failed()
+    public async Task When_Stocks_Reservation_Failed_Event_Is_Published_Then_State_Should_Be_Checkout_Failed()
     {
         var correlationId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));
         await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
+
         await _harness.Bus.Publish(new StocksReservationFailedEvent(correlationId));
 
         var catalogUpdatedSagaId = await _sagaHarness.Exists(correlationId, x => x.CheckoutFailed, TimeSpan.FromSeconds(10));
-
         Assert.That(catalogUpdatedSagaId.HasValue, Is.True);
         Assert.That(catalogUpdatedSagaId.Value, Is.EqualTo(correlationId));
     }
 
     [Test]
-    public async Task When_Payment_Successfully_Processed_Then_State_Should_Be_Payment_Processed()
+    public async Task When_Payment_Successfully_Processed_Event_Is_Published_Then_State_Should_Be_Payment_Processed()
     {
         var correlationId = Guid.NewGuid();
         var orderId = Guid.NewGuid();
@@ -90,17 +90,17 @@ public class OrderingStateMachineTests
         await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
         await _sagaHarness.Consumed.Any<StocksReservedEvent>();
+
         await _harness.Bus.Publish(new PaymentProcessedEvent(correlationId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.PaymentProcessed, TimeSpan.FromSeconds(10));
-
         Assert.That(orderCreatedSagaId.HasValue, Is.True);
         Assert.That(orderCreatedSagaId.Value, Is.EqualTo(correlationId));
     }
 
 
     [Test]
-    public async Task When_Payment_Failed_Then_State_Should_Be_Payment_Failed()
+    public async Task When_Payment_Failed_Event_Is_Published_Then_State_Should_Be_Payment_Failed()
     {
         var correlationId = Guid.NewGuid();
         var orderId = Guid.NewGuid();
@@ -108,16 +108,16 @@ public class OrderingStateMachineTests
         await _sagaHarness.Consumed.Any<BasketCheckedOutEvent>();
         await _harness.Bus.Publish(new StocksReservedEvent(correlationId, 10));
         await _sagaHarness.Consumed.Any<StocksReservedEvent>();
+
         await _harness.Bus.Publish(new PaymentFailedEvent(correlationId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.PaymentFailed, TimeSpan.FromSeconds(10));
-
         Assert.That(orderCreatedSagaId.HasValue, Is.True);
         Assert.That(orderCreatedSagaId.Value, Is.EqualTo(correlationId));
     }
 
     [Test]
-    public async Task When_Order_Created_Then_State_Should_Be_Order_Created()
+    public async Task When_Order_Created_Event_Is_Published_Then_State_Should_Be_Order_Created()
     {
         var correlationId = Guid.NewGuid();
         var orderId = 3;
@@ -127,17 +127,17 @@ public class OrderingStateMachineTests
         await _sagaHarness.Consumed.Any<StocksReservedEvent>();
         await _harness.Bus.Publish(new PaymentProcessedEvent(correlationId));
         await _sagaHarness.Consumed.Any<PaymentProcessedEvent>();
+
         await _harness.Bus.Publish(new OrderCreatedEvent(correlationId, orderId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.OrderCreated, TimeSpan.FromSeconds(10));
-
         Assert.That(orderCreatedSagaId.HasValue, Is.True);
         Assert.That(orderCreatedSagaId.Value, Is.EqualTo(correlationId));
     }
 
 
     [Test]
-    public async Task When_Stocks_Released_Then_State_Should_Be_Checkout_Failed()
+    public async Task When_Stocks_Released_Event_Is_Published_Then_State_Should_Be_Checkout_Failed()
     {
         var correlationId = Guid.NewGuid();
         var orderId = Guid.NewGuid();
@@ -147,16 +147,16 @@ public class OrderingStateMachineTests
         await _sagaHarness.Consumed.Any<StocksReservedEvent>();
         await _harness.Bus.Publish(new PaymentFailedEvent(correlationId));
         await _sagaHarness.Consumed.Any<PaymentProcessedEvent>();
+
         await _harness.Bus.Publish(new StocksReleasedEvent(correlationId));
 
         var orderCreatedSagaId = await _sagaHarness.Exists(correlationId, x => x.CheckoutFailed, TimeSpan.FromSeconds(10));
-
         Assert.That(orderCreatedSagaId.HasValue, Is.True);
         Assert.That(orderCreatedSagaId.Value, Is.EqualTo(correlationId));
     }
 
     [Test]
-    public async Task When_Basket_Cleared_Then_State_Should_Be_Finalized()
+    public async Task When_Basket_Cleared_Event_Is_Published_Then_State_Should_Be_Finalized()
     {
         var correlationId = Guid.NewGuid();
         await _harness.Bus.Publish(new BasketCheckedOutEvent(correlationId, Guid.NewGuid(), string.Empty, string.Empty, Guid.NewGuid(), new List<BasketCheckoutItem>()));

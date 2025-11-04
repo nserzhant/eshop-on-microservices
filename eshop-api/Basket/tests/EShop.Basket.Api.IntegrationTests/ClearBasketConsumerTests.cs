@@ -45,7 +45,7 @@ public class ClearBasketConsumerTests : BaseBasketIntegrationTests
     }
 
     [Test]
-    public async Task When_Clear_Basket_Command_Consumed_Then_Basket_Should_Be_ClearedAsync()
+    public async Task When_Clear_Basket_Command_Consumed_Then_Basket_Should_Be_Cleared()
     {
         var customerId = Guid.NewGuid();
         var basket = new CustomerBasket()

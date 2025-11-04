@@ -46,18 +46,18 @@ public class CatalogItemUnitTests
 
 
     [Test]
-    public void When_Create_Catalog_Item_With_Empty_Type_Reference_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Item_Without_Type_Then_Exception_Should_Be_Thrown()
     {
         var name = "Test Name";
         var catalogBrandId = Guid.NewGuid();
 
-        Action act = () => new CatalogItem(name,Guid.Empty, catalogBrandId);
+        Action act = () => new CatalogItem(name, Guid.Empty, catalogBrandId);
 
         Assert.That(act, Throws.TypeOf<CatalogItemTypeIsEmptyException>());
     }
 
     [Test]
-    public void When_Create_Catalog_Item_With_Empty_Brand_Reference_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Item_Without_Brand_Then_Exception_Should_Be_Thrown()
     {
         var name = "Test Name";
         var catalogTypeId = Guid.NewGuid();
@@ -122,7 +122,7 @@ public class CatalogItemUnitTests
     }
 
     [Test]
-    public void When_Update_Catalog_Item_With_Negative_Availbable_Qty_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Item_With_Negative_Available_Qty_Then_Exception_Should_Be_Thrown()
     {
         var catalogItem = createItemWithDefaulFields();
 
@@ -132,7 +132,7 @@ public class CatalogItemUnitTests
     }
 
     [Test]
-    public void When_Update_TS_Item_With_Null_Or_Empty_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Item_With_Null_Or_Empty_TS_Then_Exception_Should_Be_Thrown()
     {            
         var catalogItem = createItemWithDefaulFields();
 
@@ -142,7 +142,7 @@ public class CatalogItemUnitTests
     }
 
     [Test]
-    public void When_Update_Item_Empty_Type_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Item_With_Empty_Type_Then_Exception_Should_Be_Thrown()
     {
         var catalogItem = createItemWithDefaulFields();
 
@@ -152,7 +152,7 @@ public class CatalogItemUnitTests
     }
 
     [Test]
-    public void When_Update_Item_With_Empty_Brand_Then_Exception_Should_Be_Thrown()
+    public void When_Update__Catalog_Item_With_Empty_Brand_Then_Exception_Should_Be_Thrown()
     {
         var catalogItem = createItemWithDefaulFields();
 

@@ -31,7 +31,6 @@ public class CatalogBrandRepository : ICatalogBrandRepository
     public async Task<CatalogBrand?> GetCatalogBrandAsync(Guid catalogBrandId)
     {
         var item = await _catalogDbContext.CatalogBrands
-            .AsNoTracking()
             .FirstOrDefaultAsync(cb => cb.Id == catalogBrandId);
 
         return item;

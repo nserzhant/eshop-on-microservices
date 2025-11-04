@@ -18,7 +18,7 @@ public class CatalogBrandTests
     }
 
     [Test]
-    public void When_Creating_Catalog_Brand_With_Null_Or_Empty_Name_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Brand_With_Null_Or_Empty_Name_Then_Exception_Should_Be_Thrown()
     {
         Action actNull = () => new CatalogBrand(null);
         Action actEmpty = () => new CatalogBrand("");
@@ -54,7 +54,7 @@ public class CatalogBrandTests
     }
 
     [Test]
-    public void When_Update_TS_Brand_With_Null_Or_Empty_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Brand_With_Null_Or_Empty_TS_Then_Exception_Should_Be_Thrown()
     {
         var catalogBrand = new CatalogBrand("defaultBrandName");
 

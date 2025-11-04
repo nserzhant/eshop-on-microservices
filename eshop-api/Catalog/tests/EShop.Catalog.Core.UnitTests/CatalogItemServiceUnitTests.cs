@@ -15,7 +15,6 @@ public class CatalogItemServiceUnitTests
     private ICatalogBrandRepository _catalogBrandRepository;
     private ICatalogTypeRepository _catalogTypeRepository;
     private ICatalogItemRepository _catalogItemRepository;
-    private CatalogItem _catalogItem;
 
     [SetUp]
     public void Setup()
@@ -26,57 +25,58 @@ public class CatalogItemServiceUnitTests
         _catalogItemService = new CatalogItemService(_catalogBrandRepository, 
             _catalogTypeRepository,
             _catalogItemRepository);
-        _catalogItem = new CatalogItem("test", 
-            Guid.NewGuid(), 
-            Guid.NewGuid());
     }
 
     [Test]
-    public void When_Saving_Catalog_Item_And_Brand_Not_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Item_And_Brand_Not_Exists_Then_Exception_Should_Be_Thrown()
     {
-        _catalogBrandRepository.GetCatalogBrandAsync(_catalogItem.CatalogBrandId).ReturnsNull();
-        _catalogTypeRepository.GetCatalogTypeAsync(_catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
+        var catalogItem = new CatalogItem("test", Guid.NewGuid(), Guid.NewGuid());
+        _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).ReturnsNull();
+        _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
 
-        Task act() => _catalogItemService.UpdateCatalogItemAsync(_catalogItem);
+        Task act() => _catalogItemService.UpdateCatalogItemAsync(catalogItem);
 
         Assert.That(act, Throws.TypeOf<CatalogBrandNotExistsException>());
     }
 
     [Test]
-    public void When_Saving_Catalog_Item_And_Type_Not_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Item_And_Type_Not_Exists_Then_Exception_Should_Be_Thrown()
     {
-        _catalogBrandRepository.GetCatalogBrandAsync(_catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
-        _catalogTypeRepository.GetCatalogTypeAsync(_catalogItem.CatalogTypeId).ReturnsNull();
+        var catalogItem = new CatalogItem("test", Guid.NewGuid(), Guid.NewGuid());
+        _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
+        _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).ReturnsNull();
 
-        Task act() => _catalogItemService.UpdateCatalogItemAsync(_catalogItem);
+        Task act() => _catalogItemService.UpdateCatalogItemAsync(catalogItem);
 
         Assert.That(act, Throws.TypeOf<CatalogTypeNotExistsException>());
     }
 
     [Test]
-    public void When_Creating_Catalog_Item_And_Brand_Not_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Item_And_Brand_Not_Exists_Then_Exception_Should_Be_Thrown()
     {
-        _catalogBrandRepository.GetCatalogBrandAsync(_catalogItem.CatalogBrandId).ReturnsNull();
-        _catalogTypeRepository.GetCatalogTypeAsync(_catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
+        var catalogItem = new CatalogItem("test", Guid.NewGuid(), Guid.NewGuid());
+        _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).ReturnsNull();
+        _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
 
-        Task act() => _catalogItemService.CreateCatalogItemAsync(_catalogItem);
+        Task act() => _catalogItemService.CreateCatalogItemAsync(catalogItem);
 
         Assert.That(act, Throws.TypeOf<CatalogBrandNotExistsException>());
     }
 
     [Test]
-    public void When_Creating_Catalog_Item_And_Type_Not_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Item_And_Type_Not_Exists_Then_Exception_Should_Be_Thrown()
     {
-        _catalogBrandRepository.GetCatalogBrandAsync(_catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
-        _catalogTypeRepository.GetCatalogTypeAsync(_catalogItem.CatalogTypeId).ReturnsNull();
+        var catalogItem = new CatalogItem("test", Guid.NewGuid(), Guid.NewGuid());
+        _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
+        _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).ReturnsNull();
 
-        Task act() => _catalogItemService.CreateCatalogItemAsync(_catalogItem);
+        Task act() => _catalogItemService.CreateCatalogItemAsync(catalogItem);
 
         Assert.That(act, Throws.TypeOf<CatalogTypeNotExistsException>());
     }
 
     [Test]
-    public void When_Create_Catalog_Item_And_The_Same_Already_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Item_With_Already_Existed_Name_Then_Exception_Should_Be_Thrown()
     {
         var catalogItemName = "Catalog Item Sample";
         var catalogBrandId = Guid.NewGuid();
@@ -94,7 +94,7 @@ public class CatalogItemServiceUnitTests
     }
 
     [Test]
-    public void When_Update_Catalog_Item_With_The_Name_That_Already_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Item_With_Already_Existed_Name_Then_Exception_Should_Be_Thrown()
     {
         var catalogItemName = "Catalog Item Sample";
         var catalogBrandId = Guid.NewGuid();
@@ -109,5 +109,37 @@ public class CatalogItemServiceUnitTests
         Task act() => _catalogItemService.UpdateCatalogItemAsync(catalogItem);
 
         Assert.That(act, Throws.TypeOf<CatalogItemAlreadyExistsException>());
+    }
+
+    [Test]
+    public async Task When_Create_Catalog_Item_Then_It_Is_Saved()
+    {
+        var catalogItemName = "Catalog Item Sample";
+        var catalogBrandId = Guid.NewGuid();
+        var catalogTypeId = Guid.NewGuid();
+        var catalogItem = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
+        _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
+        _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
+
+        await _catalogItemService.CreateCatalogItemAsync(catalogItem);
+
+        await _catalogItemRepository.Received().CreateCatalogItemAsync(catalogItem);
+        await _catalogItemRepository.Received().SaveChangesAsync();
+    }
+
+    [Test]
+    public async Task When_Update_Catalog_Item_Then_It_Is_Saved()
+    {
+        var catalogItemName = "Catalog Item Sample";
+        var catalogBrandId = Guid.NewGuid();
+        var catalogTypeId = Guid.NewGuid();
+        var catalogItem = new CatalogItem(catalogItemName, catalogTypeId, catalogBrandId);
+        _catalogBrandRepository.GetCatalogBrandAsync(catalogItem.CatalogBrandId).Returns(new CatalogBrand("test"));
+        _catalogTypeRepository.GetCatalogTypeAsync(catalogItem.CatalogTypeId).Returns(new CatalogType("test"));
+
+        await _catalogItemService.UpdateCatalogItemAsync(catalogItem);
+
+        _catalogItemRepository.Received().UpdateCatalogItem(catalogItem);
+        await _catalogItemRepository.Received().SaveChangesAsync();
     }
 }

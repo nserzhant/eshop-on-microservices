@@ -8,7 +8,7 @@ namespace EShop.Catalog.Core.UnitTests;
 
 [TestFixture]
 [Category("Catalog Brand")]
-public class CatalogBrandServiceTests
+public class CatalogBrandServiceUnitTests
 {
     private CatalogBrandService _catalogBrandService;
     private ICatalogItemRepository _catalogItemRepository;
@@ -23,18 +23,18 @@ public class CatalogBrandServiceTests
     }
 
     [Test]
-    public void When_Delete_Catalog_Brand_And_Catalog_Item_Wit_Type_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Delete_Catalog_Brand_And_Catalog_Item_With_Type_Exists_Then_Exception_Should_Be_Thrown()
     {
         var catalogBrand = new CatalogBrand("Test catalog brand");
-        _catalogItemRepository.DoesCatalogItemsWithBrandExistsAsync(catalogBrand.Id).Returns(true);
+        _catalogItemRepository.CatalogItemsWithBrandExistAsync(catalogBrand.Id).Returns(true);
 
         Task act() => _catalogBrandService.DeleteCatalogBrandAsync(catalogBrand);
 
-        Assert.That(act, Throws.TypeOf<CatalogItemsForBrandExistsException>());
+        Assert.That(act, Throws.TypeOf<CatalogItemsForBrandExistException>());
     }
 
     [Test]
-    public void When_Create_Catalog_Brand_And_The_Same_Already_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Brand_With_Already_Existed_Name_Then_Exception_Should_Be_Thrown()
     {
         var catalogBrandName = "Test Brand";
         var catalogBrandAlreadyExists = new CatalogBrand(catalogBrandName);
@@ -47,7 +47,7 @@ public class CatalogBrandServiceTests
     }
 
     [Test]
-    public void When_Update_Catalog_Brand_With_The_Name_That_Already_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Brand_With_Already_Existed_Name_Then_Exception_Should_Be_Thrown()
     {
         var catalogBrandName = "Test Brand";
         var catalogBrandAlreadyExists = new CatalogBrand(catalogBrandName);
@@ -60,14 +60,35 @@ public class CatalogBrandServiceTests
     }
 
     [Test]
-    public void When_Update_Catalog_Brand_That_Already_Exists_Then_Exception_Should_Not_Thrown()
+    public async Task When_Create_Catalog_Brand_Then_It_Is_Saved()
     {
-        var catalogBrandName = "Test Brand";
-        var catalogBrand = new CatalogBrand(catalogBrandName);
-        _catalogBrandRepository.GetCatalogBrandByNameAsync(catalogBrandName).Returns(catalogBrand);
+        var catalogBrand = new CatalogBrand("Test Brand");
 
-        Task act() => _catalogBrandService.UpdateCatalogBrandAsync(catalogBrand);
+        await _catalogBrandService.CreateCatalogBrandAsync(catalogBrand);
 
-        Assert.That(act, Throws.Nothing);
+        await _catalogBrandRepository.Received().CreateCatalogBrandAsync(catalogBrand);
+        await _catalogBrandRepository.Received().SaveChangesAsync();
+    }
+
+    [Test]
+    public async Task When_Update_Catalog_Brand_Then_It_Is_Saved()
+    {
+        var catalogBrand = new CatalogBrand("Test Brand");
+
+        await _catalogBrandService.UpdateCatalogBrandAsync(catalogBrand);
+
+        _catalogBrandRepository.Received().UpdateCatalogBrand(catalogBrand);
+        await _catalogBrandRepository.Received().SaveChangesAsync();
+    }
+
+    [Test]
+    public async Task When_Delete_Catalog_Brand_Then_It_Is_Saved()
+    {
+        var catalogBrand = new CatalogBrand("Test Brand");
+
+        await _catalogBrandService.DeleteCatalogBrandAsync(catalogBrand);
+
+        _catalogBrandRepository.Received().DeleteCatalogBrand(catalogBrand);
+        await _catalogBrandRepository.Received().SaveChangesAsync();
     }
 }

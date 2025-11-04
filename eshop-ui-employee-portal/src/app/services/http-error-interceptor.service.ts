@@ -22,7 +22,7 @@ export class HttpErrorInterceptor implements HttpInterceptor {
             case 400 : //Application generated error should be handled by components/service code
               break;
             case 401 :
-              errorMessage = 'errors.unathorized'
+              errorMessage = 'errors.unauthorized'
               break;
             case 403 :
               errorMessage = 'errors.access-is-denied'

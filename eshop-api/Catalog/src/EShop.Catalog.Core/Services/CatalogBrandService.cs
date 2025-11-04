@@ -24,11 +24,11 @@ public class CatalogBrandService : ICatalogBrandService
 
     public async Task DeleteCatalogBrandAsync(CatalogBrand catalogBrand)
     {
-        var doesCatalogItemsExists = await _catalogItemRepository.DoesCatalogItemsWithBrandExistsAsync(catalogBrand.Id);
+        var catalogItemsExist = await _catalogItemRepository.CatalogItemsWithBrandExistAsync(catalogBrand.Id);
 
-        if (doesCatalogItemsExists)
+        if (catalogItemsExist)
         {
-            throw new CatalogItemsForBrandExistsException();
+            throw new CatalogItemsForBrandExistException();
         }
 
         _catalogBrandRepository.DeleteCatalogBrand(catalogBrand);

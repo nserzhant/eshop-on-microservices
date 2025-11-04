@@ -31,13 +31,12 @@ public class CatalogItemRepository : ICatalogItemRepository
     public async Task<CatalogItem?> GetCatalogItemAsync(Guid catalogItemId)
     {
         var item = await _catalogDbContext.CatalogItems
-            .AsNoTracking()
             .FirstOrDefaultAsync(ci => ci.Id == catalogItemId);
 
         return item;
     }
 
-    public async Task<bool> DoesCatalogItemsWithTypeExistsAsync(Guid catalogTypeId)
+    public async Task<bool> CatalogItemsWithTypeExistAsync(Guid catalogTypeId)
     {
         var exists = await _catalogDbContext.CatalogItems
             .AsNoTracking()
@@ -46,7 +45,7 @@ public class CatalogItemRepository : ICatalogItemRepository
         return exists;
     }
 
-    public async Task<bool> DoesCatalogItemsWithBrandExistsAsync(Guid catalogBrandId)
+    public async Task<bool> CatalogItemsWithBrandExistAsync(Guid catalogBrandId)
     {
         var exists = await _catalogDbContext.CatalogItems
             .AsNoTracking()

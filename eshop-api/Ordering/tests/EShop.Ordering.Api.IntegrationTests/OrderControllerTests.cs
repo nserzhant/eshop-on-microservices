@@ -62,7 +62,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Get Order")]
-    public async Task When_Customer_Order_Exists_Then_Customer_Could_Get_The_Order_By_Id()
+    public async Task When_Customer_Is_Authenticated_Then_Order_Can_Be_Retrieved_By_Id()
     {
         var customerId = Guid.NewGuid();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -92,7 +92,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Get Order")]
-    public async Task When_Customer_Is_Unauthenticated_Then_Get_Order_Returns_Unathorized()
+    public async Task When_Customer_Is_Unauthenticated_Then_Get_Order_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -104,7 +104,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Get Order")]
-    public async Task When_Customer_Is_Trying_To_Get_Anothers_Order_Then_Forbidden_Returns()
+    public async Task When_Customer_Retrieves_Others_Order_Then_Forbidden_Is_Returned()
     {
         var customerId = Guid.NewGuid();
         var anotherCustomerId = Guid.NewGuid();
@@ -119,7 +119,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Get Order")]
-    public async Task When_Customer_Is_Requesting_Non_Existing_Order_Then_Not_Found_Returns()
+    public async Task When_Customer_Requests_Non_Existing_Order_Then_Not_Found_Is_Returned()
     {
         var customerId = Guid.NewGuid();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -132,7 +132,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Get All Orders")]
-    public async Task When_Customer_Is_Unauthenticated_Then_Get_All_Orders_Returns_Unathorized()
+    public async Task When_Customer_Is_Unauthenticated_Then_Get_All_Orders_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -144,7 +144,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Get All Orders")]
-    public async Task When_Customer_Orders_Exists_Then_Get_All_Orders_Returns_Them()
+    public async Task When_Customer_Requests_All_Orders_Then_Customers_Orders_Are_Returned()
     {
         var customerId = Guid.NewGuid();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -163,7 +163,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Get All Orders")]
-    public async Task When_Another_Customer_Orders_Exists_Then_Get_All_Orders_Does_Not_Return_Them()
+    public async Task When_Customer_Requests_All_Orders_Then_Only_Own_Orders_Are_Returned()
     {
         var customerId = Guid.NewGuid();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -182,7 +182,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Return Order")]
-    public async Task When_Customer_Is_Unauthenticated_Then_Return_Order_Returns_Unathorized()
+    public async Task When_Customer_Is_Unauthenticated_Then_Return_Order_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -194,7 +194,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Return Order")]
-    public async Task When_Customer_Is_Trying_To_Return_Anothers_Order_Then_Forbidden_Returns()
+    public async Task When_Customer_Returns_Others_Order_Then_Forbidden_Is_Returned()
     {
         var customerId = Guid.NewGuid();
         var anotherCustomerId = Guid.NewGuid();
@@ -209,7 +209,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Return Order")]
-    public async Task When_Customer_Order_Exists_Then_Customer_Could_Return_The_Order_By_Id()
+    public async Task When_Customer_Returns_Delivered_Order_Then_Ok_Is_Returned()
     {
         var customerId = Guid.NewGuid();
         var orderingClient = webApplicationFactory.CreateClient();
@@ -223,7 +223,7 @@ public class OrderControllerTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Return Order")]
-    public async Task When_Customer_Is_Trying_To_Return_Non_Existing_Order_Then_Not_Found_Returns()
+    public async Task When_Customer_Returns_Non_Existing_Order_Then_Not_Found_Is_Returned()
     {
         var customerId = Guid.NewGuid();
         var orderingClient = webApplicationFactory.CreateClient();

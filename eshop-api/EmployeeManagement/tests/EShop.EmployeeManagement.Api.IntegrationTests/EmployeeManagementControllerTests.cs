@@ -14,7 +14,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Get Employee")]
-    public async Task When_Unauthenitcated_Gets_Employee_By_Id_Then_Unathorized_Should_Be_Returned()
+    public async Task When_User_Is_Unauthenticated_Then_Get_Employee_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -26,7 +26,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Get Employee")]
-    public async Task When_Sales_Manager_Gets_Employee_By_Id_Then_Forbidden_Should_Be_Returned()
+    public async Task When_Sales_Manager_Requests_Employee_Then_Forbidden_Is_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -38,7 +38,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Get Employee")]
-    public async Task When_Administrator_Gets_Employee_By_Id_Then_Employee_Should_Be_Returned()
+    public async Task When_Administrator_Requests_Employee_Then_Ok_Is_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -51,7 +51,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Get Employee")]
-    public async Task When_Administrator_Gets_Non_Existing_Employee_Then_Not_Found_Should_Be_Returned()
+    public async Task When_Administrator_Requests_Non_Existing_Employee_Then_Not_Found_Is_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -63,7 +63,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("List Employees")]
-    public async Task When_Unauthenitcated_Lists_Employees_Then_Unathorized_Should_Be_Returned()
+    public async Task When_User_Is_Unauthenticated_Then_List_Employees_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -101,7 +101,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("List Employees")]
-    public async Task When_Sales_Manager_Lists_Employees_Then_Forbidden_Should_Be_Returned()
+    public async Task When_Sales_Manager_Lists_Employees_Then_Forbidden_Is_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -120,7 +120,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Employee Roles")]
-    public async Task When_Unauthenitcateds_Changes_Roles_Then_Unathorized_Should_Be_Returned()
+    public async Task When_User_Is_Unauthenticated_Then_Change_Roles_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -134,7 +134,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Employee Roles")]
-    public async Task When_Administrator_Saves_Roles_Then_Roles_Should_Be_Successfully_Saved()
+    public async Task When_Administrator_Changes_Roles_Then_Roles_Should_Be_Successfully_Changed()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.Administrator);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -153,7 +153,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Employee Roles")]
-    public async Task When_Sales_Manager_Saves_Roles_Then_Forbidden_Should_Be_Returned()
+    public async Task When_Sales_Manager_Changes_Roles_Then_Forbidden_Is_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -167,7 +167,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Password")]
-    public async Task When_Unauthenitcated_Changes_Password_Then_Unathorized_Should_Be_Returned()
+    public async Task When_User_Is_Unauthenticated_Then_Change_Password_Returns_Unauthorized()
     {
         _testAuthenticationContextBuilder.SetUnauthenticated();
         var employeeManagementClient = _webApplicationFactory.CreateClient();
@@ -196,7 +196,7 @@ public class EmployeeManagementControllerTests : BaseControllerTests
 
     [Test]
     [Category("Update Password")]
-    public async Task When_Sales_Manager_Changes_Password_Then_Forbidden_Should_Be_Returned()
+    public async Task When_Sales_Manager_Changes_Password_Then_Forbidden_Is_Returned()
     {
         _testAuthenticationContextBuilder.WithRole(Roles.SalesManager);
         var employeeManagementClient = _webApplicationFactory.CreateClient();

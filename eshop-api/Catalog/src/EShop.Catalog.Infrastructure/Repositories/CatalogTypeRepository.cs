@@ -31,7 +31,6 @@ public class CatalogTypeRepository : ICatalogTypeRepository
     public async Task<CatalogType?> GetCatalogTypeAsync(Guid catalogTypeId)
     {
         var catalogType = await _catalogDbContext.CatalogTypes
-            .AsNoTracking()
             .FirstOrDefaultAsync(ct => ct.Id == catalogTypeId);
 
         return catalogType;

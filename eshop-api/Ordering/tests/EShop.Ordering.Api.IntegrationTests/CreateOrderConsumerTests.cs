@@ -97,7 +97,7 @@ public class CreateOrderConsumerTests : BaseOrderingIntegationTests
 
 
     [Test]
-    public async Task When_Create_Order_Then_Created_Order_Event_Should_Be_Published()
+    public async Task When_Publish_Create_Order_Command_Then_Created_Order_Event_Should_Be_Published()
     {
         var correlationId = Guid.NewGuid();
         var customerId = Guid.NewGuid();

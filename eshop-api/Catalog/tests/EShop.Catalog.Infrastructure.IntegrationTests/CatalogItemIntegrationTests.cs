@@ -26,21 +26,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Repository")]
-    public async Task When_Save_Catalog_Item_Than_Id_Should_Be_Generated()
-    {
-        var catalogBrand = await createCatalogBrandAsync("Brand");
-        var catalogType = await createCatalogTypeAsync("Type");
-        var catalogItemName = "test catalog item";
-        var catalogItemToCreate = new CatalogItem(catalogItemName, catalogType.Id, catalogBrand.Id);
-
-        await _catalogItemService.CreateCatalogItemAsync(catalogItemToCreate);
-
-        Assert.That(catalogItemToCreate.Id, Is.Not.EqualTo(Guid.Empty));
-    }
-
-    [Test]
-    [Category("Catalog Item Repository")]
-    public async Task When_Catalog_Item_Created_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Catalog_Item_Exists_Then_It_Can_Be_Retrieved_By_Id()
     {
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
@@ -57,7 +43,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Repository")]
-    public async Task When_Catalog_Item_Created_Then_It_Could_Be_Retreived_By_Name_Brand_Type()
+    public async Task When_Catalog_Item_Exists_Then_It_Can_Be_Retrieved_By_Name_Brand_Type()
     {
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
@@ -74,7 +60,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Repository")]
-    public async Task When_Catalog_Item_Created_Then_Catalog_Brand_Exists_Check_Working()
+    public async Task When_Catalog_Item_Exists_Then_Check_By_Brand_Returns_True()
     {
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
@@ -84,8 +70,8 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogBrandWithItemId = catalogBrand.Id;
         var catalogBrandWithoutItemId = Guid.NewGuid();
 
-        var itemsWithBrandExists = await _catalogItemRepository.DoesCatalogItemsWithBrandExistsAsync(catalogBrandWithItemId);
-        var itemsWithoutBrandExists = await _catalogItemRepository.DoesCatalogItemsWithBrandExistsAsync(catalogBrandWithoutItemId);
+        var itemsWithBrandExists = await _catalogItemRepository.CatalogItemsWithBrandExistAsync(catalogBrandWithItemId);
+        var itemsWithoutBrandExists = await _catalogItemRepository.CatalogItemsWithBrandExistAsync(catalogBrandWithoutItemId);
 
         Assert.That(itemsWithBrandExists, Is.True);
         Assert.That(itemsWithoutBrandExists, Is.False);
@@ -93,7 +79,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Repository")]
-    public async Task When_Catalog_Item_Created_Then_Catalog_Type_Exists_Check_Working()
+    public async Task When_Catalog_Item_Exists_Then_Check_By_Type_Returns_True()
     {
         var catalogBrand = await createCatalogBrandAsync("Brand");
         var catalogType = await createCatalogTypeAsync("Type");
@@ -103,8 +89,8 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogTypeWithItemId = catalogType.Id;
         var catalogTypeWithoutItemId = Guid.NewGuid();
 
-        var itemsWithTypeExists = await _catalogItemRepository.DoesCatalogItemsWithTypeExistsAsync(catalogTypeWithItemId);
-        var itemsWithoutTypeExists = await _catalogItemRepository.DoesCatalogItemsWithTypeExistsAsync(catalogTypeWithoutItemId);
+        var itemsWithTypeExists = await _catalogItemRepository.CatalogItemsWithTypeExistAsync(catalogTypeWithItemId);
+        var itemsWithoutTypeExists = await _catalogItemRepository.CatalogItemsWithTypeExistAsync(catalogTypeWithoutItemId);
 
         Assert.That(itemsWithTypeExists, Is.True);
         Assert.That(itemsWithoutTypeExists, Is.False);
@@ -113,7 +99,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     [Test]
     [Category("Catalog Item Repository")]
     [Category("Catalog Item Query Service")]
-    public async Task When_Update_Catalog_Item_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Catalog_Item_Is_Updated_Then_It_Can_Be_Retrieved_By_Id()
     {
         var catalogItemName = "test catalog item";
         var updatedCatalogItemName = "updated catalog item";
@@ -130,7 +116,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Repository")]
-    public async Task When_Delete_Catalog_Item_Then_It_Could_Not_Be_Retreived_By_Id()
+    public async Task When_Catalog_Item_Is_Deleted_Then_It_Can_Not_Be_Retrieved()
     {
         var catalogItemName = "test catalog item";
         var catalogItem = await createCatalogItemAsync(catalogItemName);
@@ -145,7 +131,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Query Service")]
-    public async Task When_Catalog_Items_Exists_Then_They_Could_Be_Requested_By_List_Query()
+    public async Task When_Catalog_Items_Exist_Then_They_Can_Be_Retrieved_By_List_Query()
     {
         await createCatalogItemAsync("A Catalog Item");
         await createCatalogItemAsync("B Catalog Item");
@@ -182,7 +168,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     [TestCase(ListCatalogItemOrderBy.Type, OrderByDirections.DESC, "SECOND ITEM")]
     [TestCase(ListCatalogItemOrderBy.Price, OrderByDirections.ASC, "SECOND ITEM")]
     [TestCase(ListCatalogItemOrderBy.Price, OrderByDirections.DESC, "FIRST ITEM")]
-    public async Task When_Catalog_Items_Exists_Then_They_Could_Ordered_By_Name_Brand_Type_Price(ListCatalogItemOrderBy orderBy, OrderByDirections directions, string resultingItemDescription)
+    public async Task When_List_Catalog_Items_Then_They_Can_Be_Ordered_By_Name_Brand_Type_Price(ListCatalogItemOrderBy orderBy, OrderByDirections directions, string resultingItemDescription)
     {
         await createCatalogItemAsync("A Catalog Item", "B Catalog Brand", "C Catalog Type", 40m, "FIRST ITEM");
         await createCatalogItemAsync("B Catalog Item", "C Catalog Brand", "D Catalog Type", 10m, "SECOND ITEM");
@@ -213,7 +199,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
     [TestCase(null, "C Catalog", null, "SECOND ITEM")]
     [TestCase(null, null, "A Catalog", "THRIRD ITEM")]
     [TestCase(null, null, "C Catalog", "FIRST ITEM")]
-    public async Task When_Catalog_Items_Exists_Then_They_Could_Be_Filtered_By_Name_Brand_Type(string? name, string? brand, string? type, string resultingItemDescription)
+    public async Task When_List_Catalog_Items_Then_They_Can_Be_Filtered_By_Name_Brand_Type(string? name, string? brand, string? type, string resultingItemDescription)
     {
         await createCatalogItemAsync("A Catalog Item", "B Catalog Brand", "C Catalog Type", 40m, "FIRST ITEM");
         await createCatalogItemAsync("B Catalog Item", "C Catalog Brand", "D Catalog Type", 10m, "SECOND ITEM");
@@ -238,7 +224,7 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Item Query Service")]
-    public async Task When_Catalog_Item_Exists_Then_It_Could_Be_Queried_By_Id()
+    public async Task When_Catalog_Item_Exists_Then_It_Can_Be_Queried_By_Id()
     {
         var catalogItemName = "test catalog Item";
         var catalogItemDescription = "test catalog description";

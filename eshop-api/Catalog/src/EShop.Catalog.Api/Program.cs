@@ -52,7 +52,7 @@ builder.Services.AddAuthentication()
         options.RequireHttpsMetadata = false;
         options.MetadataAddress = employeeJwtSettings.MetadataAddress;
     })
-    .AddJwtBearer(AuthenticationSchemeNames.Client, options =>
+    .AddJwtBearer(AuthenticationSchemeNames.Customer, options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -74,7 +74,7 @@ builder.Services.AddAuthorization(options =>
 {
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
-        .AddAuthenticationSchemes(AuthenticationSchemeNames.Employee, AuthenticationSchemeNames.Client)
+        .AddAuthenticationSchemes(AuthenticationSchemeNames.Employee, AuthenticationSchemeNames.Customer)
         .Build();
 });
 

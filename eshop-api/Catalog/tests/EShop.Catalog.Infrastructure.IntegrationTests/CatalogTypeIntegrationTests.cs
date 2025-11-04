@@ -26,7 +26,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Type Repository")]
-    public async Task When_Save_Catalog_Type_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Catalog_Type_Exists_Then_It_Can_Be_Retrieved_By_Id()
     {
         var catalogTypeToCreate = new CatalogType("test catalog type");
         await _catalogTypeService.CreateCatalogTypeAsync(catalogTypeToCreate);
@@ -41,7 +41,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
     [Test]
     [Category("Catalog Type Repository")]
     [Category("Catalog Type Query Service")]
-    public async Task When_Update_Catalog_Type_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Catalog_Type_Is_Updated_Then_It_Can_Be_Retrieved_By_Id()
     {
         var catalogTypeName = "test catalog type";
         var updatedCatalogTypeName = "updated catalog type";
@@ -58,7 +58,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Type Repository")]
-    public async Task When_Delete_Catalog_Type_Then_It_Could_Not_Be_Retreived_By_Id()
+    public async Task When_Catalog_Type_Is_Deleted_Then_It_Can_Not_Be_Retrieved()
     {
         var catalogTypeName = "test catalog type";
         var catalogType = await createCatalogTypeAsync(catalogTypeName);
@@ -72,7 +72,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Type Query Service")]
-    public async Task When_Types_Exists_Then_They_Could_Be_Requested_By_List_Query()
+    public async Task When_Catalog_Types_Exist_Then_They_Can_Be_Retrieved_By_List_Query()
     {
         await createCatalogTypeAsync("A Catalog Type");
         await createCatalogTypeAsync("B Catalog Type");
@@ -101,7 +101,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Type Query Service")]
-    public async Task When_Page_Size_Is_Zero_Then_All_Types_Should_Be_ReturnedAsync()
+    public async Task When_Page_Size_Is_Zero_Then_All_Types_Should_Be_Returned()
     {
         await createCatalogTypeAsync("A Catalog Type");
         await createCatalogTypeAsync("B Catalog Type");
@@ -122,7 +122,7 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Type Query Service")]
-    public async Task When_Catalog_Type_Exists_Then_It_Could_Be_Queried_By_Id()
+    public async Task When_Catalog_Type_Exists_Then_It_Can_Be_Queried_By_Id()
     {
         var catalogTypeName = "test catalog type";
         var catalogTypeToCreate = new CatalogType(catalogTypeName);

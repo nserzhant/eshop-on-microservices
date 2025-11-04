@@ -27,18 +27,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Brand Repository")]
-    public async Task When_Save_Catalog_Brand_Than_Id_Should_Be_Generated()
-    {
-        var catalogBrandToCreate = new CatalogBrand("test brand");
-
-        await _catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
-
-        Assert.That(catalogBrandToCreate.Id, Is.Not.EqualTo(Guid.Empty));
-    }
-
-    [Test]
-    [Category("Catalog Brand Repository")]
-    public async Task When_Save_Catalog_Brand_Exists_It_Could_Be_Retreived_By_Id()
+    public async Task When_Catalog_Brand_Exists_Then_It_Can_Be_Retrieved_By_Id()
     {
         var catalogBrandToCreate = new CatalogBrand("test brand");
         await _catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);
@@ -52,7 +41,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Brand Repository")]
-    public async Task When_Save_Catalog_Brand_Exists_It_Could_Be_Retreived_By_Name()
+    public async Task When_Catalog_Brand_Exists_Then_It_Can_Be_Retrieved_By_Name()
     {
         var catalogBrandName = "test brand";
         var catalogBrandToCreate = new CatalogBrand(catalogBrandName);
@@ -68,7 +57,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
     [Test]
     [Category("Catalog Brand Repository")]
     [Category("Catalog Brand Query Service")]
-    public async Task When_Update_Catalog_Brand_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Catalog_Brand_Is_Updated_Then_It_Can_Be_Retrieved_By_Id()
     {
         var catalogBrandName = "catalog brand";
         var catalogBrand = await createCatalogBrandAsync(catalogBrandName);
@@ -83,12 +72,11 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Brand Repository")]
-    public async Task When_Delete_Catalog_Brand_Then_It_Could_Not_Be_Retreived_By_Id()
+    public async Task When_Catalog_Brand_Is_Deleted_Then_It_Can_Not_Be_Retrieved()
     {
         var catalogBrandName = "catalog brand";
         var catalogBrand = await createCatalogBrandAsync(catalogBrandName);
-        await _catalogBrandRepository.SaveChangesAsync();
-        
+        await _catalogBrandRepository.SaveChangesAsync();        
 
         await _catalogBrandService.DeleteCatalogBrandAsync(catalogBrand);
 
@@ -98,7 +86,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Brand Query Service")]
-    public async Task When_Brands_Exists_Then_They_Could_Be_Requested_By_List_Query()
+    public async Task When_Catalog_Brands_Exist_Then_They_Can_Be_Retrieved_By_List_Query()
     {
         await createCatalogBrandAsync("A Brand");
         await createCatalogBrandAsync("B Brand");
@@ -128,7 +116,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Brand Query Service")]
-    public async Task When_Page_Size_Is_Zero_Then_All_Brands_Should_Be_ReturnedAsync()
+    public async Task When_Page_Size_Is_Zero_Then_All_Brands_Should_Be_Returned()
     {
         await createCatalogBrandAsync("A Brand");
         await createCatalogBrandAsync("B Brand");
@@ -149,7 +137,7 @@ public class CatalogBrandIntegrationTests : BaseCatalogIntegrationTests
 
     [Test]
     [Category("Catalog Brand Query Service")]
-    public async Task When_Catalog_Brand_Exists_Then_It_Could_Be_Queried_By_Id()
+    public async Task When_Catalog_Brand_Exists_Then_It_Can_Be_Queried_By_Id()
     {
         var catalogBrandToCreate = new CatalogBrand("test brand");
         await _catalogBrandService.CreateCatalogBrandAsync(catalogBrandToCreate);

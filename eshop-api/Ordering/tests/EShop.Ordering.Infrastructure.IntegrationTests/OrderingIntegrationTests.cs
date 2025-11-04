@@ -24,7 +24,7 @@ public class OrderingIntegrationTests : BaseOrderingIntegationTests
     [Test]
     [Category("Order Repository")]
     [Category("Order Query Service")]
-    public async Task When_Save_Order_Then_It_Could_Be_Retreived_By_Id()
+    public async Task When_Create_Order_Then_It_Can_Be_Retrieved_By_Id()
     {
         var orderDate = DateTime.UtcNow;
         var customerId = Guid.NewGuid();
@@ -82,7 +82,7 @@ public class OrderingIntegrationTests : BaseOrderingIntegationTests
 
     [Test]
     [Category("Order Query Service")]
-    public async Task When_Orders_Exists_Then_They_Could_Be_Queried_By_Customer_Id()
+    public async Task When_Orders_Exist_Then_They_Can_Be_Queried_By_Customer_Id()
     {
         var customerId = Guid.NewGuid();
         var shippingAddress = "Address 1";
@@ -110,7 +110,7 @@ public class OrderingIntegrationTests : BaseOrderingIntegationTests
     [TestCase(ListOrderOrderBy.CustomerEmail, OrderByDirections.DESC, "FIRST ITEM")]
     [TestCase(ListOrderOrderBy.OrderStatus, OrderByDirections.ASC, "FOURTH ITEM")]
     [TestCase(ListOrderOrderBy.OrderStatus, OrderByDirections.DESC, "SECOND ITEM")]
-    public async Task When_Orders_Exists_Then_They_Could_Be_Ordered_By_Date_Status_Email_Id(ListOrderOrderBy orderBy, OrderByDirections orderByDirections, string expectedOrderShippingAddress)
+    public async Task When_Orders_Exist_Then_They_Can_Be_Ordered_By_Date_Status_Email_Id(ListOrderOrderBy orderBy, OrderByDirections orderByDirections, string expectedOrderShippingAddress)
     {
         await createOrderAsync(DateTime.Now.AddDays(2), new Guid("0098DF40-EFA8-44BC-AB74-36CA0CD98398"), "test email 4", Read.ReadModels.OrderStatus.Shipped, "FIRST ITEM");
         await createOrderAsync(DateTime.Now.AddDays(1), new Guid("1098DF40-EFA8-44BC-AB74-36CA0CD98398"), "test email 2", Read.ReadModels.OrderStatus.Returned, "SECOND ITEM");

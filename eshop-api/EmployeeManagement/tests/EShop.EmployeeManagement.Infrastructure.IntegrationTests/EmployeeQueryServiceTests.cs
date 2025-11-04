@@ -50,7 +50,7 @@ public class EmployeeQueryServiceTests : BaseEmployeeIntegrationTests
     [Category("GetEmployees")]
     [TestCase(ListEmployeeOrderBy.Email, OrderByDirections.ASC, "newemail0@test.com", 2)]
     [TestCase(ListEmployeeOrderBy.Email, OrderByDirections.DESC, "newemail5@test.com", 1)]
-    public async Task When_List_Employees_Then_Ordered_Employees_List_Should_Be_Returned(ListEmployeeOrderBy orderBy, OrderByDirections directions, string resultingFirstEmail, int rolesCount)
+    public async Task When_List_Employees_Then_They_Can_Be_Ordered_By_Email(ListEmployeeOrderBy orderBy, OrderByDirections directions, string resultingFirstEmail, int rolesCount)
     {
         await createEmployee("newemail1test.com", Roles.Administrator, Roles.SalesManager);
         await createEmployee("newemail3@test.com", Roles.SalesManager);
@@ -76,7 +76,7 @@ public class EmployeeQueryServiceTests : BaseEmployeeIntegrationTests
 
     [Test]
     [Category("GetEmployees")]
-    public async Task When_Filter_Employees_Then_Ordered_Employees_List_Should_Be_Returned()
+    public async Task When_List_Employees_Then_They_Can_Be_Filtered_By_Email()
     {
         await createEmployee("newemail0@test.com", Roles.Administrator);
         await createEmployee("anotherEmail@test.com", Roles.SalesManager);

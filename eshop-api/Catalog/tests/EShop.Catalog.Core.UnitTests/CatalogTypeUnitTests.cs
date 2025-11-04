@@ -18,7 +18,7 @@ public class CatalogTypeUnitTests
     }
 
     [Test]
-    public void When_Creating_Catalog_Type_With_Null_Or_Empty_Name_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Type_With_Null_Or_Empty_Name_Then_Exception_Should_Be_Thrown()
     {
         Action actNull = () => new CatalogType(null);
         Action actEmpty = () => new CatalogType("");
@@ -54,7 +54,7 @@ public class CatalogTypeUnitTests
     }
 
     [Test]
-    public void When_Update_TS_Type_With_Null_Or_Empty_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Type_With_Null_Or_Empty_TS_Then_Exception_Should_Be_Thrown()
     {
         var catalogType = new CatalogType("default Catalog Type Name");
 

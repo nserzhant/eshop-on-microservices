@@ -29,7 +29,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Catalog Type")]
-    public async Task When_User_Is_Unauthenticated_Then_Create_Catalog_Type_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Create_Catalog_Type_Returns_Unauthorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -69,9 +69,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Catalog Type")]
-    public async Task When_User_Is_Client_Then_Create_Catalog_Type_Returns_Unathorized()
+    public async Task When_Customer_Creates_Catalog_Type_Then_Unauthorized_Is_Returned()
     {
-        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Customer);
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var content = createCatalogTypeContent(new CatalogTypeDTO() { Type = "Test type" });
 
@@ -82,7 +82,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Get Catalog Type")]
-    public async Task When_User_Is_Unauthenticated_Then_Catalog_Type_Can_Be_Gotten()
+    public async Task When_User_Is_Unauthenticated_Then_Catalog_Type_Can_Be_Retrieved()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -94,7 +94,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Get Catalog Type")]
-    public async Task When_User_Is_Requesting_Non_Existing_Catalog_Type_Then_Not_Found_Returned()
+    public async Task When_User_Requests_Non_Existing_Catalog_Type_Then_Not_Found_Is_Returned()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -106,7 +106,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Create Catalog Type")]
-    public async Task When_Employee_Created_The_Type_Then_It_Returned_With_Response()
+    public async Task When_Employee_Creates_Catalog_Type_Then_Catalog_Type_Is_Returned()
     {
         testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
             .AsSalesManager();
@@ -124,7 +124,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
     [Test]
     [Category("Create Catalog Type")]
     [Category("Get Catalog Type")]
-    public async Task When_Employee_Created_The_Type_Then_It_Can_Be_Requested_By_Id()
+    public async Task When_Employee_Creates_Catalog_Type_Then_It_Can_Be_Retrieved_By_Id ()
     {
         testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
             .AsSalesManager();
@@ -143,7 +143,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_User_Is_Unauthenticated_Then_Update_Catalog_Type_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Update_Catalog_Type_Returns_Unauthorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -169,9 +169,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_User_Is_Client_Then_Update_Catalog_Type_Returns_Unathorized()
+    public async Task When_Customer_Updates_Catalog_Type_Then_Unauthorized_Is_Returned()
     {
-        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Customer);
         var catalogTypeClient = webApplicationFactory.CreateClient();
         var updateContent = createCatalogTypeContent(new CatalogTypeDTO());
 
@@ -182,7 +182,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_Employee_Is_Updating_Non_Existing_Catalog_Type_Then_Not_Found_Returns()
+    public async Task When_Employee_Updates_Non_Existing_Catalog_Type_Then_Not_Found_Is_Returned()
     {
         testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
             .AsSalesManager();
@@ -196,7 +196,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Update Catalog Type")]
-    public async Task When_Employee_Is_Updated_Type_Then_Updated_Version_Can_Be_Gotten()
+    public async Task When_Employee_Updates_Catalog_Type_Then_Updated_Version_Is_Returned()
     {
         testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -217,7 +217,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_User_Is_Unauthenticated_Then_Delete_Catalog_Type_Returns_Unathorized()
+    public async Task When_User_Is_Unauthenticated_Then_Delete_Catalog_Type_Returns_Unauthorized()
     {
         testAuthenticationContextBuilder.SetUnauthenticated();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -241,7 +241,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_Employee_Is_Deleting_Non_Existing_Catalog_Type_Then_Not_Found_Returns()
+    public async Task When_Employee_Deletes_Non_Existing_Catalog_Type_Then_Not_Found_Is_Returned()
     {
         testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee)
             .AsSalesManager();
@@ -254,9 +254,9 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_User_Is_Client_Then_Delete_Catalog_Type_Returns_Unathorized()
+    public async Task When_Customer_Deletes_Catalog_Type_Then_Unauthorized_Is_Returned()
     {
-        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Client);
+        testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Customer);
         var catalogTypeClient = webApplicationFactory.CreateClient();
 
         var response = await catalogTypeClient.DeleteAsync(CatalogType(defaultCatalogTypeId));
@@ -266,7 +266,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("Delete Catalog Type")]
-    public async Task When_Employee_Is_Deleting_Type_Then_Catalog_Type_Could_Not_Be_Requested_Anymore()
+    public async Task When_Employee_Deletes_Catalog_Type_Then_Catalog_Type_Can_Not_Be_Retrieved_Anymore()
     {
         testAuthenticationContextBuilder.SetAuthenticated(AuthenticationSchemeNames.Employee).AsSalesManager();
         var catalogTypeClient = webApplicationFactory.CreateClient();
@@ -280,7 +280,7 @@ public class CatalogTypeControllerTests : BaseCatalogControllerTests
 
     [Test]
     [Category("List Catalog Types")]
-    public async Task When_User_Is_Unauthenitcated_Then_Types_Can_Be_Listed()
+    public async Task When_User_Is_Unauthenticated_Then_Catalog_Types_Can_Be_Listed()
     {
         await createCatalogTypeAsync("A Type");
         await createCatalogTypeAsync("B Type");

@@ -8,7 +8,7 @@ namespace EShop.Catalog.Core.UnitTests;
 
 [TestFixture]
 [Category("Catalog Type")]
-public class CatalogTypeServiceTests
+public class CatalogTypeServiceUnitTests
 {
     private CatalogTypeService _catalogTypeService;
     private ICatalogTypeRepository _catalogTypeRepository;
@@ -23,18 +23,18 @@ public class CatalogTypeServiceTests
     }
 
     [Test]
-    public void When_Delete_Catalog_Type_And_Catalog_Item_Wit_Type_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Catalog_Type_Is_Used_By_Item_Then_Delete_Throws_Exception()
     {
         var catalogType = new CatalogType("Test catalog type");
-        _catalogItemRepository.DoesCatalogItemsWithTypeExistsAsync(catalogType.Id).Returns(true);
+        _catalogItemRepository.CatalogItemsWithTypeExistAsync(catalogType.Id).Returns(true);
 
         Task act() => _catalogTypeService.DeleteCatalogTypeAsync(catalogType);
 
-        Assert.That(act, Throws.TypeOf<CatalogItemsForTypeExistsException>());
+        Assert.That(act, Throws.TypeOf<CatalogItemsForTypeExistException>());
     }
 
     [Test]
-    public void When_Create_Catalog_Type_And_The_Same_Already_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Create_Catalog_Type_With_Already_Existed_Name_Then_Exception_Should_Be_Thrown()
     {
         var catalogTypeName = "Test Catalog Type";
         var catalogTypeAlreadyExists = new CatalogType(catalogTypeName);
@@ -47,7 +47,7 @@ public class CatalogTypeServiceTests
     }
 
     [Test]
-    public void When_Update_Catalog_Type_With_The_Name_That_Already_Exists_Then_Exception_Should_Be_Thrown()
+    public void When_Update_Catalog_Type_With_Already_Existed_Name_Then_Exception_Should_Be_Thrown()
     {
         var catalogTypeName = "Test Catalog Type";
         var catalogTypeAlreadyExists = new CatalogType(catalogTypeName);
@@ -60,14 +60,35 @@ public class CatalogTypeServiceTests
     }
 
     [Test]
-    public void When_Update_Catalog_Type_That_Already_Exists_Then_Exception_Should_Not_Thrown()
+    public async Task When_Create_Catalog_Type_Then_It_Is_Saved()
     {
-        var catalogTypeName = "Test Catalog Type";
-        var catalogType = new CatalogType(catalogTypeName);
-        _catalogTypeRepository.GetCatalogTypeByNameAsync(catalogTypeName).Returns(catalogType);
+        var catalogType = new CatalogType("Test Catalog Type");
+        
+        await _catalogTypeService.CreateCatalogTypeAsync(catalogType);
 
-        Task act() => _catalogTypeService.UpdateCatalogTypeAsync(catalogType);
+        await _catalogTypeRepository.Received().CreateCatalogTypeAsync(catalogType);
+        await _catalogTypeRepository.Received().SaveChangesAsync();
+    }
 
-        Assert.That(act, Throws.Nothing);
+    [Test]
+    public async Task When_Update_Catalog_Type_Then_It_Is_Saved()
+    {
+        var catalogType = new CatalogType("Test Catalog Type");
+
+        await _catalogTypeService.UpdateCatalogTypeAsync(catalogType);
+
+        _catalogTypeRepository.Received().UpdateCatalogType(catalogType);
+        await _catalogTypeRepository.Received().SaveChangesAsync();
+    }
+
+    [Test]
+    public async Task When_Delete_Catalog_Type_Then_It_Is_Saved()
+    {
+        var catalogType = new CatalogType("Test Catalog Type");
+
+        await _catalogTypeService.DeleteCatalogTypeAsync(catalogType);
+
+        _catalogTypeRepository.Received().DeleteCatalogType(catalogType);
+        await _catalogTypeRepository.Received().SaveChangesAsync();
     }
 }

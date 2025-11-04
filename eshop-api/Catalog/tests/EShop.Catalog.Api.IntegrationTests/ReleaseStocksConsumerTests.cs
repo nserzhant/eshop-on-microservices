@@ -58,7 +58,7 @@ public class ReleaseStocksConsumerTests : BaseCatalogIntegrationTests
     }
 
     [Test]
-    public async Task When_Release_Stocks_Then_Stock_Released_Event_With_Correct_Total_Price_Should_Be_Published()
+    public async Task When_Release_Stocks_Then_Stock_Released_Event_Should_Be_Published()
     {
         var correlationId = Guid.NewGuid();
         var availableQty = 6;

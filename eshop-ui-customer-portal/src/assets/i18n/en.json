@@ -53,7 +53,7 @@
     "currentPageLabelTemplate" : "{{startIndex}} - {{endIndex}} of {{length}}"
   },
   "errors" : {
-    "unathorized" : "Unathorized",
+    "unauthorized" : "Unauthorized",
     "access-is-denied" : "Access is denied",
     "internal-server-error" : "Internal server error",
     "unknown-error" : "Unknown error",

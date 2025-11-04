@@ -59,7 +59,7 @@ public class ProcessPaymentConsumerTests
     }
 
     [Test]
-    public async Task When_Payment_Not_Processed_Then_Payment_Failed_Event_Should_Be_Published()
+    public async Task When_Payment_Is_Not_Processed_Then_Payment_Failed_Event_Should_Be_Published()
     {
         _processPayment = false;
         var correlationId = Guid.NewGuid();

@@ -24,11 +24,11 @@ public class CatalogTypeService : ICatalogTypeService
 
     public async Task DeleteCatalogTypeAsync(CatalogType catalogType)
     {
-        var doesCatalogItemsExists = await _catalogItemRepository.DoesCatalogItemsWithTypeExistsAsync(catalogType.Id);
+        var catalogItemsExist = await _catalogItemRepository.CatalogItemsWithTypeExistAsync(catalogType.Id);
 
-        if (doesCatalogItemsExists)
+        if (catalogItemsExist)
         {
-            throw new CatalogItemsForTypeExistsException();
+            throw new CatalogItemsForTypeExistException();
         }
 
         _catalogTypeRepository.DeleteCatalogType(catalogType);
