@@ -45,5 +45,7 @@ EmployeeManagement client: eshop-ui-employee-portal\src\app\employee-management\
 
   All microservices contain integration and unit tests. To run integration tests, MSSQL LocalDB is used. For running Saga integration tests, all instances of the microservices should be started using the docker-compose project with the "Saga integration tests" profile.
 
+  The end-to-end integration test from the **EShop.Saga.Processor.IntegrationTest** project should be run in isolation from all other Saga integration tests due to a connectivity issue. Before running the test, restart the Docker Compose project.
+
 ## Infrastructure:
  All components include samples of Bicep resources in the `.azure` folder and Azure DevOps pipelines in the `.ado` folder.

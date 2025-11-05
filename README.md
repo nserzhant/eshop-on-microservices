@@ -105,13 +105,13 @@ The repository contains a set of **Bicep** templates located in the `.azure` fol
 
 ![](.images/azure-deployment-2.png)
 
-* #### AKS (deploying Docker images hosted on ACR)
+* #### AKS (deploying Docker images hosted on ACR):
 
 ![](.images/azure-deployment-3.png)
 
 ### CI/CD Setup:
 
-* [Azure DevOps Guide](./.ado/README.md)
+* [Azure DevOps Guide](./.ado/Setup.md)
 
-* [GitHub Actions Guide](./.github/README.md)
+* [GitHub Actions Guide](./.github/Setup.md)
 
