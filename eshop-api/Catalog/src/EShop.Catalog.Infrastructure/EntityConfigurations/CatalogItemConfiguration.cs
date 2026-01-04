@@ -25,6 +25,8 @@ public class CatalogItemConfiguration : IEntityTypeConfiguration<CatalogItem>
             .IsRequired();
         builder.Property(ci => ci.CatalogTypeId)
             .IsRequired();
+        builder.Property(ci => ci.AvailableQty)
+            .IsRequired();
 
         // Foreign keys
         builder.HasOne<CatalogBrand>()
