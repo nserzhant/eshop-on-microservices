@@ -20,6 +20,9 @@ public class CatalogTypeRepository : ICatalogTypeRepository
 
     public void UpdateCatalogType(CatalogType catalogTypeToUpdate)
     {
+        _catalogDbContext.Entry(catalogTypeToUpdate)
+            .Property(b => b.Ts).OriginalValue = catalogTypeToUpdate.Ts;
+
         _catalogDbContext.Update(catalogTypeToUpdate);
     }
 

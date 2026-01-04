@@ -27,6 +27,9 @@ export class HttpErrorInterceptor implements HttpInterceptor {
             case 403 :
               errorMessage = 'errors.access-is-denied'
               break;
+            case 409 :
+              errorMessage = 'errors.already-changed'
+              break;
             case 500 :
               errorMessage = 'errors.internal-server-error'
               break;

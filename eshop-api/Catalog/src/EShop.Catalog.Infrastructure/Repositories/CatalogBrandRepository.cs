@@ -20,6 +20,9 @@ public class CatalogBrandRepository : ICatalogBrandRepository
 
     public void UpdateCatalogBrand(CatalogBrand catalogBrandToUpdate)
     {
+        _catalogDbContext.Entry(catalogBrandToUpdate)
+            .Property(b => b.Ts).OriginalValue = catalogBrandToUpdate.Ts;
+
         _catalogDbContext.Update(catalogBrandToUpdate);
     }
 

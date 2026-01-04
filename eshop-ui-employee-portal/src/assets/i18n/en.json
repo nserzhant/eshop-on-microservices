@@ -98,6 +98,7 @@
     "access-is-denied" : "Access is denied",
     "internal-server-error" : "Internal server error",
     "unknown-error" : "Unknown error",
-    "service-unavailable" : "Service unavailable"
+    "service-unavailable" : "Service unavailable",
+    "already-changed" : "Modification conflict - the item has already been changed."
   }
 }

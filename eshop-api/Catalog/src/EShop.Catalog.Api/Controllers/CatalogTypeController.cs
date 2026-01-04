@@ -62,6 +62,7 @@ public class CatalogTypeController : ControllerBase
 
     [ProducesResponseType(typeof(CatalogTypeReadModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPut("{catalogTypeId:Guid}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemeNames.Employee, Roles = Roles.SALES_MANAGER_ROLE_NAME)]

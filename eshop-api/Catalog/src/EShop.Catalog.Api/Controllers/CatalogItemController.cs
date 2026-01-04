@@ -67,6 +67,7 @@ public class CatalogItemController : ControllerBase
 
     [ProducesResponseType(typeof(CatalogItemReadModel), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(CatalogDomainErrorDTO), StatusCodes.Status400BadRequest)]
     [HttpPut("{catalogItemId:Guid}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemeNames.Employee, Roles = Roles.SALES_MANAGER_ROLE_NAME)]

@@ -5,19 +5,9 @@ using EShop.Ordering.Api.Models;
 
 namespace EShop.Ordering.Api.Filters;
 
-public class OrderDomainExceptionFilter : IActionFilter, IOrderedFilter
+public class OrderDomainExceptionFilter : IExceptionFilter
 {
-    private ILogger<OrderDomainExceptionFilter> _logger;
-    public int Order => int.MaxValue - 10;
-
-    public OrderDomainExceptionFilter(ILogger<OrderDomainExceptionFilter> logger)
-    { 
-        _logger = logger; 
-    }
-
-    public void OnActionExecuting(ActionExecutingContext context) { }
-
-    public void OnActionExecuted(ActionExecutedContext context)
+    public void OnException(ExceptionContext context)
     {
         if (context.Exception is BaseOrderingDomainException catalogDomainException)
         {
@@ -26,8 +16,6 @@ public class OrderDomainExceptionFilter : IActionFilter, IOrderedFilter
                     new OrderDomainErrorDTO(catalogDomainException));
 
             context.ExceptionHandled = true;
-
-            _logger.LogError($"Domain exception wat thrown: {context.Exception.GetType().Name}");
         }
     }
 }

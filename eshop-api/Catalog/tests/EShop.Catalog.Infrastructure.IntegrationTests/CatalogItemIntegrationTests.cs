@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using EShop.Catalog.Core.Interfaces;
+﻿using EShop.Catalog.Core.Interfaces;
 using EShop.Catalog.Core.Models;
 using EShop.Catalog.Core.Services;
 using EShop.Catalog.Infrastructure.Read;
 using EShop.Catalog.Infrastructure.Read.Queries;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EShop.Catalog.Infrastructure.IntegrationTests;
 
@@ -112,6 +113,25 @@ public class CatalogItemIntegrationTests : BaseCatalogIntegrationTests
         var catalogItemUpdated = await _catalogItemQueryService.GetById(catalogItem.Id);
         Assert.That(catalogItemUpdated, Is.Not.Null);
         Assert.That(catalogItemUpdated.Name, Is.EqualTo(updatedCatalogItemName));
+    }
+
+    [Test]
+    [Category("Optimistic Concurrency Check")]
+    [Category("Catalog Item Repository")]
+    public async Task When_Catalog_Item_Is_Updated_In_Parallel_Then_Update_Fails()
+    {
+        var catalogItemName = "test catalog item";
+        var updatedCatalogItemName = "updated catalog item";
+        var catalogItem = await createCatalogItemAsync(catalogItemName);
+        var initialVersion = catalogItem.Ts;
+        catalogItem.UpdateName(updatedCatalogItemName);
+        await _catalogItemService.UpdateCatalogItemAsync(catalogItem);
+        // Set the original version to emulate parallel update
+        catalogItem.UpdateTs(initialVersion);
+
+        var actUpdate = async () => await _catalogItemService.UpdateCatalogItemAsync(catalogItem);
+
+        Assert.That(actUpdate, Throws.TypeOf<DbUpdateConcurrencyException>());
     }
 
     [Test]

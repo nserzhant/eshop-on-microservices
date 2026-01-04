@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using EShop.Catalog.Core.Interfaces;
+﻿using EShop.Catalog.Core.Interfaces;
 using EShop.Catalog.Core.Models;
 using EShop.Catalog.Core.Services;
 using EShop.Catalog.Infrastructure.Read;
 using EShop.Catalog.Infrastructure.Read.Queries;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EShop.Catalog.Infrastructure.IntegrationTests;
 
@@ -46,7 +47,6 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
         var catalogTypeName = "test catalog type";
         var updatedCatalogTypeName = "updated catalog type";
         var catalogType = await createCatalogTypeAsync(catalogTypeName);
-        await _catalogTypeRepository.SaveChangesAsync();
         catalogType.UpdateType(updatedCatalogTypeName);
 
         await _catalogTypeService.UpdateCatalogTypeAsync(catalogType);
@@ -54,6 +54,25 @@ public class CatalogTypeIntegrationTests : BaseCatalogIntegrationTests
         var catalogTypeUpdated = await _catalogTypeQueryService.GetById(catalogType.Id);
         Assert.That(catalogTypeUpdated, Is.Not.Null);
         Assert.That(catalogTypeUpdated.Type, Is.EqualTo(updatedCatalogTypeName));
+    }
+
+    [Test]
+    [Category("Optimistic Concurrency Check")]
+    [Category("Catalog Type Repository")]
+    public async Task When_Catalog_Type_Is_Updated_In_Parallel_Then_Update_Fails()
+    {
+        var catalogTypeName = "test catalog type";
+        var updatedCatalogTypeName = "updated catalog type";
+        var catalogType = await createCatalogTypeAsync(catalogTypeName);
+        var initialVersion = catalogType.Ts;
+        catalogType.UpdateType(updatedCatalogTypeName);
+        await _catalogTypeService.UpdateCatalogTypeAsync(catalogType);
+        // Set the original version to emulate parallel update
+        catalogType.UpdateTs(initialVersion);
+
+        var actUpdate = async () => await _catalogTypeService.UpdateCatalogTypeAsync(catalogType);
+
+        Assert.That(actUpdate, Throws.TypeOf<DbUpdateConcurrencyException>());
     }
 
     [Test]

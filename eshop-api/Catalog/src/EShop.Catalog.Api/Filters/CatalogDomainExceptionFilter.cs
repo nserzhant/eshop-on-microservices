@@ -5,13 +5,11 @@ using EShop.Catalog.Api.Models;
 
 namespace EShop.Catalog.Api.Filters;
 
-public class CatalogDomainExceptionFilter : IActionFilter, IOrderedFilter
+public class CatalogDomainExceptionFilter : IExceptionFilter
 {
-    public int Order => int.MaxValue - 10;
-
     public void OnActionExecuting(ActionExecutingContext context) { }
 
-    public void OnActionExecuted(ActionExecutedContext context)
+    public void OnException(ExceptionContext context)
     {
         if (context.Exception is BaseCatalogDomainException catalogDomainException)
         {

@@ -20,6 +20,9 @@ public class CatalogItemRepository : ICatalogItemRepository
 
     public void UpdateCatalogItem(CatalogItem catalogItemToUpdate)
     {
+        _catalogDbContext.Entry(catalogItemToUpdate)
+            .Property(b => b.Ts).OriginalValue = catalogItemToUpdate.Ts;
+
         _catalogDbContext.Update(catalogItemToUpdate);
     }
 

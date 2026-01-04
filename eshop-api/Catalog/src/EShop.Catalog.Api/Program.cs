@@ -78,7 +78,11 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-builder.Services.AddControllers(options => options.Filters.Add<CatalogDomainExceptionFilter>());
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<CatalogDomainExceptionFilter>();
+    options.Filters.Add<ConcurrencyExceptionFilter>();
+});
 builder.Services.AddOpenApiDocument(document =>
 {
     document.AddSecurity("Bearer", new NSwag.OpenApiSecurityScheme
