@@ -30,17 +30,17 @@ public static class MassTransitRegistrationExtension
                 x.UsingAzureServiceBus((context, cfg) =>
                 {
                     cfg.Host(messageBrokerSettings.AzureServiceBusConnectionString);
+                    cfg.UseInMemoryOutbox(context);
+                    cfg.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
 
                     cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
                     {
                         configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
-                        configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
                     });
 
                     cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
                     {
                         configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
-                        configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
                     });
 
                     cfg.ConfigureEndpoints(context);
@@ -50,6 +50,9 @@ public static class MassTransitRegistrationExtension
             {
                 x.UsingRabbitMq((context, cfg) =>
                 {
+                    cfg.UseInMemoryOutbox(context);
+                    cfg.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
+
                     cfg.Host(messageBrokerSettings.RabbitMQHost, messageBrokerSettings.RabbitMQPort, messageBrokerSettings.RabbitMQVirtualHost, h =>
                     {
                         h.Username(messageBrokerSettings.RabbitMQUsername);
@@ -59,13 +62,11 @@ public static class MassTransitRegistrationExtension
                     cfg.ReceiveEndpoint(messageBrokerSettings.ReserveStockQueueName, configureEndpoint =>
                     {
                         configureEndpoint.ConfigureConsumer<ReserveStocksConsumer>(context);
-                        configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
                     });
 
                     cfg.ReceiveEndpoint(messageBrokerSettings.ReleaseStockQueueName, configureEndpoint =>
                     {
                         configureEndpoint.ConfigureConsumer<ReleaseStocksConsumer>(context);
-                        configureEndpoint.UseConsumeFilter(typeof(IdempotentConsumingFilter<>), context);
                     });
 
                     cfg.ConfigureEndpoints(context);
