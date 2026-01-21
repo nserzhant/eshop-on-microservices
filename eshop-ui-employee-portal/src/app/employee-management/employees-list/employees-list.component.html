@@ -6,13 +6,13 @@
     <form>
       <mat-form-field appearance="outline" class="email-filter">
         <mat-label>{{ 'employee-management.filter-by-email' | translate }}</mat-label>
-        <input matInput #emailFilter [ngModel] = "currentEmailFilter" name = "emailFilter">
+        <input matInput #emailFilter>
       </mat-form-field>
       <button mat-raised-button class="right"  (click)="applyEmailFilter(emailFilter.value)">
         {{ 'employee-management.apply-filter' | translate }}
       </button>
     </form>
-    <table mat-table [dataSource]="data"  matSort>
+    <table mat-table [dataSource]="data()" matSort>
 
       <!-- Email Column -->
       <ng-container matColumnDef="Email">
@@ -29,20 +29,22 @@
       <!-- Edit Column -->
       <ng-container matColumnDef="Edit">
         <th mat-header-cell *matHeaderCellDef>
-            <div class="center">{{ 'edit' | translate }}</div>
+          <div class="center">{{ 'edit' | translate }}</div>
         </th>
         <td mat-cell *matCellDef="let user">
-            <button mat-icon-button color="primary" class="right" (click)="openEditUser(user)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="primary" class="right" (click)="openEditUser(user)"><mat-icon>edit</mat-icon></button>
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
-    <mat-spinner *ngIf="isLoadingResults" class="grid-spinner"></mat-spinner>
+    @if (isLoadingResults()) {
+      <mat-spinner class="grid-spinner"></mat-spinner>
+    }
     <mat-paginator [pageSizeOptions]="[5, 10, 20]"
-                   [length]="resultsLength"
-                   showFirstLastButtons>
+      [length]="resultsLength()"
+      showFirstLastButtons>
     </mat-paginator>
   </mat-card-content>
 </mat-card>

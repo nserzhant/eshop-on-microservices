@@ -7,7 +7,7 @@
   </mat-card-header>
   <mat-card-content>
 
-    <table mat-table [dataSource]="data"  matSort>
+    <table mat-table [dataSource]="data()"  matSort>
 
       <!-- Item Column -->
       <ng-container matColumnDef="Name">
@@ -49,10 +49,12 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
-    <mat-spinner *ngIf="isLoadingResults" class="grid-spinner"></mat-spinner>
+    @if (isLoadingResults()) {
+      <mat-spinner class="grid-spinner"></mat-spinner>
+    }
     <mat-paginator [pageSizeOptions]="[5, 10, 20]"
-                   [length]="resultsLength"
-                   showFirstLastButtons>
+      [length]="resultsLength()"
+      showFirstLastButtons>
     </mat-paginator>
   </mat-card-content>
 </mat-card>

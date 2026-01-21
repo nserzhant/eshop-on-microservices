@@ -1,29 +1,41 @@
 <mat-toolbar color="primary">
   <!-- Toolbar Items -->
-  <button mat-button [matMenuTriggerFor]="smallScreenMenu" *ngIf="isSmallScreen">
-    <mat-icon>menu</mat-icon>
-  </button>
-  <a mat-button [routerLink]="''" *ngIf="!isSmallScreen">
-    <mat-icon>home</mat-icon>
-    {{ 'header.home' | translate }}
-  </a>
-  <a mat-button [routerLink]="'/employee-management/employees'" *ngIf="isAdmin && !isSmallScreen">
-    <mat-icon>people</mat-icon>
+  @if (isSmallScreen()) {
+    <button mat-button [matMenuTriggerFor]="smallScreenMenu">
+      <mat-icon>menu</mat-icon>
+    </button>
+  }
+  @if (!isSmallScreen()) {
+    <a mat-button [routerLink]="''">
+      <mat-icon>home</mat-icon>
+      {{ 'header.home' | translate }}
+    </a>
+  }
+  @if (isAdmin() && !isSmallScreen()) {
+    <a mat-button [routerLink]="'/employee-management/employees'">
+      <mat-icon>people</mat-icon>
       {{'header.employees' | translate }}
-  </a>
-  <button mat-button [matMenuTriggerFor]="catalogMenu" *ngIf="isSalesManager && !isSmallScreen">
-    <mat-icon>equalizer</mat-icon>
-    {{ 'header.setup' | translate }}
-  </button>
+    </a>
+  }
+  @if (isSalesManager() && !isSmallScreen()) {
+    <button mat-button [matMenuTriggerFor]="catalogMenu">
+      <mat-icon>equalizer</mat-icon>
+      {{ 'header.setup' | translate }}
+    </button>
+  }
   <span class="spacer"></span>
-  <button mat-button [matMenuTriggerFor]="userActionsMenu" *ngIf="isAuthenticated">
-    <mat-icon>account_box</mat-icon>
-      {{ userEmail }}
-  </button>
-  <button mat-button (click)="login()" *ngIf="!isAuthenticated">
-    {{'header.log-in' | translate}}
-    <mat-icon>login</mat-icon>
-  </button>
+  @if (isAuthenticated()) {
+    <button mat-button [matMenuTriggerFor]="userActionsMenu">
+      <mat-icon>account_box</mat-icon>
+      {{ userEmail() }}
+    </button>
+  }
+  @if (!isAuthenticated()) {
+    <button mat-button (click)="login()">
+      {{'header.log-in' | translate}}
+      <mat-icon>login</mat-icon>
+    </button>
+  }
 
   <!-- Menus -->
   <mat-menu #smallScreenMenu="matMenu">
@@ -31,22 +43,30 @@
       <mat-icon>home</mat-icon>
       {{ 'header.home' | translate }}
     </a>
-    <a mat-menu-item [routerLink]="'/employee-management/employees'" *ngIf="isAdmin">
-      <mat-icon>people</mat-icon>
+    @if (isAdmin()) {
+      <a mat-menu-item [routerLink]="'/employee-management/employees'">
+        <mat-icon>people</mat-icon>
         {{'header.employees' | translate }}
-    </a>
-    <a mat-menu-item [routerLink]="'/catalog/items'" *ngIf="isSalesManager">
-      <mat-icon>storage</mat-icon>
-      {{ 'header.catalog' | translate }}
-    </a>
-    <a mat-menu-item [routerLink]="'/catalog/brands'" *ngIf="isSalesManager">
-      <mat-icon>label_outline</mat-icon>
-      {{ 'header.brands' | translate }}
-    </a>
-    <a mat-menu-item [routerLink]="'/catalog/types'" *ngIf="isSalesManager">
-      <mat-icon>category</mat-icon>
-      {{ 'header.types' | translate }}
-    </a>
+      </a>
+    }
+    @if (isSalesManager()) {
+      <a mat-menu-item [routerLink]="'/catalog/items'">
+        <mat-icon>storage</mat-icon>
+        {{ 'header.catalog' | translate }}
+      </a>
+    }
+    @if (isSalesManager()) {
+      <a mat-menu-item [routerLink]="'/catalog/brands'">
+        <mat-icon>label_outline</mat-icon>
+        {{ 'header.brands' | translate }}
+      </a>
+    }
+    @if (isSalesManager()) {
+      <a mat-menu-item [routerLink]="'/catalog/types'">
+        <mat-icon>category</mat-icon>
+        {{ 'header.types' | translate }}
+      </a>
+    }
   </mat-menu>
   <mat-menu #userActionsMenu="matMenu">
     <button mat-menu-item (click)="logout()">
@@ -65,7 +85,7 @@
     </a>
     <a mat-menu-item [routerLink]="'/catalog/types'">
       <mat-icon>category</mat-icon>
-    {{ 'header.types' | translate }}
+      {{ 'header.types' | translate }}
     </a>
   </mat-menu>
 </mat-toolbar>

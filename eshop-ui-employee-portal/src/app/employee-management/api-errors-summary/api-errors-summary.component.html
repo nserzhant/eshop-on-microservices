@@ -1,9 +1,13 @@
 <div>
-  <div *ngIf="identityErrors" class="errors-container">
-    <ul>
-      <li *ngFor="let error of identityErrors.errors">
-        <mat-error>{{error.description}}</mat-error>
-      </li>
-    </ul>
-  </div>
+  @if (identityErrors) {
+    <div class="errors-container">
+      <ul>
+        @for (error of identityErrors.errors; track error) {
+          <li>
+            <mat-error>{{error.description}}</mat-error>
+          </li>
+        }
+      </ul>
+    </div>
+  }
 </div>

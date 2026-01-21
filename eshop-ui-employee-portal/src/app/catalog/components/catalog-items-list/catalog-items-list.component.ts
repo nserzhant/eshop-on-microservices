@@ -1,83 +1,78 @@
-import { AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, afterNextRender, Component, computed, HostListener, signal, ViewChild, inject, DestroyRef } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, merge, of as observableOf, Subject} from 'rxjs';
-import { Location } from '@angular/common';
-import { catchError, debounceTime, map, startWith, switchMap, takeUntil} from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
+import { merge, of as observableOf, Subject} from 'rxjs';
+import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
 import { CatalogDomainErrorDTO, CatalogItemClient, CatalogItemReadModel, ICatalogItemDTO, ListCatalogItemOrderBy, OrderByDirections } from '../../services/api/catalog.api.client';
+import { MATERIAL_COMPONENTS_IMPORTS } from 'src/app/shared/material-imports';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'app-catalog-items-list',
-  templateUrl: './catalog-items-list.component.html'
+    selector: 'app-catalog-items-list',
+    templateUrl: './catalog-items-list.component.html',
+    imports: [
+      CommonModule,
+      TranslateModule,
+      ...MATERIAL_COMPONENTS_IMPORTS
+    ]
 })
-export class CatalogItemsListComponent implements OnInit, OnDestroy, AfterViewInit {
+export class CatalogItemsListComponent implements AfterViewInit {
 
   MAX_SMALL_WIDTH = 520;
-
-  componentDestroyed$ = new Subject<void>();
-  screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
   refreshDataSubject$ = new Subject<void>();
-  data: CatalogItemReadModel[] = [];
-  resultsLength = 0;
-  selectedCatalogItem: ICatalogItemDTO | null = null;
-  selectedCatalogItemId: string | null = null;
-  apiError : CatalogDomainErrorDTO | null = null;
-  isCatalogItemSaving = false;
-  isLoadingResults = true;
-  isSmallScreen = false;
+
+  screenWidth = signal(window.innerWidth);
+  isSmallScreen = computed(() => this.screenWidth() <= this.MAX_SMALL_WIDTH);
+  data = signal<CatalogItemReadModel[]>([]);
+  resultsLength = signal(0);
+  isLoadingResults = signal(true);
+  apiError = signal<CatalogDomainErrorDTO | null>(null);
+  selectedCatalogItem = signal<ICatalogItemDTO>({name: ''});
+  selectedCatalogItemId = signal<string | null>(null);
+  isCatalogItemSaving = signal(false);
+  destroyRef$ = inject(DestroyRef);
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   @HostListener('window:resize', ['$event'])
   onResize(event : any) {
-    this.screenWidth$.next(event.target.innerWidth);
+    this.screenWidth.set(event.target.innerWidth);
   }
 
   get displayedColumns(): string[] {
-    return this.isSmallScreen ?  ['Name', 'Edit', 'Delete'] :  ['Name','Type', 'Brand', 'Edit', 'Delete'];
+    return this.isSmallScreen() ?  ['Name', 'Edit', 'Delete'] : ['Name','Type', 'Brand', 'Edit', 'Delete'];
   }
 
   constructor(private catalogItemClient: CatalogItemClient,
               private router: Router,
               private route: ActivatedRoute,
-              private location: Location) {}
-
-  ngOnInit(): void {
-    this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
-       if (width < this.MAX_SMALL_WIDTH) {
-        this.isSmallScreen = true;
-      }
-      else if (width >  this.MAX_SMALL_WIDTH) {
-        this.isSmallScreen = false;
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.componentDestroyed$.next();
-  }
-
-  ngAfterViewInit(): void {
-
-    setTimeout(() => {
+              private location: Location) {
+    afterNextRender(() => {
       const paramsMap = this.route.snapshot.queryParamMap;
       this.paginator.pageIndex = +(paramsMap.get('pageIndex') ?? '0');
       this.paginator.pageSize = +(paramsMap.get('pageSize') ?? '5');
       this.sort.active =  paramsMap.get('orderBy') ?? '';
       this.sort.direction = paramsMap.get('orderByDirection') as SortDirection ?? '';
-    }, 0);
+    });
+  }
 
-    this.sort.sortChange.subscribe(() => (this.paginator.pageIndex = 0));
+  ngAfterViewInit(): void {
+
+    this.sort.sortChange.pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => (this.paginator.pageIndex = 0));
 
     merge(this.sort.sortChange, this.paginator.page, this.refreshDataSubject$)
     .pipe(
+      takeUntilDestroyed(this.destroyRef$),
       startWith({}),
       debounceTime(0),
       switchMap((val, index) => {
         this.updateLocation();
-        this.isLoadingResults = true;
+        this.isLoadingResults.set(true);
         const orderBy = ListCatalogItemOrderBy[this.sort.active  as keyof typeof ListCatalogItemOrderBy];
         const orderByDirection = OrderByDirections[this.sort.direction.toUpperCase() as keyof typeof OrderByDirections];
         return this.catalogItemClient.getCatalogItems(
@@ -89,7 +84,7 @@ export class CatalogItemsListComponent implements OnInit, OnDestroy, AfterViewIn
       }),
       map(data => {
         // Flip flag to show that loading has finished.
-        this.isLoadingResults = false;
+        this.isLoadingResults.set(false);
 
         if (data === null) {
           return [];
@@ -98,11 +93,11 @@ export class CatalogItemsListComponent implements OnInit, OnDestroy, AfterViewIn
         // Only refresh the result length if there is new data. In case of rate
         // limit errors, we do not want to reset the paginator to zero, as that
         // would prevent users from re-triggering requests.
-        this.resultsLength = data.totalCount ?? 0;
+        this.resultsLength.set(data.totalCount ?? 0);
         return data.catalogItems ?? [];
       }),
     )
-    .subscribe(data => (this.data = data));
+    .subscribe(data => this.data.set(data));
   }
 
   editItem(item: CatalogItemReadModel) {
@@ -110,16 +105,16 @@ export class CatalogItemsListComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   deleteItem(item: CatalogItemReadModel) {
-    this.isLoadingResults = true;
+    this.isLoadingResults.set(true);
     this.catalogItemClient.deleteCatalogItem(item.id!).subscribe({
       error: (e) => {
-        this.isLoadingResults = false;
-        this.apiError = e;
+        this.isLoadingResults.set(false);
+        this.apiError.set(e);
       },
       complete: () => {
-        this.isCatalogItemSaving = false;
+        this.isCatalogItemSaving.set(false);
         this.refreshDataSubject$.next();
-        this.apiError = null;
+        this.apiError.set(null);
       }
     });
   }

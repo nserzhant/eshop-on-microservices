@@ -1,6 +1,6 @@
 <mat-card>
   <mat-card-header>
-    <mat-card-title>{{'employee-management.edit-employee-hedader' | translate:  {'email' : employee?.email} }}</mat-card-title>
+    <mat-card-title>{{'employee-management.edit-employee-hedader' | translate:  {'email' : employee()?.email} }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
 
@@ -16,14 +16,16 @@
           <mat-list-option value="SalesManager">{{ 'employee-management.sales-manager-role' | translate }}</mat-list-option>
           <mat-list-option value="Administrator">{{ 'employee-management.administrator-role' | translate }}</mat-list-option>
         </mat-selection-list>
-        <api-errors-summary [apiError] = "updateRolesApiError"></api-errors-summary>
+        <api-errors-summary [apiError] = "updateRolesApiError()"></api-errors-summary>
 
         <!-- Save Button -->
         <button mat-raised-button color="primary" (click)="changeRoles()"
-          [disabled]="isRolesUpdating">
+          [disabled]="isRolesUpdating()">
           {{ 'employee-management.change-roles' | translate }}
         </button>
-        <mat-spinner *ngIf="isRolesUpdating" class="action-spinner"></mat-spinner>
+        @if (isRolesUpdating()) {
+          <mat-spinner class="action-spinner"></mat-spinner>
+        }
       </mat-card-content>
     </mat-card>
     <div class="child-card-spacer"></div>
@@ -42,14 +44,16 @@
             <input type="password" matInput name="password" required ngModel>
             <mat-error>{{ 'employee-management.errors.missing-password' | translate }}</mat-error>
           </mat-form-field>
-          <api-errors-summary [apiError] = "updatePasswordApiError"></api-errors-summary>
+          <api-errors-summary [apiError] = "updatePasswordApiError()"></api-errors-summary>
 
           <!-- Save Button -->
           <button type="submit" mat-raised-button color="primary"
-            [disabled]="setPasswordForm.invalid || isPasswordUpdating">
+            [disabled]="setPasswordForm.invalid || isPasswordUpdating()">
             {{ 'employee-management.set-password' | translate }}
           </button>
-          <mat-spinner *ngIf="isPasswordUpdating" class="action-spinner"></mat-spinner>
+          @if (isPasswordUpdating()) {
+            <mat-spinner class="action-spinner"></mat-spinner>
+          }
         </form>
       </mat-card-content>
     </mat-card>

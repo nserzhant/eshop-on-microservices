@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import {MatPaginatorIntl} from '@angular/material/paginator';
 import { TranslateParser, TranslateService } from '@ngx-translate/core';
 import { Subject, take} from 'rxjs';
@@ -15,7 +15,7 @@ export class CustomPaginatorIntl implements MatPaginatorIntl {
   currentPageLabelTempl = '';
 
   constructor(private translateService: TranslateService,
-              private translateParser: TranslateParser ) {
+              private translateParser: TranslateParser){
 
     this.translateService.get([
       'paginator.firstPageLabel',

@@ -1,16 +1,16 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
+import { MatInputModule } from "@angular/material/input";
+import { TranslateModule } from '@ngx-translate/core';
 import { CatalogDomainErrorDTO } from '../../services/api/catalog.api.client';
 
 @Component({
-  selector: 'catalog-api-errors-summary',
-  templateUrl: './catalog-api-errors-summary.component.html'
+    selector: 'catalog-api-errors-summary',
+    templateUrl: './catalog-api-errors-summary.component.html',
+    imports: [
+    TranslateModule,
+    MatInputModule
+]
 })
 export class CatalogApiErrorsSummaryComponent {
-
-  catalogDomainError: CatalogDomainErrorDTO | null = null;
-
-  @Input()
-  set error(catalogDomainError : CatalogDomainErrorDTO | null) {
-    this.catalogDomainError = catalogDomainError;
-  }
+  error = input<CatalogDomainErrorDTO | null>(null);
 }

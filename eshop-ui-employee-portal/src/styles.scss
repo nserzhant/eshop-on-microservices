@@ -76,11 +76,11 @@ div.child-card-spacer {
     padding: 5px;
 }
 
-.error-snack-bar {
-  padding: 16px;
-  --mdc-snackbar-container-color: red;
-  --mdc-snackbar-supporting-text-color: white;
-  --mat-snack-bar-button-color: white;
+:root {
+  @include mat.snack-bar-overrides((
+    button-color: white,
+    container-color: red,
+  ));
 }
 
 .back-button {
@@ -89,7 +89,7 @@ div.child-card-spacer {
 }
 
 .standard-top-indent {
-  margin-top: 4px
+  margin-top: 5px
 }
 
 mat-paginator {

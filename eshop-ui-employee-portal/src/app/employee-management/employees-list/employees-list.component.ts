@@ -1,81 +1,79 @@
-import { Location } from '@angular/common';
-import { AfterViewInit, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
+import { AfterViewInit, afterNextRender, Component, computed, HostListener, signal, ViewChild, inject, DestroyRef } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
-import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, merge, of as observableOf, Subject} from 'rxjs';
-import { catchError, debounceTime, map, startWith, switchMap, takeUntil} from 'rxjs/operators';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { BehaviorSubject, merge, of as observableOf} from 'rxjs';
+import { catchError, debounceTime, map, startWith, switchMap} from 'rxjs/operators';
 import { EmployeeManagementClient, EmployeeReadModel, ListEmployeeOrderBy, OrderByDirections } from '../services/api/employee.api.client';
+import { TranslateModule } from '@ngx-translate/core';
+import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MATERIAL_COMPONENTS_IMPORTS } from 'src/app/shared/material-imports';
 
 @Component({
-  selector: 'app-emloyees-list',
-  templateUrl: './emloyees-list.component.html'
+    selector: 'app-employees-list',
+    templateUrl: './employees-list.component.html',
+    imports: [
+      CommonModule,
+      RouterModule,
+      FormsModule,
+      TranslateModule,
+      ...MATERIAL_COMPONENTS_IMPORTS
+    ]
 })
-export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
+export class EmployeesListComponent implements AfterViewInit {
 
   MAX_SMALL_WIDTH = 430;
 
-  componentDestroyed$ = new Subject<void>();
-  currentEmailFilter: string | null = null;
   emailFilterSubject$ = new BehaviorSubject<string | null>(null);
-  resultsLength = 0;
-  isLoadingResults = true;
-  data: EmployeeReadModel[] = [];
-  isSmallScreen = false;
-  screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
+
+  resultsLength = signal(0);
+  isLoadingResults = signal(true);
+  data = signal<EmployeeReadModel[]>([]);
+  screenWidth = signal(window.innerWidth);
+  isSmallScreen = computed(() => this.screenWidth() <= this.MAX_SMALL_WIDTH);
 
   @HostListener('window:resize', ['$event'])
   onResize(event : any) {
-    this.screenWidth$.next(event.target.innerWidth);
+    this.screenWidth.set(event.target.innerWidth);
   }
+
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
+  destroyRef$ = inject(DestroyRef);
+
   get displayedColumns(): string[] {
-    return this.isSmallScreen ? ['Email', 'Edit'] : ['Email', 'Roles', 'Edit'];
+    return this.isSmallScreen() ? ['Email', 'Edit'] : ['Email', 'Roles', 'Edit'];
   }
 
   constructor(private employeeManagementClient: EmployeeManagementClient,
               private router: Router,
               private route: ActivatedRoute,
-              private location: Location) {}
-
-  ngOnInit(): void {
-    this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
-       if (width < this.MAX_SMALL_WIDTH) {
-        this.isSmallScreen = true;
-      }
-      else if (width >  this.MAX_SMALL_WIDTH) {
-        this.isSmallScreen = false;
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.componentDestroyed$.next();
-  }
-
-  ngAfterViewInit() : void {
-
-    setTimeout(() => {
+              private location: Location) {
+    afterNextRender(() => {
       const paramsMap = this.route.snapshot.queryParamMap;
       this.paginator.pageIndex = +(paramsMap.get('pageIndex') ?? '0');
       this.paginator.pageSize = +(paramsMap.get('pageSize') ?? '5');
       this.sort.active =  paramsMap.get('orderBy') ?? '';
       this.sort.direction = paramsMap.get('orderByDirection') as SortDirection ?? '';
-      this.currentEmailFilter = paramsMap.get('emailFilter');
-      this.emailFilterSubject$.next(this.currentEmailFilter);
-    }, 0);
+      this.emailFilterSubject$.next(paramsMap.get('emailFilter'));
+    });
+  }
 
-    this.sort.sortChange.subscribe(() => (this.paginator.pageIndex = 0));
+  ngAfterViewInit() : void {
+    this.sort.sortChange.pipe(takeUntilDestroyed(this.destroyRef$))
+      .subscribe(() => (this.paginator.pageIndex = 0));
 
     merge(this.sort.sortChange, this.paginator.page, this.emailFilterSubject$)
     .pipe(
+      takeUntilDestroyed(this.destroyRef$),
       startWith({}),
       debounceTime(0),
       switchMap((val, index) => {
         this.updateLocation();
-        this.isLoadingResults = true;
+        this.isLoadingResults.set(true);
         const orderBy = ListEmployeeOrderBy[this.sort.active  as keyof typeof ListEmployeeOrderBy];
         const orderByDirection = OrderByDirections[this.sort.direction.toUpperCase() as keyof typeof OrderByDirections];
         return this.employeeManagementClient.getEmployees(
@@ -88,7 +86,7 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
       }),
       map(data => {
         // Flip flag to show that loading has finished.
-        this.isLoadingResults = false;
+        this.isLoadingResults.set(false);
 
         if (data === null) {
           return [];
@@ -97,11 +95,11 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
         // Only refresh the result length if there is new data. In case of rate
         // limit errors, we do not want to reset the paginator to zero, as that
         // would prevent users from re-triggering requests.
-        this.resultsLength = data.totalCount ?? 0;
+        this.resultsLength.set(data.totalCount ?? 0);
         return data.employees ?? [];
       }),
     )
-    .subscribe(data => (this.data = data));
+    .subscribe(data => this.data.set(data));
   }
 
   openEditUser(employee: EmployeeReadModel) {
@@ -109,12 +107,7 @@ export class EmloyeesListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   applyEmailFilter(emailFilter : string) {
-    if (emailFilter === '') {
-      this.currentEmailFilter = null;
-    } else {
-      this.currentEmailFilter = emailFilter;
-    }
-    this.emailFilterSubject$.next(this.currentEmailFilter);
+    this.emailFilterSubject$.next(emailFilter === '' ? null : emailFilter);
   }
 
   getRoles(employee: EmployeeReadModel) {

@@ -1,73 +1,52 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, HostListener, inject, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, Subject, take, takeUntil } from 'rxjs';
+import { Router, RouterModule } from '@angular/router';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { take } from 'rxjs';
 import { AuthenticationService } from '../auth/authentication.service';
+import { CommonModule } from '@angular/common';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html'
+    selector: 'app-header',
+    templateUrl: './header.component.html',
+    imports: [
+      CommonModule,
+      RouterModule,
+      TranslateModule,
+      MatToolbarModule,
+      MatButtonModule,
+      MatMenuModule,
+      MatIconModule
+    ]
 })
-export class HeaderComponent implements OnInit, OnDestroy {
+export class HeaderComponent {
   MAX_SMALL_WIDTH = 430;
   ADMINISTRATOR_ROLE_NAME = 'Administrator';
   SALES_MANAGER_ROLE_NAME = 'SalesManager';
 
-  isAuthenticated = false;
-  isAdmin = false;
-  isSalesManager = false;
-  userEmail = '';
-  componentDestroyed$ = new Subject<void>();
-  screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
+  authenticationService = inject(AuthenticationService);
+  private translateService = inject(TranslateService);
+  private matSnackBar = inject(MatSnackBar);
+  private router = inject(Router);
+
+  screenWidth = signal(window.innerWidth);
+  isSmallScreen = signal(window.innerWidth < this.MAX_SMALL_WIDTH);
+  authUser = signal<any>(null);
+
+  // Properties updated when authUser changes
+  isAuthenticated = computed(()=> this.authenticationService.isAuthenticated());
+  userEmail = computed(()=> this.authenticationService.userEmail());
+  isAdmin = computed(()=> this.authenticationService.isAdmin());
+  isSalesManager = computed(()=> this.authenticationService.isSalesManager());
+
   @HostListener('window:resize', ['$event'])
   onResize(event : any) {
-    this.screenWidth$.next(event.target.innerWidth);
-  }
-  isSmallScreen = false;
-
-  constructor(
-    private translateService: TranslateService,
-    private matSnackBar: MatSnackBar,
-    private router: Router,
-    private authenticationService: AuthenticationService) { }
-
-  ngOnInit(): void {
-    this.authenticationService.authUser$.pipe(takeUntil(this.componentDestroyed$))
-      .subscribe((user) => {
-        if (user) {
-          this.isAuthenticated = true;
-          this.userEmail = user.profile.email!;
-          const userRoles  = user.profile['role'] ?? user.profile['roles'];
-          let roleNames = new Array<string>();
-
-          if(userRoles) {
-            if ( typeof userRoles ===  'string') {
-              roleNames.push(userRoles);
-            } else if (Array.isArray(userRoles)) {
-              roleNames = userRoles;
-            }
-          }
-
-          this.isAdmin = roleNames.indexOf(this.ADMINISTRATOR_ROLE_NAME) >= 0;
-          this.isSalesManager = roleNames.indexOf(this.SALES_MANAGER_ROLE_NAME) >= 0;
-        } else {
-          this.isAdmin = this.isAuthenticated = this.isSalesManager = false;
-          this.userEmail = '';
-        }
-      });
-      this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
-         if (width < this.MAX_SMALL_WIDTH) {
-          this.isSmallScreen = true;
-        }
-        else if (width >  this.MAX_SMALL_WIDTH) {
-          this.isSmallScreen = false;
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.componentDestroyed$.next();
+    this.screenWidth.set(event.target.innerWidth);
+    this.isSmallScreen.set(event.target.innerWidth < this.MAX_SMALL_WIDTH);
   }
 
   logout() {
@@ -79,7 +58,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authenticationService.login().catch((error) => {
       this.translateService.get('errors.service-unavailable')
           .pipe(take(1))
-          .subscribe(translated=>this.matSnackBar.open(translated , 'Close', { duration: 3000, panelClass: ['error-snack-bar'] }));
+          .subscribe(translated=>this.matSnackBar.open(translated , 'Close', { duration: 3000 }));
       }
     );
   }

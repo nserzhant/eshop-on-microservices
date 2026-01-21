@@ -1,12 +1,15 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { ApiErrorDTO, IdentityErrorsDTO } from 'src/app/employee-management/services/api/employee.api.client';
 
 @Component({
-  selector: 'api-errors-summary',
-  templateUrl: './api-errors-summary.component.html'
+    selector: 'api-errors-summary',
+    templateUrl: './api-errors-summary.component.html',
+    imports: [
+      MatFormFieldModule
+    ]
 })
-export class ApiErrorsSummaryComponent implements OnInit {
-
+export class ApiErrorsSummaryComponent {
   identityErrors: IdentityErrorsDTO | null = null;
 
   @Input()
@@ -18,10 +21,5 @@ export class ApiErrorsSummaryComponent implements OnInit {
         this.identityErrors = apiError.identityErrors;
       }
     }
-  }
-
-  constructor() { }
-
-  ngOnInit(): void {
   }
 }

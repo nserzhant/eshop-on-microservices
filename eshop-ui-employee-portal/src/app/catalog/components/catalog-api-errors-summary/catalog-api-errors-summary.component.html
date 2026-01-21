@@ -1,3 +1,5 @@
-<div class="errors-container" *ngIf="catalogDomainError">
-  <mat-error class="single-error-message">{{'catalog.errors.api.' + catalogDomainError.errorType! | translate}}</mat-error>
-</div>
+@if (error()) {
+  <div class="errors-container">
+    <mat-error class="single-error-message">{{'catalog.errors.api.' + error()!.errorType! | translate}}</mat-error>
+  </div>
+}
