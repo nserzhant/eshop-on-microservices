@@ -1,52 +1,47 @@
 <div class="column-container">
-  <mat-accordion *ngFor="let item of items" class="order">
-    <mat-expansion-panel>
-      <mat-expansion-panel-header>
-        <mat-panel-title>{{'orders.order-number' | translate }}: {{ item.id }}, {{'orders.date' | translate }}: {{ item.orderDate?.toDateString() }}</mat-panel-title>
-      </mat-expansion-panel-header>
-      <table mat-table [dataSource]="item.orderItems!">
-
-        <!-- Image Column -->
-        <ng-container matColumnDef="image">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let element">
-            <img class="order-image" src="{{element.pictureUri}}">
-          </td>
-        </ng-container>
-
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef> {{'orders.name' | translate }} </th>
-          <td mat-cell *matCellDef="let element"> {{element.name}} </td>
-        </ng-container>
-
-        <!-- Brand Column -->
-        <ng-container matColumnDef="brand">
-          <th mat-header-cell *matHeaderCellDef> {{'orders.brand' | translate }} </th>
-          <td mat-cell *matCellDef="let element"> {{element.brandName}} </td>
-        </ng-container>
-
-        <!-- Type Column -->
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef> {{'orders.type' | translate }} </th>
-          <td mat-cell *matCellDef="let element"> {{element.typeName}} </td>
-        </ng-container>
-
-        <!-- QTY Column -->
-        <ng-container matColumnDef="qty">
-          <th mat-header-cell *matHeaderCellDef> {{'orders.qty' | translate }} </th>
-          <td mat-cell *matCellDef="let element"> {{element.qty}} </td>
-        </ng-container>
-
-        <!-- Price Column -->
-        <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef> {{'orders.price' | translate }} </th>
-          <td mat-cell *matCellDef="let element"> {{element.price * element.qty}} </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </mat-expansion-panel>
-  </mat-accordion>
+  @for (item of orders(); track item.id) {
+    <mat-accordion class="order">
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>{{'orders.order-number' | translate }}: {{ item.id }}, {{'orders.date' | translate }}: {{ item.orderDate?.toDateString() }}</mat-panel-title>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="item.orderItems!">
+          <!-- Image Column -->
+          <ng-container matColumnDef="image">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let element">
+              <img class="order-image" src="{{element.pictureUri}}">
+            </td>
+          </ng-container>
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> {{'orders.name' | translate }} </th>
+            <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+          </ng-container>
+          <!-- Brand Column -->
+          <ng-container matColumnDef="brand">
+            <th mat-header-cell *matHeaderCellDef> {{'orders.brand' | translate }} </th>
+            <td mat-cell *matCellDef="let element"> {{element.brandName}} </td>
+          </ng-container>
+          <!-- Type Column -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef> {{'orders.type' | translate }} </th>
+            <td mat-cell *matCellDef="let element"> {{element.typeName}} </td>
+          </ng-container>
+          <!-- QTY Column -->
+          <ng-container matColumnDef="qty">
+            <th mat-header-cell *matHeaderCellDef> {{'orders.qty' | translate }} </th>
+            <td mat-cell *matCellDef="let element"> {{element.qty}} </td>
+          </ng-container>
+          <!-- Price Column -->
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef> {{'orders.price' | translate }} </th>
+            <td mat-cell *matCellDef="let element"> {{element.price * element.qty}} </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns();"></tr>
+        </table>
+      </mat-expansion-panel>
+    </mat-accordion>
+  }
 </div>

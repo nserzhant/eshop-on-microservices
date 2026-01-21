@@ -1,15 +1,28 @@
-import { Injectable } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { User, UserManager, UserManagerSettings, WebStorageStateStore } from 'oidc-client-ts';
-import { BehaviorSubject, ReplaySubject} from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-  initCompleted$ = new ReplaySubject<void>(1);
-  authUser$ = new BehaviorSubject<User | null>(null);
-  userManager: UserManager;
+
+  private userManager: UserManager;
+  private _user = signal<User | null>(null);
+
+  readonly isAuthenticated = computed(() => this._user() !== null);
+  readonly userEmail = computed(() => {
+    const user = this._user();
+    return user?.profile?.email ?? '';
+  });
+
+  get accessToken() {
+    return this._user()?.access_token;
+  }
+
+  signinCallback() : Promise<User | undefined> {
+    return this.userManager.signinCallback();
+  }
 
   constructor() {
     const userManagerSettings : UserManagerSettings = {
@@ -25,15 +38,15 @@ export class AuthenticationService {
     this.userManager = new UserManager(userManagerSettings);
     this.userManager.events.addUserSignedIn(()=>this.handleUserLoggedIn());
     this.userManager.events.addUserSignedOut(()=>this.handleUserLoggedOut());
+    //Handles refresh token events
+    this.userManager.events.addUserLoaded((user) => this._user.set(user));
 
     this.userManager.getUser().then(user => {
       if(user?.expired) {
         this.userManager.removeUser();
       } else {
-        this.authUser$.next(user);
+        this._user.set(user);
       }
-
-      this.initCompleted$.next()
     });
   }
 
@@ -47,11 +60,11 @@ export class AuthenticationService {
 
   async handleUserLoggedOut() {
     await this.userManager!.removeUser();
-    this.authUser$.next(null);
+    this._user.set(null);
   }
 
   async handleUserLoggedIn() {
     const user = await this.userManager.getUser();
-    this.authUser$.next(user);
+    this._user.set(user);
   }
 }

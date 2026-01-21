@@ -5,9 +5,11 @@
     <mat-form-field appearance="outline" style="grid-column-start: span 2;" class="form-item">
       <mat-label>{{ 'checkout.shipping-address' | translate }}</mat-label>
       <textarea matInput formControlName="shippingAddress"></textarea>
-      <mat-error *ngIf="checkoutForm.controls['shippingAddress']?.hasError('required')">
-        {{ 'checkout.shipping-address-required' | translate }}
-      </mat-error>
+      @if (checkoutForm.controls['shippingAddress']?.hasError('required')) {
+        <mat-error>
+          {{ 'checkout.shipping-address-required' | translate }}
+        </mat-error>
+      }
     </mat-form-field>
 
     <!-- Cardholder  (fake field) -->
@@ -37,7 +39,7 @@
     <!-- Total  (information field) -->
     <mat-form-field appearance="outline" style="grid-column-start: span 2;" class="form-item">
       <mat-label>{{ 'checkout.total' | translate }}</mat-label>
-      <input matInput disabled="true" value="{{ total }} $">
+      <input matInput disabled="true" value="{{ totalPrice() }} $">
     </mat-form-field>
     <div  style="grid-column-start: span 2;" class="form-item">
       <button type="submit" mat-raised-button color="primary" [disabled]="checkoutForm.invalid" class="action-button">
@@ -48,5 +50,7 @@
       </button>
     </div>
   </form>
-  <mat-spinner *ngIf="isCheckingOut" class="action-spinner"></mat-spinner>
+  @if (isCheckingOut()) {
+    <mat-spinner class="action-spinner"></mat-spinner>
+  }
 </div>

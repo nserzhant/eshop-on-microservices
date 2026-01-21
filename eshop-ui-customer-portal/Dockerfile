@@ -1,6 +1,6 @@
-FROM node:22.4.0-alpine3.20  as development
+FROM node:25.4.0-alpine3.23  AS development
 WORKDIR /app
-RUN npm install -g @angular/cli@18.1.0
+RUN npm install -g @angular/cli@21.0.5
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
@@ -12,7 +12,7 @@ FROM development AS build
 ARG CONFIGURATION="production"
 RUN ng build --configuration=$CONFIGURATION
 
-FROM nginx:alpine3.17 as release
+FROM nginx:alpine3.17 AS release
 COPY --from=build /app/.nginx/nginx.conf /etc/nginx/conf.d/default.conf
 WORKDIR /usr/share/nginx/html
 # Remove default nginx static assets

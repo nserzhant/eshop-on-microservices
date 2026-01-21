@@ -1,13 +1,13 @@
 <div class="column-container">
   <div class="basket">
-    <table mat-table [dataSource]="items">
+    <table mat-table [dataSource]="items()">
 
       <!-- Item Name Column -->
       <ng-container matColumnDef="itemName">
         <th mat-header-cell *matHeaderCellDef>{{ 'basket.name' | translate }}</th>
         <td mat-cell *matCellDef="let element"> {{element.itemName}} </td>
         <td mat-footer-cell *matFooterCellDef colspan="4">
-          <a mat-raised-button color="primary" [routerLink]="['','checkout']" [disabled]="!canCheckout" class="action-button">
+          <a mat-raised-button color="primary" [routerLink]="['','checkout']" [disabled]="!canCheckout()" class="action-button">
             {{ 'basket.checkout' | translate }}
           </a>
           <a type="button" mat-raised-button color="primary" class="right action-button" [routerLink]="''">
@@ -21,7 +21,7 @@
         <th mat-header-cell *matHeaderCellDef>{{ 'basket.qty' | translate }}</th>
         <td mat-cell *matCellDef="let element">
           <mat-form-field  appearance="outline"  class="mat-qty-edit">
-            <input type="number" min="1" matInput [ngModel]="element.qty" (ngModelChange)="qtyChanged(element, $event)" [ngModelOptions]="{standalone: true}">
+            <input type="number" min="1" matInput [ngModel]="element.qty" (ngModelChange)="qtyChanged(element, $event)">
           </mat-form-field>
         </td>
       </ng-container>

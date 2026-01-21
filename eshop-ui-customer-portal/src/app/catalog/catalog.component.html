@@ -13,9 +13,11 @@
         <mat-label>{{'catalog.brand' | translate }}</mat-label>
         <mat-select  [(ngModel)] = "brandFilter">
           <mat-option></mat-option>
-          <mat-option *ngFor="let brand of catalogBrands" [value]="brand.brand">
-            {{ brand.brand }}
-          </mat-option>
+          @for (brand of catalogBrands(); track brand.id) {
+            <mat-option [value]="brand.brand">
+              {{ brand.brand }}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
@@ -24,61 +26,66 @@
         <mat-label>{{'catalog.type' | translate }}</mat-label>
         <mat-select [(ngModel)] = "typeFilter">
           <mat-option></mat-option>
-          <mat-option *ngFor="let type of catalogTypes" [value]="type.type">
-            {{ type.type }}
-          </mat-option>
+          @for (type of catalogTypes(); track type.id) {
+            <mat-option [value]="type.type">
+              {{ type.type }}
+            </mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <button mat-raised-button color="primary" class="filter-row" (click)="onFilterChange()">Apply</button>
     </div>
   </mat-sidenav>
   <mat-sidenav-content>
-    <button mat-button color='primary' (click) ='sidenav.toggle()' class ='expand-sidenav-button' *ngIf="!isSideNavOpened">
-      <mat-icon>menu</mat-icon> {{'catalog.filters' | translate }}
-    </button>
+    @if (!isSideNavOpened) {
+      <button mat-button color='primary' (click) ='sidenav.toggle()' class ='expand-sidenav-button'>
+        <mat-icon>menu</mat-icon> {{'catalog.filters' | translate }}
+      </button>
+    }
     <div class="wrap-container">
-      <mat-card *ngFor="let item of items" class="catalog-item">
-        <mat-card-header>
-
-          <!-- Name -->
-          <mat-card-title>
-            <b>{{ item.name }}</b>
-          </mat-card-title>
-
-          <!-- Brand -->
-          <mat-card-subtitle>
-            <b class="subtitle-header">{{'catalog.brand' | translate }}:</b>{{item.catalogBrand?.brand}}
-          </mat-card-subtitle>
-
-          <!-- Type -->
-          <mat-card-subtitle>
-            <b class="subtitle-header">{{'catalog.type' | translate }}:</b>{{item.catalogType?.type}}
-          </mat-card-subtitle>
-
-          <!-- Price -->
-          <mat-card-subtitle>
-            <b class="subtitle-header">{{'catalog.price' | translate }}</b>{{item.price}} $
-          </mat-card-subtitle>
-        </mat-card-header>
-
-        <!-- Image -->
-        <mat-card-content>
-          <img class="catalog-image" src="{{item.pictureUri}}">
-        </mat-card-content>
-        <mat-card-footer>
-          <button mat-icon-button class="right" (click)="addItemToBasket(item)">
-            <mat-icon>add_shopping_cart</mat-icon>
-          </button>
-        </mat-card-footer>
-      </mat-card>
+      @for (item of items(); track item.id) {
+        <mat-card class="catalog-item">
+          <mat-card-header>
+            <!-- Name -->
+            <mat-card-title>
+              <b>{{ item.name }}</b>
+            </mat-card-title>
+            <!-- Brand -->
+            <mat-card-subtitle>
+              <b class="subtitle-header">{{'catalog.brand' | translate }}:</b>{{item.catalogBrand?.brand}}
+            </mat-card-subtitle>
+            <!-- Type -->
+            <mat-card-subtitle>
+              <b class="subtitle-header">{{'catalog.type' | translate }}:</b>{{item.catalogType?.type}}
+            </mat-card-subtitle>
+            <!-- Price -->
+            <mat-card-subtitle>
+              <b class="subtitle-header">{{'catalog.price' | translate }}</b>{{item.price}} $
+            </mat-card-subtitle>
+          </mat-card-header>
+          <!-- Image -->
+          <mat-card-content>
+            <img class="catalog-image" src="{{item.pictureUri}}">
+          </mat-card-content>
+          <mat-card-footer>
+            <button mat-icon-button class="right" (click)="addItemToBasket(item)">
+              <mat-icon>add_shopping_cart</mat-icon>
+            </button>
+          </mat-card-footer>
+        </mat-card>
+      }
     </div>
-    <div class="right" [hidden] ="hidePaginator">
-      <mat-spinner *ngIf="isLoadingResults" class="grid-spinner"></mat-spinner>
+    <div class="right" [hidden] ="hidePaginator()">
+      @if (isLoadingResults()) {
+        <mat-spinner class="grid-spinner"></mat-spinner>
+      }
       <mat-paginator [pageSizeOptions]="[5, 10, 20]"
-                    [length]="resultsLength"
-                    showFirstLastButtons>
+        [length]="resultsLength()"
+        showFirstLastButtons>
       </mat-paginator>
     </div>
-    <span *ngIf="hidePaginator" class="not-found-container">{{'catalog.items-not-found' | translate }}</span>
+    @if (hidePaginator()) {
+      <span class="not-found-container">{{'catalog.items-not-found' | translate }}</span>
+    }
   </mat-sidenav-content>
 </mat-sidenav-container>

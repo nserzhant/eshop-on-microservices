@@ -6,12 +6,14 @@
   <span class="spacer"></span>
   <button  mat-button [routerLink]="'/basket'">
     <mat-icon>shopping_cart</mat-icon>
-    {{ basketTotal }}
+    {{ basketTotal() }}
   </button>
-  <button mat-button [matMenuTriggerFor]="userActionsMenu" *ngIf="isAuthenticated">
-    <mat-icon>account_box</mat-icon>
-      {{ userEmail }}
-  </button>
+  @if (isAuthenticated()) {
+    <button mat-button [matMenuTriggerFor]="userActionsMenu">
+      <mat-icon>account_box</mat-icon>
+      {{ userEmail() }}
+    </button>
+  }
   <mat-menu #userActionsMenu="matMenu">
     <button mat-menu-item (click)="logout()">
       <mat-icon>logout</mat-icon>
@@ -22,8 +24,10 @@
       {{'header.orders' | translate }}
     </button>
   </mat-menu>
-  <button mat-button (click)="login()" *ngIf="!isAuthenticated">
-    {{'header.log-in' | translate}}
-    <mat-icon>login</mat-icon>
-  </button>
+  @if (!isAuthenticated()) {
+    <button mat-button (click)="login()">
+      {{'header.log-in' | translate}}
+      <mat-icon>login</mat-icon>
+    </button>
+  }
 </mat-toolbar>

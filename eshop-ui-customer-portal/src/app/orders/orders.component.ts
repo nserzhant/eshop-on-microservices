@@ -1,47 +1,38 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { OrderClient, OrderReadModel } from '../services/api/ordering.api.client';
-import { BehaviorSubject, lastValueFrom, Subject, takeUntil } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
+import { MATERIAL_TABLE_IMPORTS, MATERIAL_COMMON_IMPORTS } from '../shared/material-imports';
 
 @Component({
-  selector: 'app-orders',
-  templateUrl: './orders.component.html'
+    selector: 'app-orders',
+    templateUrl: './orders.component.html',
+    imports: [
+      TranslateModule,
+      ...MATERIAL_TABLE_IMPORTS,
+      ...MATERIAL_COMMON_IMPORTS
+    ]
 })
-export class OrdersComponent implements OnInit, OnDestroy  {
+export class OrdersComponent implements OnInit {
   MAX_SMALL_WIDTH = 520;
-  componentDestroyed$ = new Subject<void>();
-  screenWidth$ = new BehaviorSubject<number>(window.innerWidth);
-  isSmallScreen = false;
 
-  items: OrderReadModel[]= [];
+  private orderClient = inject(OrderClient);
+  screenWidth = signal(window.innerWidth);
+  orders = signal<OrderReadModel[]>([]);
 
-  get displayedColumns(): string[] {
-    return this.isSmallScreen ?  ['image','name','qty','price'] : ['image','name','brand','type','qty','price'];
-  }
+  isSmallScreen = computed(() => this.screenWidth() < this.MAX_SMALL_WIDTH);
+  displayedColumns = computed(() => {
+    return this.isSmallScreen() ?  ['image','name','qty','price'] : ['image','name','brand','type','qty','price'];
+  });
 
   @HostListener('window:resize', ['$event'])
   onResize(event : any) {
-    this.screenWidth$.next(event.target.innerWidth);
-  }
-
-  constructor(private orderClient: OrderClient){
+    this.screenWidth.set(event.target.innerWidth);
   }
 
   async ngOnInit() {
     const orders$ = this.orderClient.getOrders();
     const result = await lastValueFrom(orders$);
-    this.items = result.orders ?? [];
-
-    this.screenWidth$.asObservable().pipe(takeUntil(this.componentDestroyed$)).subscribe(width => {
-         if (width < this.MAX_SMALL_WIDTH) {
-          this.isSmallScreen = true;
-        }
-        else if (width >  this.MAX_SMALL_WIDTH) {
-          this.isSmallScreen = false;
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.componentDestroyed$.next();
+    this.orders.set(result.orders ?? []);
   }
 }

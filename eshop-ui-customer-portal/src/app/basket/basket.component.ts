@@ -1,47 +1,37 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { OrderingService } from '../services/ordering.service';
-import { BasketItem } from '../services/api/basket.api.client';
-import { Subject, takeUntil } from 'rxjs';
+import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { BasketService } from '../services/basket.service';
+import { BasketItem, CustomerBasket } from '../services/api/basket.api.client';
+import { MATERIAL_TABLE_IMPORTS, MATERIAL_FORM_IMPORTS } from '../shared/material-imports';
 
 @Component({
-  selector: 'app-basket',
-  templateUrl: './basket.component.html',
-  styleUrl: './basket.component.css'
+    selector: 'app-basket',
+    templateUrl: './basket.component.html',
+    styleUrl: './basket.component.css',
+    imports: [
+      RouterLink,
+      FormsModule,
+      TranslateModule,
+      ...MATERIAL_TABLE_IMPORTS,
+      ...MATERIAL_FORM_IMPORTS
+    ]
 })
-export class BasketComponent implements OnInit, OnDestroy {
-  items: BasketItem[] = [];
+export class BasketComponent {
   displayedColumns: string[] = ['itemName', 'qty', 'price', 'remove'];
+
+  private basketService = inject(BasketService);
   readonly panelOpenState = signal(false);
-  componentDestroyed$ = new Subject<void>();
-
-  get canCheckout(): boolean {
-    return this.orderingService.isBasketSaved && this.items.length > 0;
-  }
-
-  constructor(private orderingService: OrderingService) {
-  }
-
-  ngOnInit(): void {
-    this.orderingService.onBasketItemsChanged.pipe(takeUntil(this.componentDestroyed$))
-      .subscribe((items)=> {
-        this.items = items;
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.componentDestroyed$.next();
-  }
+  items = computed(() => this.basketService.basket().items ?? []);
+  canCheckout = computed(() => this.basketService.isBasketSaved() && this.items().length > 0);
 
   remove(item: BasketItem) {
-    const index = this.items.indexOf(item);
-
-    this.items.splice(index, 1);
-    this.orderingService.saveBasket(this.items);
-    this.items = this.items.slice();
+    this.basketService.removeItemFromBasket(item);
   }
 
   qtyChanged(item: BasketItem, newQty: number) {
     item.qty = newQty;
-    this.orderingService.saveBasket(this.items);
+    this.basketService.saveBasket(new CustomerBasket({...this.basketService.basket()}));
   }
 }

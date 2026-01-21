@@ -7,7 +7,8 @@
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
-@include mat.core();
+@include mat.elevation-classes();
+@include mat.app-background();
 
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
@@ -149,11 +150,11 @@ mat-sidenav-content {
   margin: 10px 10px 0px 10px;
 }
 
-.error-snack-bar {
-  padding: 16px;
-  --mdc-snackbar-container-color: red;
-  --mdc-snackbar-supporting-text-color: white;
-  --mat-snack-bar-button-color: white;
+:root {
+  @include mat.snack-bar-overrides((
+    button-color: white,
+    container-color: red,
+  ));
 }
 
 .action-button {
